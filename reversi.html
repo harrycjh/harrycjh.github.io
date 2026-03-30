@@ -19,233 +19,149 @@
             align-items: center;
             justify-content: center;
             color: #fff;
+            padding: 20px;
         }
         h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
+            font-size: 2rem;
+            margin-bottom: 15px;
             text-shadow: 0 0 20px rgba(255,255,255,0.3);
-            letter-spacing: 4px;
+        }
+        .mode-select {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .mode-select button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .mode-select button.active {
+            background: rgba(100,200,255,0.4);
         }
         .game-info {
             display: flex;
-            gap: 40px;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
+            gap: 30px;
+            margin-bottom: 15px;
         }
         .player {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 20px;
+            gap: 8px;
+            padding: 8px 16px;
             border-radius: 10px;
             background: rgba(255,255,255,0.1);
-            transition: all 0.3s;
         }
         .player.active {
             background: rgba(255,255,255,0.25);
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
         }
         .piece-icon {
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.3);
         }
-        .black .piece-icon {
-            background: #1a1a1a;
-            box-shadow: inset 0 0 10px rgba(255,255,255,0.3);
-        }
-        .white .piece-icon {
-            background: #f5f5f5;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
-        }
-        .score {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
+        .black .piece-icon { background: #111; border: 2px solid #444; }
+        .white .piece-icon { background: #fff; border: 2px solid #ddd; }
+        .score { font-size: 1.3rem; font-weight: bold; }
+
         .board {
-            display: grid;
-            grid-template-columns: repeat(8, 50px);
-            grid-template-rows: repeat(8, 50px);
-            gap: 3px;
+            display: block;
             background: #1a472a;
-            padding: 8px;
+            padding: 6px;
             border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.3);
-            width: 418px;
-            height: 418px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .board-row {
+            display: flex;
+            gap: 3px;
         }
         .cell {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             background: #4a8f3f;
-            border-radius: 4px;
+            border-radius: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background 0.2s;
         }
-        .cell:hover {
-            background: #4d8a47;
-        }
-        .cell.valid {
-            background: #5d9a57;
-            box-shadow: inset 0 0 10px rgba(255,255,100,0.3);
-        }
-        .cell.valid:hover {
-            background: #6daa67;
-        }
+        .cell:hover { background: #5aa04f; }
+        .cell.valid { background: #6ab058; box-shadow: inset 0 0 8px rgba(255,255,100,0.4); }
         .piece {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            transition: transform 0.3s ease;
         }
         .piece.black {
-            background: radial-gradient(circle at 30% 30%, #4a4a4a, #1a1a1a);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5), inset 0 0 15px rgba(255,255,255,0.2);
+            background: radial-gradient(circle at 35% 35%, #555, #111);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         }
         .piece.white {
-            background: radial-gradient(circle at 30% 30%, #ffffff, #d0d0d0);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 0 15px rgba(0,0,0,0.1);
+            background: radial-gradient(circle at 35% 35%, #fff, #ccc);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
-        .piece.flip {
-            animation: flipPiece 0.5s ease;
-        }
-        @keyframes flipPiece {
-            0% { transform: scale(1) rotateY(0deg); }
-            50% { transform: scale(1.1) rotateY(90deg); }
-            100% { transform: scale(1) rotateY(180deg); }
-        }
-        .piece.new {
-            animation: dropPiece 0.4s ease;
-        }
-        @keyframes dropPiece {
-            0% { transform: scale(0) translateY(-20px); opacity: 0; }
-            60% { transform: scale(1.2) translateY(0); }
-            100% { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-        }
-        button {
-            padding: 12px 30px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.15);
-            color: #fff;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
-        }
-        button:hover {
-            background: rgba(255,255,255,0.25);
-            transform: translateY(-2px);
-        }
+
         .status {
             margin-top: 15px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: rgba(255,255,255,0.8);
-            min-height: 30px;
+            text-align: center;
         }
-        .status.win {
-            color: #ffd700;
-            font-weight: bold;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        .mode-select {
-            margin-bottom: 20px;
-        }
-        .mode-select button {
+        .controls { margin-top: 15px; }
+        .controls button {
             padding: 10px 25px;
-            margin: 0 5px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
         }
-        .mode-select button.selected {
-            background: rgba(100,200,255,0.3);
-            box-shadow: 0 0 15px rgba(100,200,255,0.3);
-        }
-        .ai-thinking {
-            display: inline-block;
-            animation: dots 1.5s infinite;
-        }
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
-        }
-        .win-probability {
+        .controls button:hover { background: rgba(255,255,255,0.25); }
+
+        .prob-area {
             margin-top: 15px;
-            padding: 12px 20px;
+            width: 418px;
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
+            padding: 12px;
         }
         .prob-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .prob-title {
+            margin-bottom: 8px;
             font-size: 0.9rem;
-            color: rgba(255,255,255,0.8);
         }
-        .prob-current {
-            font-size: 0.85rem;
-        }
-        .prob-current span {
-            font-weight: bold;
-        }
-        .prob-current .black { color: #888; }
-        .prob-current .white { color: #ddd; }
-        .prob-chart {
-            position: relative;
-            height: 80px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
+        .prob-bar {
+            height: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
             overflow: hidden;
-            width: 100%;
+            display: flex;
         }
-        .prob-canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
+        .prob-black { background: #444; transition: width 0.3s; }
+        .prob-white { background: #eee; transition: width 0.3s; }
         .prob-legend {
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-top: 8px;
+            margin-top: 6px;
             font-size: 0.8rem;
+            opacity: 0.7;
         }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        .legend-dot.black { background: #888; }
-        .legend-dot.white { background: #ddd; }
     </style>
 </head>
 <body>
-    <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px;">
-        <h1 style="margin: 0;">⚫ 白棋 REVERSI ⚪</h1>
-        <div class="mode-select" style="margin: 0;">
-            <button id="pvpBtn" onclick="setMode('pvp')">双人对战</button>
-            <button id="aiBtn" class="selected" onclick="setMode('ai')">AI 对战</button>
-        </div>
+    <h1>⚫ 黑白棋 ⚪</h1>
+
+    <div class="mode-select">
+        <button id="pvpBtn" onclick="setMode('pvp')">双人对战</button>
+        <button id="aiBtn" class="active" onclick="setMode('ai')">AI 对战</button>
     </div>
 
     <div class="game-info">
@@ -263,728 +179,204 @@
 
     <div class="board" id="board"></div>
 
-    <div class="status" id="status">黑方先行,点击棋盘落子</div>
-
-    <div class="win-probability" id="winProb">
-        <div class="prob-header">
-            <div class="prob-title">📈 胜率走势</div>
-            <div class="prob-current">
-                <span class="black" id="probBlackText">50%</span> ⚫ - ⚪ <span class="white" id="probWhiteText">50%</span>
-            </div>
-        </div>
-        <div class="prob-chart">
-            <canvas id="probCanvas" class="prob-canvas"></canvas>
-        </div>
-        <div class="prob-legend">
-            <div class="legend-item"><div class="legend-dot black"></div>黑方走势</div>
-            <div class="legend-item"><div class="legend-dot white"></div>白方走势</div>
-        </div>
-    </div>
+    <div class="status" id="status">黑方先行，点击落子</div>
 
     <div class="controls">
         <button onclick="resetGame()">重新开始</button>
     </div>
 
+    <div class="prob-area">
+        <div class="prob-header">
+            <span>📈 胜率走势</span>
+            <span><span id="probBlackText">50</span>% ⚫ — ⚪ <span id="probWhiteText">50</span>%</span>
+        </div>
+        <div class="prob-bar">
+            <div class="prob-black" id="probBlack" style="width:50%"></div>
+            <div class="prob-white" id="probWhite" style="width:50%"></div>
+        </div>
+        <div class="prob-legend">
+            <span>⚫ 黑方走势</span>
+            <span>⚪ 白方走势</span>
+        </div>
+    </div>
+
     <script>
-        const BOARD_SIZE = 8;
-        const EMPTY = 0;
-        const BLACK = 1;
-        const WHITE = 2;
+        const SIZE = 8;
+        const EMPTY = 0, BLACK = 1, WHITE = 2;
+        const DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
 
         let board = [];
-        let currentPlayer = BLACK;
-        let gameOver = false;
-        let gameMode = 'ai'; // 'pvp' or 'ai'
-        let aiDepth = 4;
-        let probHistory = [{black: 50, white: 50}]; // 胜率历史记录
+        let player = BLACK;
+        let over = false;
+        let mode = 'ai';
+        let probHistory = [{b:50,w:50}];
 
-        // Directions: up, down, left, right, and 4 diagonals
-        const DIRECTIONS = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [0, -1],           [0, 1],
-            [1, -1],  [1, 0], [1, 1]
-        ];
-
-        function initBoard() {
-            board = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(EMPTY));
-            // Initial pieces in center
-            board[3][3] = WHITE;
-            board[3][4] = BLACK;
-            board[4][3] = BLACK;
-            board[4][4] = WHITE;
-            currentPlayer = BLACK;
-            gameOver = false;
+        function init() {
+            board = Array(SIZE).fill(0).map(()=>Array(SIZE).fill(EMPTY));
+            board[3][3] = WHITE; board[3][4] = BLACK;
+            board[4][3] = BLACK; board[4][4] = WHITE;
+            player = BLACK; over = false; probHistory = [{b:50,w:50}];
         }
 
-        function getValidMoves(player) {
-            const moves = [];
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c] === EMPTY && getFlippablePieces(r, c, player).length > 0) {
-                        moves.push([r, c]);
-                    }
-                }
+        function flips(r,c,p) {
+            const o = p===BLACK?WHITE:BLACK;
+            let list = [];
+            for(let [dr,dc] of DIRS) {
+                let k=r+dr, l=c+dc, line=[];
+                while(k>=0&&k<SIZE&&l>=0&&l<SIZE&&board[k][l]===o) { line.push([k,l]); k+=dr; l+=dc; }
+                if(line.length && k>=0&&k<SIZE&&l>=0&&l<SIZE && board[k][l]===p) list.push(...line);
             }
-            return moves;
+            return list;
         }
 
-        function getFlippablePieces(row, col, player) {
-            const opponent = player === BLACK ? WHITE : BLACK;
-            const flippable = [];
-
-            for (const [dr, dc] of DIRECTIONS) {
-                const line = [];
-                let r = row + dr;
-                let c = col + dc;
-
-                while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === opponent) {
-                    line.push([r, c]);
-                    r += dr;
-                    c += dc;
-                }
-
-                if (line.length > 0 && r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-                    flippable.push(...line);
-                }
-            }
-
-            return flippable;
+        function validMoves(p) {
+            let m=[];
+            for(let i=0;i<SIZE;i++) for(let j=0;j<SIZE;j++) if(board[i][j]===EMPTY && flips(i,j,p).length) m.push([i,j]);
+            return m;
         }
 
-        function makeMove(row, col, player) {
-            const flippable = getFlippablePieces(row, col, player);
-            if (flippable.length === 0) return false;
-
-            board[row][col] = player;
-
-            const newPieces = [[row, col]];
-
-            for (const [r, c] of flippable) {
-                board[r][c] = player;
-            }
-
+        function move(r,c,p) {
+            let f = flips(r,c,p);
+            if(!f.length) return false;
+            board[r][c] = p;
+            for(let [i,j] of f) board[i][j] = p;
             return true;
         }
 
-        function countPieces() {
-            let black = 0, white = 0;
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c] === BLACK) black++;
-                    else if (board[r][c] === WHITE) white++;
-                }
-            }
-            return [black, white];
+        function count() {
+            let b=0,w=0;
+            for(let i=0;i<SIZE;i++) for(let j=0;j<SIZE;j++) { if(board[i][j]===BLACK) b++; else if(board[i][j]===WHITE) w++; }
+            return [b,w];
         }
 
-        function updateUI() {
-            const boardEl = document.getElementById('board');
-            boardEl.innerHTML = '';
+        function render() {
+            let el = document.getElementById('board');
+            el.innerHTML = '';
+            let vm = validMoves(player);
 
-            const validMoves = getValidMoves(currentPlayer);
-
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    const cell = document.createElement('div');
+            for(let i=0;i<SIZE;i++) {
+                let row = document.createElement('div');
+                row.className = 'board-row';
+                for(let j=0;j<SIZE;j++) {
+                    let cell = document.createElement('div');
                     cell.className = 'cell';
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-
-                    const isValid = validMoves.some(m => m[0] === r && m[1] === c);
-                    if (isValid && !gameOver) {
-                        cell.classList.add('valid');
+                    if(!over && vm.some(m=>m[0]===i&&m[1]===j)) cell.classList.add('valid');
+                    if(board[i][j] !== EMPTY) {
+                        let p = document.createElement('div');
+                        p.className = 'piece ' + (board[i][j]===BLACK?'black':'white');
+                        cell.appendChild(p);
                     }
-
-                    if (board[r][c] !== EMPTY) {
-                        const piece = document.createElement('div');
-                        piece.className = `piece ${board[r][c] === BLACK ? 'black' : 'white'}`;
-                        cell.appendChild(piece);
-                    }
-
-                    cell.addEventListener('click', () => handleCellClick(r, c));
-                    boardEl.appendChild(cell);
+                    cell.onclick = () => click(i,j);
+                    row.appendChild(cell);
                 }
+                el.appendChild(row);
             }
 
-            const [black, white] = countPieces();
-            document.getElementById('blackScore').textContent = black;
-            document.getElementById('whiteScore').textContent = white;
+            let [b,w] = count();
+            document.getElementById('blackScore').textContent = b;
+            document.getElementById('whiteScore').textContent = w;
+            document.getElementById('blackPlayer').classList.toggle('active', player===BLACK && !over);
+            document.getElementById('whitePlayer').classList.toggle('active', player===WHITE && !over);
 
-            // Update active player display
-            document.getElementById('blackPlayer').classList.toggle('active', currentPlayer === BLACK && !gameOver);
-            document.getElementById('whitePlayer').classList.toggle('active', currentPlayer === WHITE && !gameOver);
-
-            // Update status
-            const statusEl = document.getElementById('status');
-            if (gameOver) {
-                statusEl.className = 'status win';
-                if (black > white) {
-                    statusEl.textContent = `🎉 黑方胜利!${black} vs ${white}`;
-                } else if (white > black) {
-                    statusEl.textContent = `🎉 白方胜利!${white} vs ${black}`;
-                } else {
-                    statusEl.textContent = `🤝 平局!${black} vs ${white}`;
-                }
+            let s = document.getElementById('status');
+            if(over) {
+                if(b>w) s.textContent = '🎉 黑方胜利！' + b + ' vs ' + w;
+                else if(w>b) s.textContent = '🎉 白方胜利！' + w + ' vs ' + b;
+                else s.textContent = '🤝 平局！' + b + ' vs ' + w;
             } else {
-                statusEl.className = 'status';
-                const currentName = currentPlayer === BLACK ? '黑方' : '白方';
-
-                if (gameMode === 'ai' && currentPlayer === WHITE) {
-                    statusEl.innerHTML = `<span class="ai-thinking">白方(AI)思考中...</span>`;
-                    setTimeout(() => aiMove(), 500);
-                } else {
-                    statusEl.textContent = `${currentName}回合`;
-                }
+                s.textContent = (player===BLACK?'黑':'白') + '方回合' + (mode==='ai'&&player===WHITE?' (AI思考中...)':'');
+                if(mode==='ai'&&player===WHITE) setTimeout(aiMove, 500);
             }
         }
 
-        function handleCellClick(row, col) {
-            if (gameOver) return;
-            if (gameMode === 'ai' && currentPlayer === WHITE) return;
+        function click(r,c) {
+            if(over) return;
+            if(mode==='ai' && player===WHITE) return;
+            if(board[r][c]!==EMPTY) return;
+            if(!flips(r,c,player).length) return;
 
-            if (board[row][col] !== EMPTY) return;
-
-            const flippable = getFlippablePieces(row, col, currentPlayer);
-            if (flippable.length === 0) return;
-
-            makeMove(row, col, currentPlayer);
-            updateUI();
-            updateWinProbability();
-
-            setTimeout(() => nextTurn(), 300);
+            move(r,c,player);
+            probHistory.push(calcProb());
+            updateProb();
+            next();
         }
 
-        function nextTurn() {
-            const opponent = currentPlayer === BLACK ? WHITE : BLACK;
-            const opponentMoves = getValidMoves(opponent);
-            const currentMoves = getValidMoves(currentPlayer);
+        function next() {
+            let o = player===BLACK?WHITE:BLACK;
+            let vm = validMoves(o);
+            let my = validMoves(player);
 
-            if (opponentMoves.length === 0 && currentMoves.length === 0) {
-                gameOver = true;
-                updateUI();
-                return;
-            }
-
-            if (opponentMoves.length === 0) {
-                // Opponent can't move, current player continues
-                updateUI();
-                return;
-            }
-
-            currentPlayer = opponent;
-            updateUI();
-            updateWinProbability();
+            if(!vm.length && !my.length) { over=true; render(); return; }
+            if(!vm.length) { render(); return; }
+            player = o; render();
         }
 
-        // ==================== AI 系统 ====================
-
-        // 开局库 - 前10步的最佳开局
-        const OPENING_BOOK = {
-            // 格式: boardState -> [row, col]
-            // 这里预置一些经典开局走法
-            'first': [[2, 3], [3, 2], [4, 5], [5, 4]], // C3, D4, E5, F6 对角线开局
-            'edge': [[2, 3], [3, 2], [4, 5], [5, 4], [2, 4], [3, 5], [4, 2], [5, 3]]
-        };
-
-        // 根据开局阶段返回最优走法
-        function getOpeningMove(player) {
-            const moveIndex = countPieces().reduce((a, b) => a + b, 0) - 4; // 已下棋子数-初始4个
-            if (moveIndex >= 8) return null; // 开局库只覆盖前8步
-
-            // 开局优先走角落旁边的位置,建立优势
-            const openings = [
-                [[2, 3], [3, 2]], // 第一步优选
-                [[4, 5], [5, 4]], // 第二步
-                [[2, 4], [4, 2]], // 第三步
-                [[3, 5], [5, 3]]  // 第四步
-            ];
-
-            const priorities = [
-                [[2, 3], [3, 2], [4, 5], [5, 4], [2, 4], [4, 2], [3, 5], [5, 3], [2, 2], [2, 5], [5, 2], [5, 5]],
-                [[4, 5], [5, 4], [3, 4], [4, 3]],
-                [[2, 4], [4, 2], [3, 5], [5, 3]],
-                [[3, 4], [4, 3], [2, 3], [3, 2], [4, 5], [5, 4]]
-            ];
-
-            const validMoves = getValidMoves(player);
-            const level = Math.min(Math.floor(moveIndex / 2), priorities.length - 1);
-
-            for (const [r, c] of priorities[level]) {
-                if (validMoves.some(m => m[0] === r && m[1] === c)) {
-                    return [r, c];
-                }
-            }
-
-            return null;
-        }
-
-        // 残局求解器 - 精确计算胜负
-        function solveEndgame(player) {
-            const [black, white] = countPieces();
-            const empty = 64 - black - white;
-
-            if (empty > 16) return null; // 超过16格不用残局库
-
-            const validMoves = getValidMoves(player);
-            if (validMoves.length === 0) {
-                // 双方都不能走,游戏结束
-                const final = countPieces();
-                if (final[0] > final[1]) return -1000; // 黑胜
-                if (final[1] > final[0]) return 1000;  // 白胜
-                return 0; // 平局
-            }
-
-            let bestScore = player === WHITE ? -Infinity : Infinity;
-
-            for (const [r, c] of validMoves) {
-                const boardCopy = board.map(row => [...row]);
-                makeMove(r, c, player);
-                const score = minimaxEndgame(3, -Infinity, Infinity, player === WHITE);
-                board = boardCopy;
-
-                if (player === WHITE) {
-                    bestScore = Math.max(bestScore, score);
-                } else {
-                    bestScore = Math.min(bestScore, score);
-                }
-            }
-
-            return bestScore;
-        }
-
-        function minimaxEndgame(depth, alpha, beta, isMaximizing) {
-            if (depth === 0) {
-                return evaluateBoard();
-            }
-
-            const player = isMaximizing ? WHITE : BLACK;
-            const validMoves = getValidMoves(player);
-
-            if (validMoves.length === 0) {
-                const opponent = isMaximizing ? BLACK : WHITE;
-                const opponentMoves = getValidMoves(opponent);
-                if (opponentMoves.length === 0) {
-                    const [black, white] = countPieces();
-                    if (white > black) return 1000;
-                    if (black > white) return -1000;
-                    return 0;
-                }
-                return minimaxEndgame(depth - 1, alpha, beta, !isMaximizing);
-            }
-
-            if (isMaximizing) {
-                let maxEval = -Infinity;
-                for (const [r, c] of validMoves) {
-                    const boardCopy = board.map(row => [...row]);
-                    makeMove(r, c, WHITE);
-                    const eval_ = minimaxEndgame(depth - 1, alpha, beta, false);
-                    board = boardCopy;
-                    maxEval = Math.max(maxEval, eval_);
-                    alpha = Math.max(alpha, eval_);
-                    if (beta <= alpha) break;
-                }
-                return maxEval;
-            } else {
-                let minEval = Infinity;
-                for (const [r, c] of validMoves) {
-                    const boardCopy = board.map(row => [...row]);
-                    makeMove(r, c, BLACK);
-                    const eval_ = minimaxEndgame(depth - 1, alpha, beta, true);
-                    board = boardCopy;
-                    minEval = Math.min(minEval, eval_);
-                    beta = Math.min(beta, eval_);
-                    if (beta <= alpha) break;
-                }
-                return minEval;
-            }
-        }
-
-        // 强力评估函数
-        function evaluateBoard() {
-            let [black, white] = countPieces();
-            const empty = 64 - black - white;
-
-            // 位置权重表 - 基于统计数据优化
-            const POS_WEIGHTS = [
-                [100, -20,  8,  6,  6,  8, -20, 100],
-                [-20, -45, -4, -3, -3, -4, -45, -20],
-                [  8,  -4,  2,  1,  1,  2,  -4,   8],
-                [  6,  -3,  1,  0,  0,  1,  -3,   6],
-                [  6,  -3,  1,  0,  0,  1,  -3,   6],
-                [  8,  -4,  2,  1,  1,  2,  -4,   8],
-                [-20, -45, -4, -3, -3, -4, -45, -20],
-                [100, -20,  8,  6,  6,  8, -20, 100]
-            ];
-
-            // 行动力权重(边角行动力更重要)
-            const MOBILITY_WEIGHT = 15;
-            const CORNER_MOBILITY_WEIGHT = 20;
-
-            let score = 0;
-
-            // 1. 棋子位置评估
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c] === WHITE) {
-                        score += POS_WEIGHTS[r][c];
-                    } else if (board[r][c] === BLACK) {
-                        score -= POS_WEIGHTS[r][c];
-                    }
-                }
-            }
-
-            // 2. 行动力评估
-            const whiteMoves = getValidMoves(WHITE).length;
-            const blackMoves = getValidMoves(BLACK).length;
-
-            // 边缘行动力更重要
-            let whiteEdgeMoves = 0, blackEdgeMoves = 0;
-            const edgeCells = [0, 7];
-            for (const [r, c] of getValidMoves(WHITE)) {
-                if (edgeCells.includes(r) || edgeCells.includes(c)) whiteEdgeMoves++;
-            }
-            for (const [r, c] of getValidMoves(BLACK)) {
-                if (edgeCells.includes(r) || edgeCells.includes(c)) blackEdgeMoves++;
-            }
-
-            score += (whiteMoves - blackMoves) * MOBILITY_WEIGHT;
-            score += (whiteEdgeMoves - blackEdgeMoves) * CORNER_MOBILITY_WEIGHT;
-
-            // 3. 棋子数量(残局时权重增加)
-            const PIECE_WEIGHT = empty > 20 ? 2 : (empty > 10 ? 5 : 10);
-            score += (white - black) * PIECE_WEIGHT;
-
-            // 4. 潜在行动力(能吃到的方向数)
-            let whitePotential = 0, blackPotential = 0;
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c] === EMPTY) {
-                        const whiteFlips = getFlippablePieces(r, c, WHITE).length;
-                        const blackFlips = getFlippablePieces(r, c, BLACK).length;
-                        if (whiteFlips > 0) whitePotential++;
-                        if (blackFlips > 0) blackPotential++;
-                    }
-                }
-            }
-            score += (whitePotential - blackPotential) * 2;
-
-            return score;
-        }
-
-        // AI 落子选择
         function aiMove() {
-            if (gameOver || currentPlayer !== WHITE) return;
+            if(over || player!==WHITE) return;
+            let vm = validMoves(WHITE);
+            if(!vm.length) { next(); return; }
 
-            const validMoves = getValidMoves(WHITE);
-            if (validMoves.length === 0) {
-                setTimeout(() => nextTurn(), 300);
-                return;
+            let best=null, bestS=-Infinity;
+            for(let [r,c] of vm) {
+                let b2 = board.map(x=>[...x]);
+                move(r,c,WHITE);
+                let s = evalBoard();
+                board = b2;
+                if(s>bestS) { bestS=s; best=[r,c]; }
             }
-
-            // 如果只有一步，直接走
-            if (validMoves.length === 1) {
-                makeMove(validMoves[0][0], validMoves[0][1], WHITE);
-                updateUI();
-                updateWinProbability();
-                setTimeout(() => nextTurn(), 300);
-                return;
-            }
-
-            const [black, white] = countPieces();
-            const empty = 64 - black - white;
-            let bestMove = validMoves[0];
-            let bestScore = -Infinity;
-
-            // 简化评估：用更轻量的搜索
-            const searchDepth = empty > 40 ? 4 : (empty > 25 ? 5 : 6);
-
-            for (const [r, c] of validMoves) {
-                const boardCopy = board.map(row => [...row]);
-                makeMove(r, c, WHITE);
-                const score = simpleMinimax(searchDepth, -Infinity, Infinity, false);
-                board = boardCopy;
-
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestMove = [r, c];
-                }
-            }
-
-            makeMove(bestMove[0], bestMove[1], WHITE);
-            updateUI();
-            updateWinProbability();
-            setTimeout(() => nextTurn(), 300);
-        }
-
-        // 简化版 Minimax（更稳定）
-        function simpleMinimax(depth, alpha, beta, isMaximizing) {
-            if (depth === 0) {
-                return simpleEvaluate();
-            }
-
-            const player = isMaximizing ? WHITE : BLACK;
-            const validMoves = getValidMoves(player);
-
-            if (validMoves.length === 0) {
-                const opponent = isMaximizing ? BLACK : WHITE;
-                const opponentMoves = getValidMoves(opponent);
-                if (opponentMoves.length === 0) {
-                    const [black, white] = countPieces();
-                    return (white - black) * 100;
-                }
-                return simpleMinimax(depth - 1, alpha, beta, !isMaximizing);
-            }
-
-            if (isMaximizing) {
-                let maxEval = -Infinity;
-                for (const [r, c] of validMoves) {
-                    const boardCopy = board.map(row => [...row]);
-                    makeMove(r, c, WHITE);
-                    const eval_ = simpleMinimax(depth - 1, alpha, beta, false);
-                    board = boardCopy;
-                    maxEval = Math.max(maxEval, eval_);
-                    alpha = Math.max(alpha, eval_);
-                    if (beta <= alpha) break;
-                }
-                return maxEval;
-            } else {
-                let minEval = Infinity;
-                for (const [r, c] of validMoves) {
-                    const boardCopy = board.map(row => [...row]);
-                    makeMove(r, c, BLACK);
-                    const eval_ = simpleMinimax(depth - 1, alpha, beta, true);
-                    board = boardCopy;
-                    minEval = Math.min(minEval, eval_);
-                    beta = Math.min(beta, eval_);
-                    if (beta <= alpha) break;
-                }
-                return minEval;
+            if(best) {
+                move(best[0],best[1],WHITE);
+                probHistory.push(calcProb());
+                updateProb();
+                setTimeout(next, 300);
             }
         }
 
-        // 轻量级评估函数
-        function simpleEvaluate() {
-            const [black, white] = countPieces();
-            const empty = 64 - black - white;
-
-            const POS_WEIGHTS = [
-                [100, -20, 8, 6, 6, 8, -20, 100],
-                [-20, -45, -4, -3, -3, -4, -45, -20],
-                [8, -4, 2, 1, 1, 2, -4, 8],
-                [6, -3, 1, 0, 0, 1, -3, 6],
-                [6, -3, 1, 0, 0, 1, -3, 6],
-                [8, -4, 2, 1, 1, 2, -4, 8],
-                [-20, -45, -4, -3, -3, -4, -45, -20],
-                [100, -20, 8, 6, 6, 8, -20, 100]
-            ];
-
-            let score = 0;
-            for (let r = 0; r < BOARD_SIZE; r++) {
-                for (let c = 0; c < BOARD_SIZE; c++) {
-                    if (board[r][c] === WHITE) score += POS_WEIGHTS[r][c];
-                    else if (board[r][c] === BLACK) score -= POS_WEIGHTS[r][c];
-                }
+        function evalBoard() {
+            const W = [[100,-20,10,5,5,10,-20,100],[-20,-50,-2,-2,-2,-2,-50,-20],[10,-2,1,1,1,1,-2,10],[5,-2,1,0,0,1,-2,5],[5,-2,1,0,0,1,-2,5],[10,-2,1,1,1,1,-2,10],[-20,-50,-2,-2,-2,-2,-50,-20],[100,-20,10,5,5,10,-20,100]];
+            let s=0;
+            for(let i=0;i<SIZE;i++) for(let j=0;j<SIZE;j++) {
+                if(board[i][j]===WHITE) s+=W[i][j];
+                else if(board[i][j]===BLACK) s-=W[i][j];
             }
-
-            const whiteMoves = getValidMoves(WHITE).length;
-            const blackMoves = getValidMoves(BLACK).length;
-            score += (whiteMoves - blackMoves) * 10;
-
-            // 棋子数量（残局权重更高）
-            const pieceWeight = empty > 20 ? 2 : (empty > 10 ? 5 : 10);
-            score += (white - black) * pieceWeight;
-
-            return score;
-        }
+            let wm=validMoves(WHITE).length, bm=validMoves(BLACK).length;
+            s += (wm-bm)*8;
+            return s;
         }
 
-        function minimax(depth, alpha, beta, isMaximizing) {
-            if (depth === 0) {
-                return evaluateBoard();
-            }
-
-            const player = isMaximizing ? WHITE : BLACK;
-            const validMoves = getValidMoves(player);
-
-            if (validMoves.length === 0) {
-                const opponent = isMaximizing ? BLACK : WHITE;
-                const opponentMoves = getValidMoves(opponent);
-                if (opponentMoves.length === 0) {
-                    const [black, white] = countPieces();
-                    return (white - black) * 100;
-                }
-                return minimax(depth - 1, alpha, beta, !isMaximizing);
-            }
-
-            if (isMaximizing) {
-                let maxEval = -Infinity;
-                for (const [r, c] of validMoves) {
-                    const boardCopy = board.map(row => [...row]);
-                    makeMove(r, c, WHITE);
-                    const eval_ = minimax(depth - 1, alpha, beta, false);
-                    board = boardCopy;
-                    maxEval = Math.max(maxEval, eval_);
-                    alpha = Math.max(alpha, eval_);
-                    if (beta <= alpha) break;
-                }
-                return maxEval;
-            } else {
-                let minEval = Infinity;
-                for (const [r, c] of validMoves) {
-                    const boardCopy = board.map(row => [...row]);
-                    makeMove(r, c, BLACK);
-                    const eval_ = minimax(depth - 1, alpha, beta, true);
-                    board = boardCopy;
-                    minEval = Math.min(minEval, eval_);
-                    beta = Math.min(beta, eval_);
-                    if (beta <= alpha) break;
-                }
-                return minEval;
-            }
+        function calcProb() {
+            let [b,w] = count();
+            let t=b+w, p = t>0 ? w/t : 0.5;
+            let s = evalBoard();
+            let prob = p*0.4 + (50+s*0.5)*0.01*0.6;
+            prob = Math.max(2,Math.min(98,Math.round(prob*100)));
+            return {b:100-prob, w:prob};
         }
 
-        // ==================== 胜率计算 ====================
-
-        function calculateWinProbability() {
-            const [black, white] = countPieces();
-            const empty = 64 - black - white;
-            const total = black + white;
-
-            if (total === 0) return { black: 50, white: 50 };
-
-            // 残局阶段 - 使用精确求解
-            if (empty <= 20) {
-                const result = solveEndgame(WHITE);
-                if (result !== null) {
-                    // 将结果转换为百分比
-                    if (result > 500) return { black: 2, white: 98 };
-                    if (result > 200) return { black: 15, white: 85 };
-                    if (result > 50) return { black: 35, white: 65 };
-                    if (result > 0) return { black: 45, white: 55 };
-                    if (result === 0) return { black: 50, white: 50 };
-                    if (result > -50) return { black: 55, white: 45 };
-                    if (result > -200) return { black: 65, white: 35 };
-                    if (result > -500) return { black: 85, white: 15 };
-                    return { black: 98, white: 2 };
-                }
-            }
-
-            // 非残局阶段 - 使用评估函数
-            const aiScore = evaluateBoard();
-            const aiProb = 50 + (aiScore * 0.15);
-
-            // 结合棋子和位置
-            const pieceRatio = total > 0 ? white / total : 0.5;
-            const finalProb = aiProb * 0.7 + pieceRatio * 100 * 0.3;
-
-            return {
-                black: Math.max(2, Math.min(98, Math.round(100 - finalProb))),
-                white: Math.max(2, Math.min(98, Math.round(finalProb)))
-            };
+        function updateProb() {
+            let p = probHistory[probHistory.length-1];
+            document.getElementById('probBlack').style.width = p.b+'%';
+            document.getElementById('probWhite').style.width = p.w+'%';
+            document.getElementById('probBlackText').textContent = p.b;
+            document.getElementById('probWhiteText').textContent = p.w;
         }
 
-        function updateWinProbability() {
-            const prob = calculateWinProbability();
-
-            // 更新文字显示
-            document.getElementById('probBlackText').textContent = prob.black + '%';
-            document.getElementById('probWhiteText').textContent = prob.white + '%';
-
-            // 记录历史
-            probHistory.push({black: prob.black, white: prob.white});
-
-            // 绘制走势图
-            drawProbChart();
-        }
-
-        function drawProbChart() {
-            const canvas = document.getElementById('probCanvas');
-            const ctx = canvas.getContext('2d');
-            const container = canvas.parentElement;
-            const containerWidth = container.clientWidth || 420;
-            const chartHeight = 80;
-            const dpr = window.devicePixelRatio || 1;
-
-            // canvas 尺寸匹配容器
-            canvas.width = containerWidth * dpr;
-            canvas.height = chartHeight * dpr;
-            canvas.style.width = containerWidth + 'px';
-            canvas.style.height = chartHeight + 'px';
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.scale(dpr, dpr);
-
-            const width = containerWidth;
-            const padding = 15;
-
-            // 清空画布
-            ctx.clearRect(0, 0, containerWidth, chartHeight);
-
-            if (probHistory.length < 2) return;
-
-            // 绘制参考线
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.moveTo(0, height / 2);
-            ctx.lineTo(width, height / 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // 绘制黑方线 (灰色)
-            ctx.strokeStyle = '#888';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-
-            const stepX = (width - padding * 2) / Math.max(probHistory.length - 1, 1);
-
-            probHistory.forEach((p, i) => {
-                const x = padding + i * stepX;
-                const y = height - padding - (p.black / 100) * (height - padding * 2);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-
-            // 绘制白方线 (白色)
-            ctx.strokeStyle = '#ddd';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-
-            probHistory.forEach((p, i) => {
-                const x = padding + i * stepX;
-                const y = height - padding - (p.white / 100) * (height - padding * 2);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.stroke();
-        }
-
-        // 窗口大小变化时重绘
-        window.addEventListener('resize', () => {
-            // 使用固定宽度，不需要 resize 处理
-        });
-
-        function setMode(mode) {
-            gameMode = mode;
-            document.getElementById('pvpBtn').classList.toggle('selected', mode === 'pvp');
-            document.getElementById('aiBtn').classList.toggle('selected', mode === 'ai');
+        function setMode(m) {
+            mode=m;
+            document.getElementById('pvpBtn').classList.toggle('active', m==='pvp');
+            document.getElementById('aiBtn').classList.toggle('active', m==='ai');
             resetGame();
         }
 
         function resetGame() {
-            probHistory = [{black: 50, white: 50}];
-            initBoard();
-            updateUI();
-            updateWinProbability();
-            // 清空图表
-            const canvas = document.getElementById('probCanvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            init();
+            render();
+            updateProb();
         }
 
-        // Start the game
-        resetGame();
+        init();
+        render();
+        updateProb();
     </script>
 </body>
 </html>
