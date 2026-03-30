@@ -79,6 +79,7 @@
         .board-row {
             display: flex;
             gap: 3px;
+            margin-bottom: 3px;
         }
         .cell {
             width: 48px;
@@ -257,6 +258,7 @@
             for(let i=0;i<SIZE;i++) {
                 let row = document.createElement('div');
                 row.className = 'board-row';
+                if(i === SIZE-1) row.style.marginBottom = '0';
                 for(let j=0;j<SIZE;j++) {
                     let cell = document.createElement('div');
                     cell.className = 'cell';
