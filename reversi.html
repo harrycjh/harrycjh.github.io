@@ -138,15 +138,17 @@
             margin-bottom: 8px;
             font-size: 0.9rem;
         }
-        .prob-bar {
-            height: 30px;
-            background: rgba(255,255,255,0.1);
+        .prob-chart {
+            height: 70px;
+            background: rgba(255,255,255,0.05);
             border-radius: 5px;
+            position: relative;
             overflow: hidden;
-            display: flex;
         }
-        .prob-black { background: #444; transition: width 0.3s; }
-        .prob-white { background: #eee; transition: width 0.3s; }
+        .prob-canvas {
+            width: 100%;
+            height: 100%;
+        }
         .prob-legend {
             display: flex;
             justify-content: center;
@@ -191,9 +193,8 @@
             <span>📈 胜率走势</span>
             <span><span id="probBlackText">50</span>% ⚫ — ⚪ <span id="probWhiteText">50</span>%</span>
         </div>
-        <div class="prob-bar">
-            <div class="prob-black" id="probBlack" style="width:50%"></div>
-            <div class="prob-white" id="probWhite" style="width:50%"></div>
+        <div class="prob-chart">
+            <canvas id="probCanvas" class="prob-canvas"></canvas>
         </div>
         <div class="prob-legend">
             <span>⚫ 黑方走势</span>
@@ -357,10 +358,60 @@
 
         function updateProb() {
             let p = probHistory[probHistory.length-1];
-            document.getElementById('probBlack').style.width = p.b+'%';
-            document.getElementById('probWhite').style.width = p.w+'%';
             document.getElementById('probBlackText').textContent = p.b;
             document.getElementById('probWhiteText').textContent = p.w;
+            drawChart();
+        }
+
+        function drawChart() {
+            let canvas = document.getElementById('probCanvas');
+            let ctx = canvas.getContext('2d');
+            let w = canvas.parentElement.clientWidth || 394;
+            let h = 70;
+            let dpr = window.devicePixelRatio || 1;
+
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            ctx.setTransform(1,0,0,1,0,0);
+            ctx.scale(dpr, dpr);
+
+            ctx.clearRect(0, 0, w, h);
+
+            if(probHistory.length < 2) return;
+
+            // 中线
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.setLineDash([5,5]);
+            ctx.beginPath();
+            ctx.moveTo(0, h/2);
+            ctx.lineTo(w, h/2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 绘制黑线
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            let stepX = (w - 20) / Math.max(probHistory.length - 1, 1);
+            probHistory.forEach((p, i) => {
+                let x = 10 + i * stepX;
+                let y = h - 10 - (p.b / 100) * (h - 20);
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+
+            // 绘制白线
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            probHistory.forEach((p, i) => {
+                let x = 10 + i * stepX;
+                let y = h - 10 - (p.w / 100) * (h - 20);
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.stroke();
         }
 
         function setMode(m) {
