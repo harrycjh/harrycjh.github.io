@@ -336,24 +336,184 @@
         }
 
         function evalBoard() {
-            const W = [[100,-20,10,5,5,10,-20,100],[-20,-50,-2,-2,-2,-2,-50,-20],[10,-2,1,1,1,1,-2,10],[5,-2,1,0,0,1,-2,5],[5,-2,1,0,0,1,-2,5],[10,-2,1,1,1,1,-2,10],[-20,-50,-2,-2,-2,-2,-50,-20],[100,-20,10,5,5,10,-20,100]];
-            let s=0;
-            for(let i=0;i<SIZE;i++) for(let j=0;j<SIZE;j++) {
-                if(board[i][j]===WHITE) s+=W[i][j];
-                else if(board[i][j]===BLACK) s-=W[i][j];
+            // 位置权重（基于统计数据）
+            const W = [
+                [100, -20,  8,  6,  6,  8, -20, 100],
+                [-20, -45, -4, -3, -3, -4, -45, -20],
+                [  8,  -4,  2,  1,  1,  2,  -4,   8],
+                [  6,  -3,  1,  0,  0,  1,  -3,   6],
+                [  6,  -3,  1,  0,  0,  1,  -3,   6],
+                [  8,  -4,  2,  1,  1,  2,  -4,   8],
+                [-20, -45, -4, -3, -3, -4, -45, -20],
+                [100, -20,  8,  6,  6,  8, -20, 100]
+            ];
+
+            let score = 0;
+            let whitePieces = 0, blackPieces = 0;
+            let whiteFrontier = 0, blackFrontier = 0; // 前线棋子（容易被翻）
+
+            for(let i=0;i<SIZE;i++) {
+                for(let j=0;j<SIZE;j++) {
+                    if(board[i][j]===WHITE) {
+                        score += W[i][j];
+                        whitePieces++;
+                        // 前线棋子检测
+                        if(isFrontier(i,j)) whiteFrontier++;
+                    } else if(board[i][j]===BLACK) {
+                        score -= W[i][j];
+                        blackPieces++;
+                        if(isFrontier(i,j)) blackFrontier++;
+                    }
+                }
             }
-            let wm=validMoves(WHITE).length, bm=validMoves(BLACK).length;
-            s += (wm-bm)*8;
-            return s;
+
+            // 1. 行动力（可走步数）
+            let wm = validMoves(WHITE).length;
+            let bm = validMoves(BLACK).length;
+            score += (wm - bm) * 12;
+
+            // 2. 前线棋子惩罚（前线棋子容易被翻）
+            score -= (whiteFrontier - blackFrontier) * 3;
+
+            // 3. 棋子数量（残局权重更高）
+            let empty = 64 - whitePieces - blackPieces;
+            let pieceWeight = empty > 20 ? 1 : (empty > 10 ? 3 : 8);
+            score += (whitePieces - blackPieces) * pieceWeight;
+
+            // 4. 边缘稳定性
+            let whiteStable = countStable(WHITE);
+            let blackStable = countStable(BLACK);
+            score += (whiteStable - blackStable) * 5;
+
+            return score;
+        }
+
+        function isFrontier(r,c) {
+            // 检查是否是前线棋子（相邻有空格）
+            for(let [dr,dc] of DIRS) {
+                let nr=r+dr, nc=c+dc;
+                if(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&board[nr][nc]===EMPTY) return true;
+            }
+            return false;
+        }
+
+        function countStable(p) {
+            // 计算稳定棋子数（不会被翻的棋子）
+            let stable = 0;
+            for(let i=0;i<SIZE;i++) {
+                for(let j=0;j<SIZE;j++) {
+                    if(board[i][j]===p && isStable(i,j,p)) stable++;
+                }
+            }
+            return stable;
+        }
+
+        function isStable(r,c,p) {
+            // 角落棋子永远稳定
+            if((r===0||r===7)&&(c===0||c===7)) return true;
+
+            // 边缘棋子如果同色连线到角落则稳定
+            if(r===0||r===7||c===0||c===7) {
+                // 检查四个方向是否都被同色包围
+                let dirs = [[0,1],[1,0]];
+                for(let [dr,dc] of dirs) {
+                    let nr=r+dr, nc=c+dc, cnt=0;
+                    while(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE) {
+                        if(board[nr][nc]===p) cnt++;
+                        else break;
+                        nr+=dr; nc+=dc;
+                    }
+                    if(cnt===0) return false;
+                }
+                return true;
+            }
+            return false;
         }
 
         function calcProb() {
             let [b,w] = count();
-            let t=b+w, p = t>0 ? w/t : 0.5;
+            let t = b+w;
+
+            if(t < 10) {
+                // 开局：位置更重要
+                let s = evalBoard();
+                let prob = 50 + s * 0.3;
+                return {b: Math.round(Math.max(5,Math.min(95,50-s*0.3))), w: Math.round(Math.max(5,Math.min(95,50+s*0.3)))};
+            } else if(t > 50) {
+                // 残局：用 minimax 深度搜索
+                let result = solveEndgame();
+                if(result !== null) {
+                    if(result > 100) return {b: 3, w: 97};
+                    if(result > 30) return {b: 20, w: 80};
+                    if(result > 0) return {b: 40, w: 60};
+                    if(result === 0) return {b: 50, w: 50};
+                    if(result > -30) return {b: 60, w: 40};
+                    if(result > -100) return {b: 80, w: 20};
+                    return {b: 97, w: 3};
+                }
+            }
+
+            // 中局：用综合评估
             let s = evalBoard();
-            let prob = p*0.4 + (50+s*0.5)*0.01*0.6;
-            prob = Math.max(2,Math.min(98,Math.round(prob*100)));
-            return {b:100-prob, w:prob};
+            let pieceRatio = t > 0 ? w/t : 0.5;
+            let prob = pieceRatio * 100 * 0.3 + (50 + s * 0.2) * 0.7;
+            prob = Math.max(2, Math.min(98, Math.round(prob)));
+            return {b: 100-prob, w: prob};
+        }
+
+        function solveEndgame() {
+            // 残局求解：模拟所有可能走法
+            let [b,w] = count();
+            let empty = 64 - b - w;
+
+            if(empty > 12) return null; // 太浅不求解
+
+            // 简单的递归搜索（限制深度）
+            let result = minimaxDeep(3, -Infinity, Infinity, true);
+            return result;
+        }
+
+        function minimaxDeep(depth, alpha, beta, maximizing) {
+            if(depth === 0) return evalBoard();
+
+            let p = maximizing ? WHITE : BLACK;
+            let vm = validMoves(p);
+
+            if(vm.length === 0) {
+                let opp = maximizing ? BLACK : WHITE;
+                let oppVm = validMoves(opp);
+                if(oppVm.length === 0) {
+                    let [b,w] = count();
+                    return (w - b) * 100;
+                }
+                return minimaxDeep(depth-1, alpha, beta, !maximizing);
+            }
+
+            if(maximizing) {
+                let maxEval = -Infinity;
+                for(let [r,c] of vm) {
+                    let b2 = board.map(x=>[...x]);
+                    move(r,c,WHITE);
+                    let ev = minimaxDeep(depth-1, alpha, beta, false);
+                    board = b2;
+                    maxEval = Math.max(maxEval, ev);
+                    alpha = Math.max(alpha, ev);
+                    if(beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for(let [r,c] of vm) {
+                    let b2 = board.map(x=>[...x]);
+                    move(r,c,BLACK);
+                    let ev = minimaxDeep(depth-1, alpha, beta, true);
+                    board = b2;
+                    minEval = Math.min(minEval, ev);
+                    beta = Math.min(beta, ev);
+                    if(beta <= alpha) break;
+                }
+                return minEval;
+            }
         }
 
         function updateProb() {
