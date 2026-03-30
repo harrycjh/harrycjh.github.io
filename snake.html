@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>贪吃蛇 · Taizi</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --grid: #1a1a1a;
+    --snake: #39ff14;
+    --snake-head: #7fff00;
+    --food: #ff3366;
+    --text: #e0e0e0;
+    --muted: #555;
+    --panel: #141414;
+    --border: #2a2a2a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    user-select: none;
+  }
+
+  .title-bar {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .title-bar h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--snake);
+    text-shadow: 0 0 12px rgba(57, 255, 20, 0.4);
+  }
+
+  .score-panel {
+    display: flex;
+    gap: 24px;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+  }
+
+  .score-panel span { color: var(--muted); }
+  .score-panel strong { color: var(--text); margin-left: 4px; }
+
+  .canvas-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    background: var(--panel);
+  }
+
+  canvas {
+    display: block;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .overlay.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .overlay h2 {
+    font-size: 1.4rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--food);
+    text-shadow: 0 0 16px rgba(255, 51, 102, 0.5);
+  }
+
+  .overlay p {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .overlay .final-score {
+    font-size: 2rem;
+    color: var(--snake);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-shadow: 0 0 20px rgba(57, 255, 20, 0.6);
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--snake);
+    color: var(--snake);
+    padding: 10px 28px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+  }
+
+  .btn:hover {
+    background: var(--snake);
+    color: var(--bg);
+  }
+
+  .controls-hint {
+    margin-top: 16px;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-align: center;
+  }
+
+  .controls-hint kbd {
+    display: inline-block;
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    font-family: inherit;
+    font-size: 0.65rem;
+    color: var(--text);
+    background: var(--panel);
+  }
+
+  .high-score {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="title-bar">
+  <h1>贪吃蛇</h1>
+  <div class="score-panel">
+    <div>分数 <strong id="score">0</strong></div>
+    <div>速度 <strong id="speed">1</strong></div>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="game" width="600" height="400"></canvas>
+  <div class="overlay" id="startOverlay">
+    <h2>贪吃蛇</h2>
+    <p>按空格或点击按钮开始</p>
+    <button class="btn" id="startBtn">开始游戏</button>
+  </div>
+  <div class="overlay" id="gameOverOverlay">
+    <h2>游戏结束</h2>
+    <div class="final-score" id="finalScore">0</div>
+    <p>游戏结束</p>
+    <button class="btn" id="restartBtn">再来一局</button>
+  </div>
+</div>
+
+<div class="controls-hint">
+  <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> 移动 &nbsp;|&nbsp; <kbd>空格</kbd> 暂停
+</div>
+<div class="high-score" id="highScoreLine">最高分: <strong id="highScore">0</strong></div>
+
+<script>
+(function() {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const speedEl = document.getElementById('speed');
+  const startOverlay = document.getElementById('startOverlay');
+  const gameOverOverlay = document.getElementById('gameOverOverlay');
+  const finalScoreEl = document.getElementById('finalScore');
+  const highScoreEl = document.getElementById('highScore');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const GRID = 20;
+  const COLS = canvas.width / GRID;
+  const ROWS = canvas.height / GRID;
+
+  let snake, dir, nextDir, food, score, gameOver, running, paused;
+  let gameLoop, lastTime = 0, accumulator = 0;
+  let baseSpeed = 120;
+  let highScore = parseInt(localStorage.getItem('snakeHS') || '0');
+  highScoreEl.textContent = highScore;
+
+  function init() {
+    snake = [{x: 5, y: 10}, {x: 4, y: 10}, {x: 3, y: 10}];
+    dir = {x: 1, y: 0};
+    nextDir = {x: 1, y: 0};
+    score = 0;
+    gameOver = false;
+    paused = false;
+    accumulator = 0;
+    scoreEl.textContent = '0';
+    speedEl.textContent = '1';
+    placeFood();
+    startOverlay.classList.add('active');
+    gameOverOverlay.classList.remove('active');
+  }
+
+  function placeFood() {
+    let pos;
+    do {
+      pos = {
+        x: Math.floor(Math.random() * COLS),
+        y: Math.floor(Math.random() * ROWS)
+      };
+    } while (snake.some(s => s.x === pos.x && s.y === pos.y));
+    food = pos;
+  }
+
+  function drawGrid() {
+    ctx.fillStyle = '#0d0d0d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x <= COLS; x++) {
+      ctx.beginPath();
+      ctx.moveTo(x * GRID, 0);
+      ctx.lineTo(x * GRID, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y <= ROWS; y++) {
+      ctx.beginPath();
+      ctx.moveTo(0, y * GRID);
+      ctx.lineTo(canvas.width, y * GRID);
+      ctx.stroke();
+    }
+  }
+
+  function drawSnake() {
+    snake.forEach((seg, i) => {
+      const isHead = i === 0;
+      const brightness = isHead ? '#7fff00' : `hsl(90, 100%, ${30 + (snake.length - i) / snake.length * 30}%)`;
+      ctx.fillStyle = brightness;
+      const pad = 1;
+      ctx.fillRect(
+        seg.x * GRID + pad,
+        seg.y * GRID + pad,
+        GRID - pad * 2,
+        GRID - pad * 2
+      );
+      if (isHead) {
+        ctx.fillStyle = '#000';
+        const cx = seg.x * GRID + GRID / 2;
+        const cy = seg.y * GRID + GRID / 2;
+        const eyeSize = 2.5;
+        if (dir.x === 1) {
+          ctx.fillRect(cx + 3, cy - 4, eyeSize, eyeSize);
+          ctx.fillRect(cx + 3, cy + 1, eyeSize, eyeSize);
+        } else if (dir.x === -1) {
+          ctx.fillRect(cx - 5, cy - 4, eyeSize, eyeSize);
+          ctx.fillRect(cx - 5, cy + 1, eyeSize, eyeSize);
+        } else if (dir.y === -1) {
+          ctx.fillRect(cx - 4, cy - 5, eyeSize, eyeSize);
+          ctx.fillRect(cx + 1, cy - 5, eyeSize, eyeSize);
+        } else {
+          ctx.fillRect(cx - 4, cy + 3, eyeSize, eyeSize);
+          ctx.fillRect(cx + 1, cy + 3, eyeSize, eyeSize);
+        }
+      }
+    });
+  }
+
+  function drawFood() {
+    const cx = food.x * GRID + GRID / 2;
+    const cy = food.y * GRID + GRID / 2;
+    const r = GRID / 2 - 2;
+    ctx.fillStyle = '#ff3366';
+    ctx.shadowColor = '#ff3366';
+    ctx.shadowBlur = 10;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath();
+    ctx.arc(cx - 2, cy - 2, r * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function update(dt) {
+    if (gameOver || paused) return;
+    accumulator += dt;
+    const speed = Math.max(60, baseSpeed - Math.floor(score / 5) * 5);
+    speedEl.textContent = String(Math.floor((baseSpeed - speed) / 5) + 1);
+    if (accumulator < speed) return;
+    accumulator = 0;
+
+    dir = {...nextDir};
+    const head = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+    if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+      triggerGameOver();
+      return;
+    }
+    if (snake.some(s => s.x === head.x && s.y === head.y)) {
+      triggerGameOver();
+      return;
+    }
+
+    snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      score += 10;
+      scoreEl.textContent = score;
+      placeFood();
+    } else {
+      snake.pop();
+    }
+  }
+
+  function triggerGameOver() {
+    gameOver = true;
+    running = false;
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem('snakeHS', highScore);
+      highScoreEl.textContent = highScore;
+    }
+    finalScoreEl.textContent = score;
+    gameOverOverlay.classList.add('active');
+  }
+
+  function draw() {
+    drawGrid();
+    drawFood();
+    drawSnake();
+  }
+
+  function loop(timestamp) {
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+    update(dt);
+    draw();
+    if (running) {
+      gameLoop = requestAnimationFrame(loop);
+    }
+  }
+
+  function startGame() {
+    startOverlay.classList.remove('active');
+    gameOverOverlay.classList.remove('active');
+    running = true;
+    lastTime = performance.now();
+    accumulator = 0;
+    gameLoop = requestAnimationFrame(loop);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      if (!startOverlay.classList.contains('active') && !gameOverOverlay.classList.contains('active')) {
+        paused = !paused;
+      } else if (startOverlay.classList.contains('active') || gameOverOverlay.classList.contains('active')) {
+        startGame();
+      }
+      return;
+    }
+    switch(e.key) {
+      case 'ArrowUp':    if (dir.y !== 1)  nextDir = {x:0, y:-1}; break;
+      case 'ArrowDown':  if (dir.y !== -1) nextDir = {x:0, y:1};  break;
+      case 'ArrowLeft':  if (dir.x !== 1)  nextDir = {x:-1, y:0}; break;
+      case 'ArrowRight': if (dir.x !== -1) nextDir = {x:1, y:0};  break;
+    }
+  });
+
+  startBtn.addEventListener('click', startGame);
+  restartBtn.addEventListener('click', startGame);
+
+  init();
+  draw();
+})();
+</script>
+</body>
+</html>

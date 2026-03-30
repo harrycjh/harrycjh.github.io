@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小烧饭 - 烹饪游戏</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #2c1810; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+        .game-container { width: 900px; background: #1a0f0a; border-radius: 20px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: linear-gradient(135deg, #d4a056, #8b5a2b); border-radius: 15px; margin-bottom: 15px; }
+        .title { font-size: 28px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .stats { display: flex; gap: 30px; }
+        .stat { text-align: center; color: #fff; }
+        .stat-value { font-size: 24px; font-weight: bold; }
+        .stat-label { font-size: 12px; opacity: 0.9; }
+        .level-bar { height: 8px; background: #333; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .level-fill { height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.3s; }
+        .game-area { display: flex; gap: 15px; }
+        .order-panel { flex: 1; background: #2d2015; border-radius: 15px; padding: 15px; min-height: 200px; }
+        .panel-title { color: #d4a056; font-size: 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .customer-avatar { width: 50px; height: 50px; border-radius: 50%; background: #d4a056; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px; }
+        .order-item { background: #3d2a1a; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .order-dish { color: #f5d89a; font-size: 16px; }
+        .order-timer { color: #ff6b6b; font-size: 14px; }
+        .order-timer.warning { color: #ffd93d; }
+        .order-timer.ok { color: #6bff6b; }
+        .cooking-panel { flex: 2; background: #2d2015; border-radius: 15px; padding: 15px; }
+        .cooking-pot { width: 120px; height: 120px; background: linear-gradient(180deg, #4a4a4a, #2a2a2a); border-radius: 50%; margin: 20px auto; position: relative; border: 4px solid #333; }
+        .cooking-pot::after { content: ""; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 60%; height: 30%; background: #8b4513; border-radius: 50%; opacity: 0.5; }
+        .current-dish { text-align: center; color: #f5d89a; margin-top: 15px; font-size: 18px; min-height: 30px; }
+        .ingredients-panel { flex: 1; background: #2d2015; border-radius: 15px; padding: 15px; }
+        .ingredients-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .ingredient { background: linear-gradient(135deg, #5d4037, #3e2723); border-radius: 10px; padding: 15px 10px; text-align: center; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+        .ingredient:hover { transform: scale(1.05); border-color: #d4a056; }
+        .ingredient.selected { border-color: #ffd700; background: linear-gradient(135deg, #6d4c41, #4e2723); }
+        .ingredient-icon { font-size: 28px; margin-bottom: 5px; }
+        .ingredient-name { color: #d7ccc8; font-size: 12px; }
+        .action-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; transition: all 0.2s; }
+        .btn-cook { background: linear-gradient(135deg, #ff6b35, #f7931e); color: #fff; }
+        .btn-cook:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4); }
+        .btn-reset { background: linear-gradient(135deg, #666, #444); color: #fff; }
+        .btn-reset:hover { transform: scale(1.02); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .recipe-panel { margin-top: 15px; background: #3d2a1a; border-radius: 10px; padding: 10px; }
+        .recipe-title { color: #d4a056; font-size: 14px; margin-bottom: 8px; }
+        .recipe-item { color: #a1887f; font-size: 12px; margin: 4px 0; display: flex; align-items: center; gap: 5px; }
+        .recipe-check { color: #4CAF50; }
+        .recipe-missing { color: #ff6b6b; }
+        .start-screen, .end-screen { text-align: center; padding: 60px 20px; }
+        .start-title { font-size: 48px; color: #d4a056; margin-bottom: 20px; text-shadow: 3px 3px 6px rgba(0,0,0,0.3); }
+        .start-subtitle { color: #a1887f; font-size: 18px; margin-bottom: 40px; }
+        .btn-start { padding: 20px 60px; font-size: 24px; background: linear-gradient(135deg, #d4a056, #8b5a2b); color: #fff; border: none; border-radius: 15px; cursor: pointer; transition: all 0.3s; }
+        .btn-start:hover { transform: scale(1.1); box-shadow: 0 8px 30px rgba(212, 160, 86, 0.4); }
+        .final-score { font-size: 72px; color: #ffd700; margin: 20px 0; text-shadow: 3px 3px 6px rgba(0,0,0,0.3); }
+        .end-message { color: #a1887f; font-size: 20px; margin-bottom: 30px; }
+        .hidden { display: none; }
+        .combo-display { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 48px; color: #ffd700; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); animation: comboAnim 1s ease-out forwards; pointer-events: none; z-index: 100; }
+        @keyframes comboAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -100%) scale(1.5); } }
+        .serving-bell { animation: bellRing 0.5s ease-out; }
+        @keyframes bellRing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } 75% { transform: rotate(-15deg); } }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="title">🍳 小烧饭</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="score">0</div>
+                    <div class="stat-label">得分</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="level">1</div>
+                    <div class="stat-label">关卡</div>
+                    <div class="level-bar"><div class="level-fill" id="levelProgress" style="width: 0%"></div></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="combo">0</div>
+                    <div class="stat-label">连击</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="served">0</div>
+                    <div class="stat-label">已服务</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 开始界面 -->
+        <div class="start-screen" id="startScreen">
+            <div class="start-title">🍳 小烧饭</div>
+            <div class="start-subtitle">根据客人点单，做出美味佳肴！</div>
+            <button class="btn-start" onclick="startGame()">开始营业</button>
+        </div>
+
+        <!-- 游戏主界面 -->
+        <div class="game-area hidden" id="gameArea">
+            <div class="order-panel">
+                <div class="panel-title">📋 当前订单</div>
+                <div id="orderList"></div>
+            </div>
+            <div class="cooking-panel">
+                <div class="panel-title">🍳 烹饪台</div>
+                <div class="cooking-pot" id="cookingPot"></div>
+                <div class="current-dish" id="currentDish">选择食材开始烹饪</div>
+                <div class="recipe-panel">
+                    <div class="recipe-title">📝 当前菜品配方</div>
+                    <div id="recipeCheck"></div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-cook" id="btnCook" onclick="serveDish()" disabled>出餐</button>
+                    <button class="btn btn-reset" onclick="resetPot()">清空</button>
+                </div>
+            </div>
+            <div class="ingredients-panel">
+                <div class="panel-title">🥘 食材</div>
+                <div class="ingredients-grid" id="ingredientsGrid"></div>
+            </div>
+        </div>
+
+        <!-- 结束界面 -->
+        <div class="end-screen hidden" id="endScreen">
+            <div class="start-title">🎉 营业结束</div>
+            <div class="final-score" id="finalScore">0</div>
+            <div class="end-message" id="endMessage">辛苦了，大厨！</div>
+            <button class="btn-start" onclick="startGame()">再来一局</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏配置
+        const INGREDIENTS = [
+            { id: "rice", name: "米饭", icon: "🍚" },
+            { id: "noodle", name: "面条", icon: "🍜" },
+            { id: "egg", name: "鸡蛋", icon: "🥚" },
+            { id: "tomato", name: "番茄", icon: "🍅" },
+            { id: "meat", name: "肉片", icon: "🥩" },
+            { id: "tofu", name: "豆腐", icon: "🧈" },
+            { id: "vegetable", name: "青菜", icon: "🥬" },
+            { id: "shrimp", name: "虾仁", icon: "🦐" },
+            { id: "mushroom", name: "蘑菇", icon: "🍄" }
+        ];
+
+        const DISHES = [
+            { name: "蛋炒饭", ingredients: ["rice", "egg"], baseScore: 10, time: 30 },
+            { name: "番茄炒蛋", ingredients: ["tomato", "egg"], baseScore: 10, time: 25 },
+            { name: "肉丝面", ingredients: ["noodle", "meat"], baseScore: 15, time: 35 },
+            { name: "豆腐汤", ingredients: ["tofu", "vegetable"], baseScore: 12, time: 20 },
+            { name: "虾仁炒饭", ingredients: ["rice", "shrimp", "egg"], baseScore: 20, time: 40 },
+            { name: "蘑菇肉片", ingredients: ["mushroom", "meat"], baseScore: 18, time: 35 },
+            { name: "青菜豆腐汤", ingredients: ["vegetable", "tofu"], baseScore: 12, time: 20 },
+            { name: "番茄肉面", ingredients: ["noodle", "tomato", "meat"], baseScore: 20, time: 40 }
+        ];
+
+        const LEVEL_CONFIG = {
+            1: { customers: 5, timeLimit: 45, dishTime: 30, scoreMult: 1 },
+            2: { customers: 7, timeLimit: 50, dishTime: 28, scoreMult: 1.2 },
+            3: { customers: 8, timeLimit: 55, dishTime: 25, scoreMult: 1.5 },
+            4: { customers: 10, timeLimit: 60, dishTime: 22, scoreMult: 1.8 },
+            5: { customers: 12, timeLimit: 65, dishTime: 20, scoreMult: 2 }
+        };
+
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            level: 1,
+            combo: 0,
+            served: 0,
+            customersToServe: 0,
+            currentOrder: null,
+            potIngredients: [],
+            timer: null,
+            levelTimer: null,
+            gameInterval: null,
+            isPlaying: false
+        };
+
+        // 初始化食材
+        function initIngredients() {
+            const grid = document.getElementById("ingredientsGrid");
+            grid.innerHTML = INGREDIENTS.map(ing => `
+                <div class="ingredient" data-id="${ing.id}" onclick="selectIngredient('${ing.id}')">
+                    <div class="ingredient-icon">${ing.icon}</div>
+                    <div class="ingredient-name">${ing.name}</div>
+                </div>
+            `).join("");
+        }
+
+        // 选择食材
+        function selectIngredient(id) {
+            if (!gameState.isPlaying || !gameState.currentOrder) return;
+            const ing = INGREDIENTS.find(i => i.id === id);
+            gameState.potIngredients.push(id);
+            document.querySelector(`.ingredient[data-id="${id}"]`).classList.add("selected");
+            setTimeout(() => document.querySelector(`.ingredient[data-id="${id}"]`).classList.remove("selected"), 200);
+            updatePotDisplay();
+            checkRecipe();
+        }
+
+        // 更新锅的显示
+        function updatePotDisplay() {
+            const pot = document.getElementById("cookingPot");
+            if (gameState.potIngredients.length === 0) {
+                pot.innerHTML = "";
+            } else {
+                const icons = gameState.potIngredients.map(id => INGREDIENTS.find(i => i.id === id).icon).join("");
+                pot.innerHTML = `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:36px;">${icons}</div>`;
+            }
+        }
+
+        // 检查配方
+        function checkRecipe() {
+            if (!gameState.currentOrder) return;
+            const dish = DISHES.find(d => d.name === gameState.currentOrder.dish);
+            const recipeDiv = document.getElementById("recipeCheck");
+            const required = dish.ingredients;
+            const has = gameState.potIngredients;
+            let allPresent = true;
+            let html = "";
+            required.forEach(ing => {
+                if (has.includes(ing)) {
+                    html += `<div class="recipe-item"><span class="recipe-check">✓</span> ${INGREDIENTS.find(i => i.id === ing).name}</div>`;
+                } else {
+                    html += `<div class="recipe-item"><span class="recipe-missing">✗</span> ${INGREDIENTS.find(i => i.id === ing).name}</div>`;
+                    allPresent = false;
+                }
+            });
+            recipeDiv.innerHTML = html;
+            document.getElementById("btnCook").disabled = !allPresent;
+            document.getElementById("currentDish").textContent = allPresent ? "✓ 配方完成，可以出餐！" : "正在烹饪...";
+        }
+
+        // 出餐
+        function serveDish() {
+            if (!gameState.currentOrder) return;
+            clearInterval(gameState.timer);
+            const dish = DISHES.find(d => d.name === gameState.currentOrder.dish);
+            const levelConf = LEVEL_CONFIG[gameState.level];
+            gameState.combo++;
+            const comboBonus = gameState.combo > 1 ? (gameState.combo - 1) * 5 : 0;
+            const score = Math.floor((dish.baseScore + comboBonus) * levelConf.scoreMult);
+            gameState.score += score;
+            gameState.served++;
+            showCombo(`${gameState.combo}连击! +${score}`);
+            updateUI();
+            gameState.potIngredients = [];
+            updatePotDisplay();
+            document.getElementById("recipeCheck").innerHTML = "";
+            document.getElementById("btnCook").disabled = true;
+            document.getElementById("currentDish").textContent = "选择食材开始烹饪";
+            gameState.customersToServe--;
+            if (gameState.customersToServe <= 0) {
+                nextLevel();
+            } else {
+                newCustomer();
+            }
+        }
+
+        // 清空锅
+        function resetPot() {
+            gameState.potIngredients = [];
+            updatePotDisplay();
+            document.getElementById("recipeCheck").innerHTML = "";
+            document.getElementById("btnCook").disabled = true;
+            document.getElementById("currentDish").textContent = "选择食材开始烹饪";
+        }
+
+        // 新客人
+        function newCustomer() {
+            clearInterval(gameState.timer);
+            const dish = DISHES[Math.floor(Math.random() * DISHES.length)];
+            const levelConf = LEVEL_CONFIG[gameState.level];
+            gameState.currentOrder = {
+                dish: dish.name,
+                timeLeft: dish.time + levelConf.dishTime
+            };
+            const orderList = document.getElementById("orderList");
+            orderList.innerHTML = `
+                <div class="order-item">
+                    <div>
+                        <div class="customer-avatar">👨</div>
+                        <div class="order-dish">${dish.name}</div>
+                    </div>
+                    <div class="order-timer" id="orderTimer">${gameState.currentOrder.timeLeft}秒</div>
+                </div>
+            `;
+            gameState.timer = setInterval(() => {
+                gameState.currentOrder.timeLeft--;
+                const timerEl = document.getElementById("orderTimer");
+                timerEl.textContent = gameState.currentOrder.timeLeft + "秒";
+                timerEl.className = "order-timer " + (gameState.currentOrder.timeLeft < 5 ? "warning" : "ok");
+                if (gameState.currentOrder.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    gameState.combo = 0;
+                    updateUI();
+                    newCustomer();
+                }
+            }, 1000);
+        }
+
+        // 显示连击
+        function showCombo(text) {
+            const div = document.createElement("div");
+            div.className = "combo-display";
+            div.textContent = text;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 1000);
+        }
+
+        // 下一关
+        function nextLevel() {
+            if (gameState.level >= 5) {
+                endGame();
+                return;
+            }
+            gameState.level++;
+            const levelConf = LEVEL_CONFIG[gameState.level];
+            gameState.customersToServe = levelConf.customers;
+            gameState.currentOrder = null;
+            document.getElementById("orderList").innerHTML = "<div style='color:#a1887f;text-align:center;padding:20px;'>准备中...</div>";
+            setTimeout(() => {
+                updateUI();
+                newCustomer();
+            }, 1500);
+        }
+
+        // 更新UI
+        function updateUI() {
+            document.getElementById("score").textContent = gameState.score;
+            document.getElementById("level").textContent = gameState.level;
+            document.getElementById("combo").textContent = gameState.combo;
+            document.getElementById("served").textContent = gameState.served;
+            const levelConf = LEVEL_CONFIG[gameState.level];
+            const progress = ((levelConf.customers - gameState.customersToServe) / levelConf.customers) * 100;
+            document.getElementById("levelProgress").style.width = progress + "%";
+        }
+
+        // 开始游戏
+        function startGame() {
+            gameState = {
+                score: 0,
+                level: 1,
+                combo: 0,
+                served: 0,
+                customersToServe: LEVEL_CONFIG[1].customers,
+                currentOrder: null,
+                potIngredients: [],
+                timer: null,
+                levelTimer: null,
+                gameInterval: null,
+                isPlaying: true
+            };
+            document.getElementById("startScreen").classList.add("hidden");
+            document.getElementById("endScreen").classList.add("hidden");
+            document.getElementById("gameArea").classList.remove("hidden");
+            initIngredients();
+            updateUI();
+            newCustomer();
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+            document.getElementById("gameArea").classList.add("hidden");
+            document.getElementById("endScreen").classList.remove("hidden");
+            document.getElementById("finalScore").textContent = gameState.score;
+            let message = "辛苦了，大厨！";
+            if (gameState.score >= 500) message = "🌟 神厨出世！";
+            else if (gameState.score >= 300) message = "👍 大厨水平！";
+            else if (gameState.score >= 150) message = "💪 不错的表现！";
+            document.getElementById("endMessage").textContent = message;
+            
+            // 保存到文件
+            saveGameFile();
+        }
+
+        // 保存游戏文件
+        function saveGameFile() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const fs = require('fs');
+            // 这个方法在浏览器中不可行，需要用其他方式
+            console.log("游戏已加载，可直接游玩");
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initIngredients();
+        });
+    </script>
+</body>
+</html>
