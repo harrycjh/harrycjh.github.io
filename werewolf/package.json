@@ -1,0 +1,12 @@
+{
+  "name": "werewolf-online",
+  "version": "1.0.0",
+  "description": "狼人杀联机游戏服务器",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.0"
+  }
+}
