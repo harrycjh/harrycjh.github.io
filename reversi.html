@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.28 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.29 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.28 - Reversi</title>
+<title>黑白棋 v1.29 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -299,6 +299,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
     </div>
     <div class="controls">
       <button onclick="resetGame()">重新开始</button>
+      <button onclick="undoLastMove()">悔棋</button>
       <button onclick="toggleHint()">提示: <span id="hintBtn">开</span></button>
     </div>
   </div>
@@ -354,6 +355,8 @@ let replayMode = false;
 let replayIndex = -1;
 let passNoticeActive = false;
 let moveFeedbackTimer = null;
+let aiMoveTimer = null;
+let undoStack = [];
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -385,10 +388,57 @@ function initBoard() {
   gameHistory = [];
   replayMode = false;
   replayIndex = -1;
+  undoStack = [];
   document.body.classList.remove('replay-mode');
   probDirty = true;
   render();
   updateStatus();
+}
+
+function deepCloneHistory(src) {
+  return src.map(item => ({
+    ...item,
+    board: cloneBoardState(item.board)
+  }));
+}
+
+function captureGameState() {
+  return {
+    board: cloneBoardState(board),
+    currentPlayer,
+    gameOver,
+    lastMoveR,
+    lastMoveC,
+    probHistory: probHistory.map(p=>({...p})),
+    lastProbSnapshot: {...lastProbSnapshot},
+    displayProbSnapshot: {...displayProbSnapshot},
+    probDirty,
+    gameHistory: deepCloneHistory(gameHistory),
+    replayMode,
+    replayIndex,
+    moveScores: moveScores.map(s=>({...s}))
+  };
+}
+
+function restoreGameState(state) {
+  board = cloneBoardState(state.board);
+  currentPlayer = state.currentPlayer;
+  gameOver = state.gameOver;
+  lastMoveR = state.lastMoveR;
+  lastMoveC = state.lastMoveC;
+  probHistory = state.probHistory.map(p=>({...p}));
+  lastProbSnapshot = {...state.lastProbSnapshot};
+  displayProbSnapshot = {...state.displayProbSnapshot};
+  probDirty = state.probDirty;
+  gameHistory = deepCloneHistory(state.gameHistory);
+  replayMode = state.replayMode;
+  replayIndex = state.replayIndex;
+  moveScores = state.moveScores.map(s=>({...s}));
+  document.body.classList.toggle('replay-mode', replayMode);
+  document.getElementById('winOverlay').classList.remove('show');
+  render();
+  updateStatus();
+  drawProbChart();
 }
 
 function cloneBoardState(srcBoard) {
@@ -1430,6 +1480,7 @@ function handleClick(r,c) {
 async function doMove(r,c,player,feedback=null) {
   const flips = getFlips(r,c,player);
   if(flips.length===0) return;
+  undoStack.push(captureGameState());
   move(r,c,player);
   lastMoveR=r; lastMoveC=c;
   probDirty = true;
@@ -1468,13 +1519,18 @@ async function doMove(r,c,player,feedback=null) {
   }
   
   if(gameMode==='ai' && currentPlayer===WHITE && !gameOver) {
-    setTimeout(doAIMove,100);
+    if(aiMoveTimer) clearTimeout(aiMoveTimer);
+    aiMoveTimer = setTimeout(() => {
+      aiMoveTimer = null;
+      doAIMove();
+    }, 100);
   } else if(gameOver) {
     showWinOverlay();
   }
 }
 
 async function doAIMove() {
+  aiMoveTimer = null;
   thinkStart=Date.now();
   isAiThinking = true;
   document.body.classList.add('ai-thinking');
@@ -1532,6 +1588,13 @@ function showWinOverlay() {
 }
 
 function resetGame() {
+  if(aiMoveTimer) {
+    clearTimeout(aiMoveTimer);
+    aiMoveTimer = null;
+  }
+  searchAbort = true;
+  isAiThinking = false;
+  document.body.classList.remove('ai-thinking');
   document.getElementById('winOverlay').classList.remove('show');
   const passEl = document.getElementById('passNotice');
   if(passEl) passEl.className = 'pass-notice';
@@ -1546,6 +1609,35 @@ function resetGame() {
   replayIndex = -1;
   document.body.classList.remove('replay-mode');
   initBoard();
+}
+
+function undoLastMove() {
+  if(replayMode) return;
+  if(passNoticeActive || isAiThinking) {
+    showMoveFeedback('请稍后再悔棋', 'bad');
+    return;
+  }
+  if(undoStack.length===0) {
+    showMoveFeedback('已经不能再悔了', 'bad');
+    return;
+  }
+
+  if(aiMoveTimer) {
+    clearTimeout(aiMoveTimer);
+    aiMoveTimer = null;
+  }
+
+  if(gameMode==='ai' && currentPlayer===BLACK && undoStack.length>=2) {
+    const state = undoStack[undoStack.length-2];
+    undoStack.splice(undoStack.length-2, 2);
+    restoreGameState(state);
+    showMoveFeedback('已悔棋（回退一整轮）', 'good');
+    return;
+  }
+
+  const state = undoStack.pop();
+  restoreGameState(state);
+  showMoveFeedback('已悔棋', 'good');
 }
 
 function setMode(m) {
