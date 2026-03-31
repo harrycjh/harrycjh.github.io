@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.3 | 最大深度提升至20 -->
+<!-- 黑白棋 Reversi v1.4 | 每层计算后显示各落子评分热力图 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.3 - Reversi</title>
+<title>黑白棋 v1.4 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -107,6 +107,16 @@ h1 {
   transition: opacity 0.2s;
 }
 .cell.show-hint .hint { opacity: 1; }
+.move-score {
+  position: absolute;
+  font-size: 10px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  pointer-events: none;
+  z-index: 10;
+}
+.move-score.best { color: #ffd700; }
 .piece:last-child:not(.hint) { animation: placepiece 0.25s ease-out; }
 @keyframes placepiece {
   0% { transform: scale(0); }
@@ -258,6 +268,8 @@ let probHistory = [{black:50, white:50}];
 let thinkStart = 0;
 let bestMoveResult = null;
 let lastMoveR = -1, lastMoveC = -1;
+let moveScores = []; // 每步评分 [{r,c,score},...]
+let showMoveScores = true; // 显示每步评分
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -648,6 +660,7 @@ async function findBestMove(onProgress) {
     
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
+    const depthScores = [];
     
     for(let [r,c] of sorted) {
       const flips = getFlips(r,c,player);
@@ -656,6 +669,7 @@ async function findBestMove(onProgress) {
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
       
+      depthScores.push({r,c,score:ev});
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
     
@@ -663,10 +677,17 @@ async function findBestMove(onProgress) {
     if(bestMove !== null) { prevBestMove = bestMove; }
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
     
+    // 更新每步评分显示
+    moveScores = depthScores.map(s=>({
+      ...s,
+      isBest: s.r===currentBest[0] && s.c===currentBest[1]
+    }));
+    
     const elapsed = Date.now() - startTime;
     
     // 报告进度并让UI刷新
     if(onProgress) onProgress(d, elapsed);
+    render(); // 每层刷新棋盘显示评分
     await new Promise(r => setTimeout(r, 0));
     
     // 深度完成后检查：满10秒则用上一深度结果
@@ -690,6 +711,7 @@ async function findEndgameMoveAsync(onProgress) {
   
   for(let d=4; d<=maxDepth; d++) {
     let currentBest=null, currentScore=-Infinity;
+    const depthScores = [];
     
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
@@ -698,6 +720,7 @@ async function findEndgameMoveAsync(onProgress) {
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
       
+      depthScores.push({r,c,score:ev});
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
     
@@ -705,9 +728,16 @@ async function findEndgameMoveAsync(onProgress) {
     if(bestMove !== null) { prevBestMove = bestMove; }
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
     
+    // 更新每步评分显示
+    moveScores = depthScores.map(s=>({
+      ...s,
+      isBest: s.r===currentBest[0] && s.c===currentBest[1]
+    }));
+    
     const elapsed = Date.now() - startTime;
     
     if(onProgress) onProgress(d, elapsed);
+    render();
     await new Promise(r => setTimeout(r, 0));
     
     // 深度完成后检查：满10秒则用上一深度结果
@@ -849,6 +879,17 @@ function render() {
       // 上一步高亮
       if(r===lastMoveR && c===lastMoveC) {
         cell.style.boxShadow='inset 0 0 0 3px rgba(255,215,0,0.7)';
+      }
+      // 显示每步评分
+      if(showMoveScores && moveScores.length>0 && board[r][c]===EMPTY && isValid(r,c,currentPlayer)) {
+        const scoreData = moveScores.find(s=>s.r===r&&s.c===c);
+        if(scoreData) {
+          const scoreDiv = document.createElement('div');
+          scoreDiv.className='move-score' + (scoreData.isBest?' best':'');
+          scoreDiv.textContent=(scoreData.score>=0?'+':'')+scoreData.score;
+          scoreDiv.style.opacity = Math.min(1, Math.abs(scoreData.score)/50);
+          cell.appendChild(scoreDiv);
+        }
       }
       cell.onclick=()=>handleClick(r,c);
       el.appendChild(cell);
@@ -994,6 +1035,7 @@ async function doAIMove() {
   clearInterval(timer);
   const elapsed = Date.now()-thinkStart;
   document.getElementById('modeInfo').textContent=`⏱ ${(elapsed/1000).toFixed(1)}秒`;
+  moveScores = []; // 清空评分显示
   
   if(m) {
     doMove(m[0],m[1],WHITE);
