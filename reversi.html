@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.6 | 次外圈惩罚：边缘-10，中间-8 -->
+<!-- 黑白棋 Reversi v1.7 | 新增位置权重热力图开关 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.6 - Reversi</title>
+<title>黑白棋 v1.7 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -117,6 +117,20 @@ h1 {
   z-index: 10;
 }
 .move-score.best { color: #ffd700; }
+.weight-overlay {
+  position: absolute;
+  font-size: 9px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.9);
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.7;
+}
+.weight-overlay.positive { color: #7fff7f; }
+.weight-overlay.negative { color: #ff6666; }
+.weight-overlay.corner { color: #ffd700; font-size: 11px; opacity: 1; }
+.weight-overlay.danger { color: #ff4444; font-size: 11px; opacity: 1; }
 .piece:last-child:not(.hint) { animation: placepiece 0.25s ease-out; }
 @keyframes placepiece {
   0% { transform: scale(0); }
@@ -227,6 +241,7 @@ h1 {
     </div>
     <div class="depth-control">
       <label>AI深度：<input type="number" id="depthInput" value="20" min="4" max="20" onchange="setDepth(this.value)"></label>
+      <button id="btnWeight" onclick="toggleWeightOverlay()">权重: 关</button>
     </div>
     <div class="controls">
       <button onclick="resetGame()">重新开始</button>
@@ -270,6 +285,7 @@ let bestMoveResult = null;
 let lastMoveR = -1, lastMoveC = -1;
 let moveScores = []; // 每步评分 [{r,c,score},...]
 let showMoveScores = true; // 显示每步评分
+let showWeightOverlay = false; // 显示位置权重热力图
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -456,6 +472,27 @@ const X_SQUARES = [[1,1],[1,6],[6,1],[6,6]];
 const SECOND_EDGE = [[1,2],[1,5],[2,1],[5,1],[2,6],[5,6],[6,2],[6,5]];
 // 次外圈中间位置（临角落少）
 const SECOND_MID = [[1,3],[1,4],[3,1],[4,1],[6,3],[6,4],[3,6],[4,6]];
+
+// 位置权重热力图值
+const POSITION_WEIGHT = {
+  // 角落 = 100
+  '0,0':100,'0,7':100,'7,0':100,'7,7':100,
+  // C格 = -20
+  '0,1':-20,'1,0':-20,'0,6':-20,'6,0':-20,'7,1':-20,'1,7':-20,'6,7':-20,'7,6':-20,
+  // X格 = -45
+  '1,1':-45,'1,6':-45,'6,1':-45,'6,6':-45,
+  // 次外圈边缘 = -10
+  '1,2':-10,'1,5':-10,'2,1':-10,'5,1':-10,'2,6':-10,'5,6':-10,'6,2':-10,'6,5':-10,
+  // 次外圈中间 = -8
+  '1,3':-8,'1,4':-8,'3,1':-8,'4,1':-8,'6,3':-8,'6,4':-8,'3,6':-8,'4,6':-8,
+  // 次外圈临角 = -4 (原-4)
+  '2,2':-4,'2,5':-4,'5,2':-4,'5,5':-4,
+  // 次外圈临X格 = -3 (原-3)
+  '2,3':-3,'2,4':-3,'3,2':-3,'4,2':-3,'5,3':-3,'5,4':-3,'3,5':-3,'4,5':-3,
+  // 第三圈外围
+  '2,0':8,'0,2':8,'2,7':8,'7,2':8,'5,0':8,'0,5':8,'5,7':8,'7,5':8,
+  '3,0':6,'0,3':6,'4,0':6,'0,4':6,'7,3':6,'3,7':6,'7,4':6,'4,7':6,
+};
 
 function evalBoard(player) {
   // 返回对player来说的评估分（正值有利）
@@ -916,6 +953,19 @@ function render() {
           cell.appendChild(scoreDiv);
         }
       }
+      // 显示位置权重热力图
+      if(showWeightOverlay && board[r][c]===EMPTY) {
+        const w = POSITION_WEIGHT[`${r},${c}`] || 0;
+        if(w !== 0) {
+          const wDiv = document.createElement('div');
+          wDiv.className='weight-overlay';
+          if(w===100) { wDiv.className+=' corner'; wDiv.textContent='角'; }
+          else if(w<=-30) { wDiv.className+=' danger'; wDiv.textContent='危'; }
+          else if(w>0) { wDiv.className+=' positive'; wDiv.textContent='+'+w; }
+          else { wDiv.className+=' negative'; wDiv.textContent=w; }
+          cell.appendChild(wDiv);
+        }
+      }
       cell.onclick=()=>handleClick(r,c);
       el.appendChild(cell);
     }
@@ -1106,6 +1156,13 @@ function setDepth(d) {
 function toggleHint() {
   hintOn=!hintOn;
   document.getElementById('hintBtn').textContent=hintOn?'开':'关';
+  render();
+}
+
+function toggleWeightOverlay() {
+  showWeightOverlay=!showWeightOverlay;
+  document.getElementById('btnWeight').textContent='权重: '+(showWeightOverlay?'开':'关');
+  document.getElementById('btnWeight').style.background=showWeightOverlay?'#4ade80':'rgba(255,255,255,0.2)';
   render();
 }
 
