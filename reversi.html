@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.40 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.41 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.40 - Reversi</title>
+<title>黑白棋 v1.41 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1265,11 +1265,13 @@ function estimateWhiteMonteCarloProb(empty) {
 function calcProb() {
   if (isAiThinking && !probDirty) return {b:lastProbSnapshot.black, w:lastProbSnapshot.white};
   const empty = emptyCount();
+  const moveCount = 60 - empty;
+  const useLateProbModel = moveCount >= 20;
 
   const whiteScore = estimateWhiteScoreForProb(empty);
   const searchProb = whiteScoreToProb(whiteScore, empty);
   const mcProb = estimateWhiteMonteCarloProb(empty);
-  const mcWeight = empty > 44 ? 0.60 : (empty > 28 ? 0.48 : (empty > 16 ? 0.34 : 0.20));
+  const mcWeight = useLateProbModel ? 0.34 : 0.60;
   const wProb = searchProb * (1 - mcWeight) + mcProb * mcWeight;
 
   const white = Math.max(0, Math.min(100, Math.round(wProb)));
@@ -1278,8 +1280,10 @@ function calcProb() {
 
 function stabilizeProb(raw) {
   const empty = emptyCount();
-  const alpha = empty > 44 ? 0.24 : (empty > 24 ? 0.34 : 0.48);
-  const maxStep = empty > 44 ? 4 : (empty > 24 ? 6 : 9);
+  const moveCount = 60 - empty;
+  const useLateProbModel = moveCount >= 20;
+  const alpha = useLateProbModel ? 0.48 : 0.24;
+  const maxStep = useLateProbModel ? 9 : 4;
   const targetW = raw.w;
   const prevW = displayProbSnapshot.white;
   const blended = prevW + (targetW - prevW) * alpha;
