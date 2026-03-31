@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.17 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.18 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.17 - Reversi</title>
+<title>黑白棋 v1.18 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -133,6 +133,7 @@ h1 {
 .weight-overlay.danger { color: #ff4444; font-size: 11px; opacity: 1; }
 .piece:last-child:not(.hint) { animation: placepiece 0.25s ease-out; }
 body.ai-thinking .piece { animation: none !important; }
+body.replay-mode #probCanvas { cursor: ew-resize; }
 @keyframes placepiece {
   0% { transform: scale(0); }
   70% { transform: scale(1.1); }
@@ -255,6 +256,7 @@ body.ai-thinking .piece { animation: none !important; }
   <div class="win-box">
     <h2 id="winText">游戏结束</h2>
     <div class="final-score" id="finalScore">黑:白 = 2:2</div>
+    <button onclick="startReplay()">复盘</button>
     <button onclick="resetGame()">再来一局</button>
   </div>
 </div>
@@ -293,6 +295,9 @@ let searchAbort = false;
 let isAiThinking = false;
 let lastProbSnapshot = {black:50, white:50};
 let probDirty = true;
+let gameHistory = [];
+let replayMode = false;
+let replayIndex = -1;
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -319,10 +324,52 @@ function initBoard() {
   currentPlayer = BLACK;
   gameOver = false;
   lastMoveR = -1; lastMoveC = -1;
-  probHistory = [{black:50, white:50}];
+  probHistory = [];
+  gameHistory = [];
+  replayMode = false;
+  replayIndex = -1;
+  document.body.classList.remove('replay-mode');
   probDirty = true;
   render();
   updateStatus();
+}
+
+function cloneBoardState(srcBoard) {
+  return srcBoard.map(row => [...row]);
+}
+
+function countBoard(srcBoard) {
+  let b = 0, w = 0;
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++) {
+    if(srcBoard[r][c]===BLACK) b++;
+    else if(srcBoard[r][c]===WHITE) w++;
+  }
+  return [b,w];
+}
+
+function recordHistoryPoint(probBlack, probWhite) {
+  gameHistory.push({
+    board: cloneBoardState(board),
+    currentPlayer,
+    gameOver,
+    lastMoveR,
+    lastMoveC,
+    blackProb: probBlack,
+    whiteProb: probWhite
+  });
+}
+
+function ensureFinalHistoryPoint() {
+  if(gameHistory.length===0) {
+    recordHistoryPoint(lastProbSnapshot.black, lastProbSnapshot.white);
+    return;
+  }
+  const last = gameHistory[gameHistory.length-1];
+  const boardKey = computeKey(board);
+  const lastKey = computeKey(last.board);
+  if(boardKey !== lastKey || !last.gameOver) {
+    recordHistoryPoint(lastProbSnapshot.black, lastProbSnapshot.white);
+  }
 }
 
 // 统计棋子
@@ -994,29 +1041,33 @@ function calcProb() {
 // UI 渲染
 // ============================================================
 function render() {
+  const replayState = (replayMode && replayIndex>=0 && gameHistory[replayIndex]) ? gameHistory[replayIndex] : null;
+  const displayBoard = replayState ? replayState.board : board;
+  const displayLastMoveR = replayState ? replayState.lastMoveR : lastMoveR;
+  const displayLastMoveC = replayState ? replayState.lastMoveC : lastMoveC;
   const el = document.getElementById('board');
   el.innerHTML='';
   for(let r=0;r<SIZE;r++) {
     for(let c=0;c<SIZE;c++) {
       const cell = document.createElement('div');
       cell.className='cell';
-      if(board[r][c]===BLACK) {
+      if(displayBoard[r][c]===BLACK) {
         cell.innerHTML='<div class="piece black"></div>';
-      } else if(board[r][c]===WHITE) {
+      } else if(displayBoard[r][c]===WHITE) {
         cell.innerHTML='<div class="piece white"></div>';
       } else {
         cell.innerHTML='<div class="hint"></div>';
       }
       // 落子提示
-      if(board[r][c]===EMPTY && hintOn && currentPlayer===BLACK && !gameOver && isValid(r,c,currentPlayer)) {
+      if(!replayMode && board[r][c]===EMPTY && hintOn && currentPlayer===BLACK && !gameOver && isValid(r,c,currentPlayer)) {
         cell.classList.add('show-hint');
       }
       // 上一步高亮
-      if(r===lastMoveR && c===lastMoveC) {
+      if(r===displayLastMoveR && c===displayLastMoveC) {
         cell.style.boxShadow='inset 0 0 0 3px rgba(255,215,0,0.7)';
       }
       // 显示每步评分
-      if(showMoveScores && moveScores.length>0 && board[r][c]===EMPTY && isValid(r,c,currentPlayer)) {
+      if(!replayMode && showMoveScores && moveScores.length>0 && board[r][c]===EMPTY && isValid(r,c,currentPlayer)) {
         const scoreData = moveScores.find(s=>s.r===r&&s.c===c);
         if(scoreData) {
           const scoreDiv = document.createElement('div');
@@ -1027,7 +1078,7 @@ function render() {
         }
       }
       // 显示位置权重热力图
-      if(showWeightOverlay && board[r][c]===EMPTY) {
+      if(showWeightOverlay && displayBoard[r][c]===EMPTY) {
         const w = POSITION_WEIGHT[`${r},${c}`] || 0;
         if(w !== 0) {
           const wDiv = document.createElement('div');
@@ -1039,12 +1090,12 @@ function render() {
           cell.appendChild(wDiv);
         }
       }
-      cell.onclick=()=>handleClick(r,c);
+      if(!replayMode) cell.onclick=()=>handleClick(r,c);
       el.appendChild(cell);
     }
   }
   
-  const [b,w]=count();
+  const [b,w]=countBoard(displayBoard);
   document.getElementById('bc').textContent=b;
   document.getElementById('wc').textContent=w;
 }
@@ -1053,6 +1104,15 @@ function updateStatus() {
   const statusEl = document.getElementById('status').querySelector('h3');
   const turnEl = document.getElementById('turnText');
   const modeEl = document.getElementById('modeInfo');
+
+  if(replayMode) {
+    const idx = Math.max(0, replayIndex);
+    const total = Math.max(0, gameHistory.length-1);
+    statusEl.textContent = '📼 复盘模式';
+    turnEl.textContent = `进度：${idx}/${total}`;
+    modeEl.textContent = '在胜率曲线上移动鼠标查看当时棋局';
+    return;
+  }
   
   if(gameOver) {
     const [b,w]=count();
@@ -1087,6 +1147,7 @@ function updateProb() {
   probDirty = false;
   
   probHistory.push({black:b, white:w});
+  recordHistoryPoint(b, w);
   drawProbChart();
 }
 
@@ -1117,9 +1178,54 @@ function drawProbChart() {
     i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   }
   ctx.stroke();
+
+  if(replayMode && replayIndex>=0) {
+    const x = replayIndex * step;
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+}
+
+function applyReplayIndex(idx) {
+  if(gameHistory.length===0) return;
+  replayIndex = Math.max(0, Math.min(gameHistory.length-1, idx));
+  const p = probHistory[replayIndex] || lastProbSnapshot;
+  document.getElementById('probBlack').textContent=p.black+'%';
+  document.getElementById('probWhite').textContent=p.white+'%';
+  render();
+  updateStatus();
+  drawProbChart();
+}
+
+function startReplay() {
+  if(gameHistory.length===0) return;
+  document.getElementById('winOverlay').classList.remove('show');
+  replayMode = true;
+  document.body.classList.add('replay-mode');
+  applyReplayIndex(gameHistory.length-1);
+}
+
+function setupReplayScrubber() {
+  const canvas = document.getElementById('probCanvas');
+  canvas.addEventListener('mousemove', (e) => {
+    if(!replayMode || gameHistory.length===0) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.max(0, Math.min(canvas.width, (e.clientX - rect.left) * (canvas.width / rect.width)));
+    const idx = Math.round((x / canvas.width) * (gameHistory.length-1));
+    applyReplayIndex(idx);
+  });
+  canvas.addEventListener('mouseleave', () => {
+    if(!replayMode || gameHistory.length===0) return;
+    applyReplayIndex(gameHistory.length-1);
+  });
 }
 
 function handleClick(r,c) {
+  if(replayMode) return;
   if(gameOver) return;
   if(gameMode==='ai' && currentPlayer===BLACK) {
     if(!isValid(r,c,BLACK)) return;
@@ -1213,6 +1319,7 @@ async function doAIMove() {
 }
 
 function showWinOverlay() {
+  ensureFinalHistoryPoint();
   const [b,w]=count();
   const el=document.getElementById('winOverlay');
   el.classList.add('show');
@@ -1222,6 +1329,9 @@ function showWinOverlay() {
 
 function resetGame() {
   document.getElementById('winOverlay').classList.remove('show');
+  replayMode = false;
+  replayIndex = -1;
+  document.body.classList.remove('replay-mode');
   initBoard();
 }
 
@@ -1252,6 +1362,7 @@ function toggleWeightOverlay() {
 }
 
 // 初始化
+setupReplayScrubber();
 initBoard();
 </script>
 </body>
