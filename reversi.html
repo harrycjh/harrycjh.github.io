@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.16 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.17 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.16 - Reversi</title>
+<title>黑白棋 v1.17 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -132,6 +132,7 @@ h1 {
 .weight-overlay.corner { color: #ffd700; font-size: 11px; opacity: 1; }
 .weight-overlay.danger { color: #ff4444; font-size: 11px; opacity: 1; }
 .piece:last-child:not(.hint) { animation: placepiece 0.25s ease-out; }
+body.ai-thinking .piece { animation: none !important; }
 @keyframes placepiece {
   0% { transform: scale(0); }
   70% { transform: scale(1.1); }
@@ -1166,6 +1167,7 @@ function doMove(r,c,player) {
 async function doAIMove() {
   thinkStart=Date.now();
   isAiThinking = true;
+  document.body.classList.add('ai-thinking');
   let currentDepth = 0;
   const formatElapsedSeconds = (elapsedMs) => (elapsedMs / 1000).toFixed(1);
   const updateModeInfo = (depth, elapsedMs) => {
@@ -1190,6 +1192,7 @@ async function doAIMove() {
   const m = await findBestMove(onProgress);
   clearInterval(timer);
   isAiThinking = false;
+  document.body.classList.remove('ai-thinking');
   const elapsed = Date.now()-thinkStart;
   document.getElementById('modeInfo').textContent=`⏱ ${formatElapsedSeconds(elapsed)}秒`;
   moveScores = []; // 清空评分显示
