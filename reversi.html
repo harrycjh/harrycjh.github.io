@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.34 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.35 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.34 - Reversi</title>
+<title>黑白棋 v1.35 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1105,16 +1105,12 @@ function moveScore(m) {
 let endgameNodes = 0;
 
 function estimateWhiteScoreForProb(empty) {
-  // 开局阶段优先用静态局面评估，减少“轮到谁走”带来的胜率抖动偏差
-  if(empty > 46) {
-    return evalBoard(WHITE);
-  }
-
   const prevDeadline = searchDeadline;
   const prevAbort = searchAbort;
   const prevNodes = searchNodes;
-  const budgetMs = empty <= 14 ? 180 : (empty <= 28 ? 120 : 80);
-  const depth = empty <= 14 ? Math.min(empty, 10) : (empty <= 28 ? 5 : 4);
+  // 统一采用“40步后风格”的搜索估值策略
+  const budgetMs = 140;
+  const depth = empty <= 12 ? Math.min(empty, 8) : 5;
   const player = currentPlayer;
 
   searchDeadline = Date.now() + budgetMs;
@@ -1133,11 +1129,8 @@ function estimateWhiteScoreForProb(empty) {
 }
 
 function getProbCalibration(empty) {
-  // 小样本标定参数（按阶段）
-  // scale 越小曲线越陡；bias > 0 表示对白方有轻微先验偏置。
-  if (empty > 44) return {scale: 280, bias: 0};
-  if (empty > 28) return {scale: 190, bias: 0};
-  if (empty > 16) return {scale: 130, bias: 0};
+  // 统一使用“40步后风格”的概率映射参数
+  if (empty > 0) return {scale: 130, bias: 0};
   return {scale: 95, bias: 0};
 }
 
