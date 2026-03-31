@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.38 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.39 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.38 - Reversi</title>
+<title>黑白棋 v1.39 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1278,7 +1278,8 @@ function render() {
         cell.innerHTML='<div class="hint"></div>';
       }
       // 落子提示
-      if(!replayMode && board[r][c]===EMPTY && hintOn && currentPlayer===BLACK && !gameOver && isValid(r,c,currentPlayer)) {
+      const showHintThisTurn = gameMode==='pvp' ? true : currentPlayer===BLACK;
+      if(!replayMode && board[r][c]===EMPTY && hintOn && showHintThisTurn && !gameOver && isValid(r,c,currentPlayer)) {
         cell.classList.add('show-hint');
       }
       // 上一步高亮
