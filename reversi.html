@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.30 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.31 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.30 - Reversi</title>
+<title>黑白棋 v1.31 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -255,7 +255,9 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
 <div class="mode-select">
   <button id="btnPvp" onclick="setMode('pvp')">双人对战</button>
   <button id="btnAi" onclick="setMode('ai')" class="active">人机对战</button>
+  <button id="btnImportReplay" onclick="triggerReplayImport()">导入录像</button>
 </div>
+<input type="file" id="replayFileInput" accept=".json,application/json" style="display:none" onchange="handleReplayImport(event)">
 
 <div class="info-bar">
   <span><span class="label">黑方：</span><span class="value">您</span></span>
@@ -300,6 +302,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
     <div class="controls">
       <button onclick="resetGame()">重新开始</button>
       <button onclick="undoLastMove()">悔棋</button>
+      <button onclick="exportReplay()">保存录像</button>
       <button onclick="toggleHint()">提示: <span id="hintBtn">开</span></button>
     </div>
   </div>
@@ -1382,6 +1385,131 @@ function setupReplayKeyboard() {
       applyReplayIndex(replayIndex+1);
     }
   });
+}
+
+function buildReplayPayload() {
+  const history = gameHistory.length>0
+    ? deepCloneHistory(gameHistory)
+    : [{
+      board: cloneBoardState(board),
+      currentPlayer,
+      gameOver,
+      lastMoveR,
+      lastMoveC,
+      blackProb: lastProbSnapshot.black,
+      whiteProb: lastProbSnapshot.white
+    }];
+  const probs = probHistory.length>0
+    ? probHistory.map(p=>({...p}))
+    : [{black:lastProbSnapshot.black, white:lastProbSnapshot.white}];
+  return {
+    type: 'reversi-replay',
+    version: '1.0',
+    createdAt: new Date().toISOString(),
+    gameHistory: history,
+    probHistory: probs
+  };
+}
+
+function exportReplay() {
+  const payload = buildReplayPayload();
+  const text = JSON.stringify(payload, null, 2);
+  const blob = new Blob([text], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().replace(/[:.]/g,'-');
+  a.href = url;
+  a.download = `reversi-replay-${ts}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showMoveFeedback('录像已保存', 'good');
+}
+
+function triggerReplayImport() {
+  const input = document.getElementById('replayFileInput');
+  if(!input) return;
+  input.value = '';
+  input.click();
+}
+
+function isValidReplayPayload(data) {
+  if(!data || data.type!=='reversi-replay') return false;
+  if(!Array.isArray(data.gameHistory) || data.gameHistory.length===0) return false;
+  if(!Array.isArray(data.probHistory) || data.probHistory.length===0) return false;
+  const first = data.gameHistory[0];
+  if(!first || !Array.isArray(first.board) || first.board.length!==SIZE) return false;
+  if(!Array.isArray(first.board[0]) || first.board[0].length!==SIZE) return false;
+  return true;
+}
+
+function normalizeImportedHistory(history) {
+  return history.map((item)=>({
+    board: cloneBoardState(item.board),
+    currentPlayer: item.currentPlayer===WHITE ? WHITE : BLACK,
+    gameOver: !!item.gameOver,
+    lastMoveR: Number.isInteger(item.lastMoveR) ? item.lastMoveR : -1,
+    lastMoveC: Number.isInteger(item.lastMoveC) ? item.lastMoveC : -1,
+    blackProb: typeof item.blackProb==='number' ? item.blackProb : 50,
+    whiteProb: typeof item.whiteProb==='number' ? item.whiteProb : 50
+  }));
+}
+
+function openImportedReplay(data) {
+  if(aiMoveTimer) {
+    clearTimeout(aiMoveTimer);
+    aiMoveTimer = null;
+  }
+  searchAbort = true;
+  isAiThinking = false;
+  document.body.classList.remove('ai-thinking');
+  document.getElementById('winOverlay').classList.remove('show');
+
+  const importedHistory = normalizeImportedHistory(data.gameHistory);
+  const importedProbs = data.probHistory.map((p)=>({
+    black: typeof p.black==='number' ? p.black : 50,
+    white: typeof p.white==='number' ? p.white : 50
+  }));
+  const usableLen = Math.min(importedHistory.length, importedProbs.length);
+  gameHistory = importedHistory.slice(0, usableLen);
+  probHistory = importedProbs.slice(0, usableLen);
+
+  const last = gameHistory[usableLen-1];
+  board = cloneBoardState(last.board);
+  currentPlayer = last.currentPlayer;
+  gameOver = !!last.gameOver;
+  lastMoveR = last.lastMoveR;
+  lastMoveC = last.lastMoveC;
+  replayMode = true;
+  replayIndex = -1;
+  undoStack = [];
+  probDirty = false;
+  const lastProb = probHistory[usableLen-1] || {black:50, white:50};
+  lastProbSnapshot = {...lastProb};
+  displayProbSnapshot = {...lastProb};
+  document.body.classList.add('replay-mode');
+  applyReplayIndex(usableLen-1);
+  showMoveFeedback('录像导入成功', 'good');
+}
+
+function handleReplayImport(event) {
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(String(reader.result || '{}'));
+      if(!isValidReplayPayload(data)) {
+        showMoveFeedback('录像格式不正确', 'bad');
+        return;
+      }
+      openImportedReplay(data);
+    } catch (e) {
+      showMoveFeedback('读取录像失败', 'bad');
+    }
+  };
+  reader.readAsText(file);
 }
 
 function showPassNotice(text, sideClass) {
