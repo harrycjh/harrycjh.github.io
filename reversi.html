@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.14 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.15 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.14 - Reversi</title>
+<title>黑白棋 v1.15 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -959,9 +959,22 @@ function estimateWhiteScoreForProb(empty) {
   return whiteScore;
 }
 
+function getProbCalibration(empty) {
+  // 小样本标定参数（按阶段）
+  // scale 越小曲线越陡；bias > 0 表示对白方有轻微先验偏置；
+  // confidence 用于向 50% 收缩，避免早期过度自信。
+  if (empty > 44) return {scale: 300, bias: 0, confidence: 0.70};
+  if (empty > 28) return {scale: 210, bias: 2, confidence: 0.82};
+  if (empty > 16) return {scale: 145, bias: 1, confidence: 0.90};
+  return {scale: 95, bias: 0, confidence: 0.97};
+}
+
 function whiteScoreToProb(score, empty) {
-  const scale = empty > 44 ? 260 : (empty > 28 ? 180 : (empty > 16 ? 120 : 80));
-  return 100 / (1 + Math.exp(-score / scale));
+  const c = getProbCalibration(empty);
+  const logistic = 100 / (1 + Math.exp(-score / c.scale));
+  const withBias = Math.max(0, Math.min(100, logistic + c.bias));
+  // 向 50% 收缩，减少前中期噪声导致的大幅抖动
+  return 50 + (withBias - 50) * c.confidence;
 }
 
 // ============================================================
