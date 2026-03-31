@@ -893,6 +893,8 @@ async function findBestMove(onProgress) {
   
   // Alpha-Beta完成，调用LLM做战略评估（与Alpha-Beta结果对比）
   const llmResult = await evaluateWithLLM(moves);
+  let finalBestMove = bestMove;
+  
   if(llmResult) {
     // 合并评分：Alpha-Beta占70%，LLM占30%
     for(let s of moveScores) {
@@ -903,11 +905,21 @@ async function findBestMove(onProgress) {
         s.score = Math.round(abNorm * 0.7 + llmScore.score * 0.3);
       }
     }
+    
+    // 根据合并后的评分重新选择最佳落子
+    const mergedBest = moveScores.reduce((best, s) => s.score > best.score ? s : best, moveScores[0]);
+    finalBestMove = [mergedBest.r, mergedBest.c];
+    
     // 更新显示
+    moveScores = moveScores.map(s => ({...s, isBest: s.r === mergedBest.r && s.c === mergedBest.c}));
     render();
+    
+    // 显示LLM分析
+    console.log('LLM分析:', llmResult.analysis);
+    console.log('LLM推荐:', llmResult.recommendations);
   }
   
-  return bestMove;
+  return finalBestMove;
 }
 
 async function findEndgameMoveAsync(onProgress) {
