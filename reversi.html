@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.15 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.16 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.15 - Reversi</title>
+<title>黑白棋 v1.16 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -961,20 +961,17 @@ function estimateWhiteScoreForProb(empty) {
 
 function getProbCalibration(empty) {
   // 小样本标定参数（按阶段）
-  // scale 越小曲线越陡；bias > 0 表示对白方有轻微先验偏置；
-  // confidence 用于向 50% 收缩，避免早期过度自信。
-  if (empty > 44) return {scale: 300, bias: 0, confidence: 0.70};
-  if (empty > 28) return {scale: 210, bias: 2, confidence: 0.82};
-  if (empty > 16) return {scale: 145, bias: 1, confidence: 0.90};
-  return {scale: 95, bias: 0, confidence: 0.97};
+  // scale 越小曲线越陡；bias > 0 表示对白方有轻微先验偏置。
+  if (empty > 44) return {scale: 300, bias: 0};
+  if (empty > 28) return {scale: 210, bias: 2};
+  if (empty > 16) return {scale: 145, bias: 1};
+  return {scale: 95, bias: 0};
 }
 
 function whiteScoreToProb(score, empty) {
   const c = getProbCalibration(empty);
   const logistic = 100 / (1 + Math.exp(-score / c.scale));
-  const withBias = Math.max(0, Math.min(100, logistic + c.bias));
-  // 向 50% 收缩，减少前中期噪声导致的大幅抖动
-  return 50 + (withBias - 50) * c.confidence;
+  return Math.max(0, Math.min(100, logistic + c.bias));
 }
 
 // ============================================================
@@ -986,12 +983,7 @@ function calcProb() {
   const empty = emptyCount();
 
   const whiteScore = estimateWhiteScoreForProb(empty);
-  let wProb = whiteScoreToProb(whiteScore, empty);
-
-  // 棋子占比仅做弱修正，避免中前期被子数误导
-  const pieceRatio = (w / (b + w || 1)) * 100;
-  const blend = empty > 40 ? 0.08 : (empty > 20 ? 0.05 : 0.03);
-  wProb = wProb * (1 - blend) + pieceRatio * blend;
+  const wProb = whiteScoreToProb(whiteScore, empty);
 
   const white = Math.max(0, Math.min(100, Math.round(wProb)));
   return {b:100-white, w:white};
