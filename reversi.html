@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v2.0 | 纯LLM决策模式，每回合直接让大模型选最佳落子 -->
+<!-- 黑白棋 Reversi v2.1 | LLM失败时显示提示，显示分析理由 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v2.0 - Reversi</title>
+<title>黑白棋 v2.1 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -290,7 +290,7 @@ let showWeightOverlay = false; // 显示位置权重热力图
 let useLLM = true; // 使用LLM评估
 // LLM API配置
 const LLM_API_KEY = '[REDACTED_API_KEY]';
-const LLM_MODEL = 'google/gemini-2.0-flash-thinking-exp';
+const LLM_MODEL = 'google/gemini-2.0-flash';
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -1355,6 +1355,8 @@ ${moveList}
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + LLM_API_KEY,
+        'HTTP-Referer': 'https://reversi.example.com',
+        'X-Title': 'Reversi AI'
       },
       body: JSON.stringify({
         model: LLM_MODEL,
@@ -1364,7 +1366,10 @@ ${moveList}
       })
     });
     
-    if(!response.ok) throw new Error('API error: ' + response.status);
+    if(!response.ok) {
+      const errText = await response.text();
+      throw new Error('API error: ' + response.status + ' - ' + errText);
+    }
     
     const data = await response.json();
     const content = data.choices[0].message.content;
