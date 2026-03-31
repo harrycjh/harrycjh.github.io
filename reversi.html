@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.1 | 三阶段AI：开局库+AlphaBeta+残局求解，实时显示深度+累计时间 -->
+<!-- 黑白棋 Reversi v1.2 | 三阶段AI：开局库+AlphaBeta+残局求解，满10秒用上一深度结果 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.1 - Reversi</title>
+<title>黑白棋 v1.2 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -638,19 +638,18 @@ async function findBestMove(onProgress) {
   const startTime = Date.now();
   const TIME_LIMIT = 10000;
   
-  // 迭代加深（连续深度，每层之间让UI刷新）
-  let bestMove=null, bestScore=-Infinity;
+  // 迭代加深（连续深度，每层完成后检查时间，满10秒用上一深度结果）
+  let bestMove=null, bestScore=-Infinity, prevBestMove=null;
   const startDepth = empty > 40 ? 4 : 2;
   const maxDepth = Math.min(aiDepth, 10);
   
   for(let d=startDepth; d<=maxDepth; d++) {
-    if(Date.now() - startTime >= TIME_LIMIT) break;
+    const depthStart = Date.now();
     
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
     
     for(let [r,c] of sorted) {
-      if(Date.now() - startTime >= TIME_LIMIT) break;
       const flips = getFlips(r,c,player);
       board[r][c]=player;
       let ev = -alphaBeta(d-1, -Infinity, Infinity, false);
@@ -659,11 +658,21 @@ async function findBestMove(onProgress) {
       
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
+    
+    // 保存上一轮结果
+    if(bestMove !== null) { prevBestMove = bestMove; }
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
     
+    const elapsed = Date.now() - startTime;
+    
     // 报告进度并让UI刷新
-    if(onProgress) onProgress(d, Date.now()-startTime);
+    if(onProgress) onProgress(d, elapsed);
     await new Promise(r => setTimeout(r, 0));
+    
+    // 深度完成后检查：满10秒则用上一深度结果
+    if(elapsed >= TIME_LIMIT) {
+      return prevBestMove !== null ? prevBestMove : bestMove;
+    }
   }
   return bestMove;
 }
@@ -676,16 +685,13 @@ async function findEndgameMoveAsync(onProgress) {
   
   const startTime = Date.now();
   const TIME_LIMIT = 10000;
-  let bestMove=null, bestScore=-Infinity;
+  let bestMove=null, bestScore=-Infinity, prevBestMove=null;
   const maxDepth = Math.min(emptyCount(), 12);
   
   for(let d=4; d<=maxDepth; d++) {
-    if(Date.now() - startTime >= TIME_LIMIT) break;
-    
     let currentBest=null, currentScore=-Infinity;
     
     for(let [r,c] of moves) {
-      if(Date.now() - startTime >= TIME_LIMIT) break;
       const flips = getFlips(r,c,player);
       board[r][c]=player;
       let ev = -solveEndgame(d-1, -Infinity, Infinity, false);
@@ -694,10 +700,20 @@ async function findEndgameMoveAsync(onProgress) {
       
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
+    
+    // 保存上一轮结果
+    if(bestMove !== null) { prevBestMove = bestMove; }
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
     
-    if(onProgress) onProgress(d, Date.now()-startTime);
+    const elapsed = Date.now() - startTime;
+    
+    if(onProgress) onProgress(d, elapsed);
     await new Promise(r => setTimeout(r, 0));
+    
+    // 深度完成后检查：满10秒则用上一深度结果
+    if(elapsed >= TIME_LIMIT) {
+      return prevBestMove !== null ? prevBestMove : bestMove;
+    }
   }
   return bestMove;
 }
