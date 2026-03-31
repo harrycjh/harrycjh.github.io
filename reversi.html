@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.18 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.19 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.18 - Reversi</title>
+<title>黑白棋 v1.19 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -131,7 +131,7 @@ h1 {
 .weight-overlay.negative { color: #ff6666; }
 .weight-overlay.corner { color: #ffd700; font-size: 11px; opacity: 1; }
 .weight-overlay.danger { color: #ff4444; font-size: 11px; opacity: 1; }
-.piece:last-child:not(.hint) { animation: placepiece 0.25s ease-out; }
+.piece.animate { animation: placepiece 0.25s ease-out; }
 body.ai-thinking .piece { animation: none !important; }
 body.replay-mode #probCanvas { cursor: ew-resize; }
 @keyframes placepiece {
@@ -1042,6 +1042,7 @@ function calcProb() {
 // ============================================================
 function render() {
   const replayState = (replayMode && replayIndex>=0 && gameHistory[replayIndex]) ? gameHistory[replayIndex] : null;
+  const prevReplayState = (replayMode && replayIndex>0 && gameHistory[replayIndex-1]) ? gameHistory[replayIndex-1] : null;
   const displayBoard = replayState ? replayState.board : board;
   const displayLastMoveR = replayState ? replayState.lastMoveR : lastMoveR;
   const displayLastMoveC = replayState ? replayState.lastMoveC : lastMoveC;
@@ -1052,9 +1053,15 @@ function render() {
       const cell = document.createElement('div');
       cell.className='cell';
       if(displayBoard[r][c]===BLACK) {
-        cell.innerHTML='<div class="piece black"></div>';
+        const animate = replayMode
+          ? !!(prevReplayState && prevReplayState.board[r][c]===EMPTY)
+          : (r===displayLastMoveR && c===displayLastMoveC);
+        cell.innerHTML=`<div class="piece black${animate ? ' animate' : ''}"></div>`;
       } else if(displayBoard[r][c]===WHITE) {
-        cell.innerHTML='<div class="piece white"></div>';
+        const animate = replayMode
+          ? !!(prevReplayState && prevReplayState.board[r][c]===EMPTY)
+          : (r===displayLastMoveR && c===displayLastMoveC);
+        cell.innerHTML=`<div class="piece white${animate ? ' animate' : ''}"></div>`;
       } else {
         cell.innerHTML='<div class="hint"></div>';
       }
@@ -1192,7 +1199,9 @@ function drawProbChart() {
 
 function applyReplayIndex(idx) {
   if(gameHistory.length===0) return;
-  replayIndex = Math.max(0, Math.min(gameHistory.length-1, idx));
+  const nextIndex = Math.max(0, Math.min(gameHistory.length-1, idx));
+  if(nextIndex===replayIndex) return;
+  replayIndex = nextIndex;
   const p = probHistory[replayIndex] || lastProbSnapshot;
   document.getElementById('probBlack').textContent=p.black+'%';
   document.getElementById('probWhite').textContent=p.white+'%';
