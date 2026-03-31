@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.24 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.25 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.24 - Reversi</title>
+<title>黑白棋 v1.25 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -339,6 +339,7 @@ let searchNodes = 0;
 let searchAbort = false;
 let isAiThinking = false;
 let lastProbSnapshot = {black:50, white:50};
+let displayProbSnapshot = {black:50, white:50};
 let probDirty = true;
 let gameHistory = [];
 let replayMode = false;
@@ -372,6 +373,7 @@ function initBoard() {
   gameOver = false;
   lastMoveR = -1; lastMoveC = -1;
   probHistory = [];
+  displayProbSnapshot = {black:50, white:50};
   gameHistory = [];
   replayMode = false;
   replayIndex = -1;
@@ -1084,6 +1086,18 @@ function calcProb() {
   return {b:100-white, w:white};
 }
 
+function stabilizeProb(raw) {
+  const empty = emptyCount();
+  const alpha = empty > 44 ? 0.24 : (empty > 24 ? 0.34 : 0.48);
+  const maxStep = empty > 44 ? 4 : (empty > 24 ? 6 : 9);
+  const targetW = raw.w;
+  const prevW = displayProbSnapshot.white;
+  const blended = prevW + (targetW - prevW) * alpha;
+  const delta = Math.max(-maxStep, Math.min(maxStep, blended - prevW));
+  const w = Math.max(0, Math.min(100, Math.round(prevW + delta)));
+  return {b:100-w, w};
+}
+
 // ============================================================
 // UI 渲染
 // ============================================================
@@ -1194,9 +1208,11 @@ function updateStatus() {
 
 function updateProb() {
   if(gameOver) return;
-  const {b,w} = calcProb();
+  const stabilized = stabilizeProb(calcProb());
+  const {b,w} = stabilized;
   document.getElementById('probBlack').textContent=b+'%';
   document.getElementById('probWhite').textContent=w+'%';
+  displayProbSnapshot = {black:b, white:w};
   lastProbSnapshot = {black:b, white:w};
   probDirty = false;
   
