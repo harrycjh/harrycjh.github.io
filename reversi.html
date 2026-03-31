@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.9 | 新增LLM战略评估（需配置API Key） -->
+<!-- 黑白棋 Reversi v2.0 | 纯LLM决策模式，每回合直接让大模型选最佳落子 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.9 - Reversi</title>
+<title>黑白棋 v2.0 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1252,41 +1252,163 @@ function doMove(r,c,player) {
 
 async function doAIMove() {
   thinkStart=Date.now();
-  let currentDepth = 0;
   
-  // 进度回调
-  const onProgress = (depth, elapsed) => {
-    currentDepth = depth;
-    document.getElementById('modeInfo').textContent=`🔥 深度${depth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
-  };
+  let m;
   
-  // 独立计时器，每100ms更新时间显示
-  const timer = setInterval(() => {
-    const elapsed = Date.now() - thinkStart;
-    document.getElementById('modeInfo').textContent=`🔥 深度${currentDepth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
-  }, 100);
+  if(useLLM) {
+    // 纯LLM模式：直接让LLM选最佳落子
+    document.getElementById('modeInfo').textContent='🤖 LLM分析中...';
+    
+    const moves = getValidMoves(WHITE);
+    if(moves.length === 0) {
+      // AI无棋，跳过
+      const currMoves = getValidMoves(BLACK);
+      if(currMoves.length > 0) {
+        currentPlayer = BLACK;
+        render(); updateStatus();
+      } else {
+        gameOver = true;
+        render(); updateStatus(); showWinOverlay();
+      }
+      return;
+    }
+    
+    const llmResult = await getLLMMove(moves);
+    
+    if(llmResult) {
+      m = llmResult.bestMove;
+      moveScores = llmResult.scores;
+    } else {
+      // LLM失败，降级到Alpha-Beta
+      m = await findBestMove(null);
+      moveScores = [];
+    }
+  } else {
+    // Alpha-Beta模式
+    let currentDepth = 0;
+    const onProgress = (depth, elapsed) => {
+      currentDepth = depth;
+      document.getElementById('modeInfo').textContent=`🔥 深度${depth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
+    };
+    
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - thinkStart;
+      document.getElementById('modeInfo').textContent=`🔥 深度${currentDepth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
+    }, 100);
+    
+    document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0.0秒';
+    m = await findBestMove(onProgress);
+    clearInterval(timer);
+  }
   
-  document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0.0秒';
-  
-  const m = await findBestMove(onProgress);
-  clearInterval(timer);
-  const elapsed = Date.now()-thinkStart;
+  const elapsed = Date.now() - thinkStart;
   document.getElementById('modeInfo').textContent=`⏱ ${(elapsed/1000).toFixed(1)}秒`;
-  moveScores = []; // 清空评分显示
   
   if(m) {
-    doMove(m[0],m[1],WHITE);
+    doMove(m[0], m[1], WHITE);
   } else {
     // AI无棋，跳过
     const currMoves = getValidMoves(BLACK);
-    if(currMoves.length>0) {
-      currentPlayer=BLACK;
+    if(currMoves.length > 0) {
+      currentPlayer = BLACK;
       render(); updateStatus();
     } else {
-        gameOver=true;
-        render(); updateStatus(); showWinOverlay();
+      gameOver = true;
+      render(); updateStatus(); showWinOverlay();
+    }
+  }
+}
+
+async function getLLMMove(moves) {
+  // 直接让LLM选最佳落子
+  const boardText = boardToText();
+  const moveList = moves.map(([r,c],i) => `${i+1}. ${String.fromCharCode(65+c)}${r+1} (翻转${getFlips(r,c,WHITE).length}子)`).join('\n');
+  
+  const prompt = `你是黑白棋(Reversi/Othello)高手。当前是白方(O)回合。
+
+棋盘(X=黑方, O=白方, .=空):
+${boardText}
+
+白方可选落子:
+${moveList}
+
+请直接给出最佳落子选择，回复格式：
+{
+  "best_move": "D3",
+  "scores": [
+    {"move": "D3", "score": 95, "reason": "占角必争，控制全局"},
+    {"move": "C4", "score": 70, "reason": "位置尚可"}
+  ]
+}
+
+只回复JSON，不要其他内容。`;
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + LLM_API_KEY,
+      },
+      body: JSON.stringify({
+        model: LLM_MODEL,
+        messages: [{role: 'user', content: prompt}],
+        max_tokens: 800,
+        temperature: 0.3
+      })
+    });
+    
+    if(!response.ok) throw new Error('API error: ' + response.status);
+    
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) return null;
+    
+    const result = JSON.parse(jsonMatch[0]);
+    
+    // 转换LLM结果为落子坐标
+    const scores = [];
+    let bestMove = null;
+    
+    for(let [r,c] of moves) {
+      const col = String.fromCharCode(65+c);
+      const row = r+1;
+      const moveStr = col + row;
+      
+      const rec = result.scores.find(s => s.move === moveStr);
+      const score = rec ? rec.score : 50;
+      const reason = rec ? rec.reason : '';
+      scores.push({r, c, score, reason, isBest: false});
+    }
+    
+    // 找最佳落子
+    if(result.best_move) {
+      const col = result.best_move.charCodeAt(0) - 65;
+      const row = parseInt(result.best_move.substring(1)) - 1;
+      const best = moves.find(([r,c]) => r === row && c === col);
+      if(best) {
+        bestMove = best;
+        for(let s of scores) {
+          if(s.r === row && s.c === col) s.isBest = true;
+        }
       }
     }
+    
+    if(!bestMove && scores.length > 0) {
+      // 如果没有明确最佳，取最高分
+      scores.sort((a,b) => b.score - a.score);
+      bestMove = [scores[0].r, scores[0].c];
+      scores[0].isBest = true;
+    }
+    
+    return {bestMove, scores};
+    
+  } catch(e) {
+    console.log('LLM调用失败:', e.message);
+    return null;
+  }
 }
 
 function showWinOverlay() {
