@@ -433,33 +433,31 @@
         function calcProb() {
             let [b,w] = count();
             let t = b+w;
-            let empty = 64 - t;
 
-            // 残局（空位<=20）：深度搜索
-            if(empty <= 20) {
+            if(t < 10) {
+                // 开局：位置更重要
+                let s = evalBoard();
+                let prob = 50 + s * 0.3;
+                return {b: Math.round(Math.max(5,Math.min(95,50-s*0.3))), w: Math.round(Math.max(5,Math.min(95,50+s*0.3)))};
+            } else if(t > 50) {
+                // 残局：用 minimax 深度搜索
                 let result = solveEndgame();
                 if(result !== null) {
-                    // 将评估分映射到 15%~85% 范围（留有余地）
-                    let prob = 50 + result * 0.15;
-                    prob = Math.max(15, Math.min(85, Math.round(prob)));
-                    return {b: 100-prob, w: prob};
+                    if(result > 100) return {b: 3, w: 97};
+                    if(result > 30) return {b: 20, w: 80};
+                    if(result > 0) return {b: 40, w: 60};
+                    if(result === 0) return {b: 50, w: 50};
+                    if(result > -30) return {b: 60, w: 40};
+                    if(result > -100) return {b: 80, w: 20};
+                    return {b: 97, w: 3};
                 }
             }
 
             // 中局：用综合评估
             let s = evalBoard();
-
-            // 综合评估映射到 20%~80%
-            let prob = 50 + s * 0.12;
-            prob = Math.max(20, Math.min(80, Math.round(prob)));
-
-            // 结合棋子数量
-            if(t > 0) {
-                let pieceProb = (w / t) * 100;
-                prob = Math.round(prob * 0.7 + pieceProb * 0.3);
-                prob = Math.max(20, Math.min(80, prob));
-            }
-
+            let pieceRatio = t > 0 ? w/t : 0.5;
+            let prob = pieceRatio * 100 * 0.3 + (50 + s * 0.2) * 0.7;
+            prob = Math.max(2, Math.min(98, Math.round(prob)));
             return {b: 100-prob, w: prob};
         }
 
