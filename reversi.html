@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.23 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.24 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.23 - Reversi</title>
+<title>黑白棋 v1.24 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -62,6 +62,7 @@ h1 {
   border-radius: 12px;
   padding: 10px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  text-align: center;
 }
 .board {
   display: grid;
@@ -229,22 +230,21 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
 .pass-notice.white { background: #f3f4f6; color: #111827; }
 .pass-notice.black { background: #111827; color: #f9fafb; border: 1px solid rgba(255,255,255,0.25); }
 .move-feedback {
-  position: fixed;
-  left: 50%;
-  top: 76px;
-  transform: translateX(-50%);
-  z-index: 130;
   display: none;
-  padding: 9px 14px;
-  border-radius: 10px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
   font-weight: bold;
-  font-size: 0.95em;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  font-size: 1.2em;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
   background: rgba(20,20,20,0.9);
   color: #fff;
   border: 1px solid rgba(255,255,255,0.25);
+  min-width: 220px;
+  justify-content: center;
 }
-.move-feedback.show { display: block; }
+.move-feedback.show { display: inline-flex; }
 .move-feedback.good { background: rgba(17,94,44,0.92); }
 .move-feedback.bad { background: rgba(127,29,29,0.92); }
 </style>
@@ -265,6 +265,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
 <div class="game-container">
   <div class="board-wrap">
     <div class="board" id="board"></div>
+    <div class="move-feedback" id="moveFeedback"></div>
   </div>
   <div>
     <div class="status" id="status">
@@ -304,7 +305,6 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   </div>
 </div>
 <div class="pass-notice" id="passNotice"></div>
-<div class="move-feedback" id="moveFeedback"></div>
 
 <script>
 // ============================================================
@@ -1374,15 +1374,19 @@ function analyzeHumanMoveQuality(r,c) {
   const second = scored.length>1 ? scored[1].score : best;
   const diff = best - picked.score;
   const corner = CORNERS.some(([cr,cc])=>cr===r&&cc===c);
+  const n = scored.length;
+  const top20 = Math.max(2, Math.ceil(n*0.2));
+  const mid45 = Math.ceil(n*0.45);
+  const bad60 = Math.ceil(n*0.6);
 
-  if(rank===1 && corner && best-second>=90) return {text:'神之一手！', tone:'good'};
-  if(rank===1 && beforeScore<-80 && picked.score>40) return {text:'逆袭！', tone:'good'};
+  if(rank===1 && corner && best-second>=70) return {text:'神之一手！', tone:'good'};
+  if(beforeScore<-120 && rank<=2 && (picked.score-beforeScore)>=120) return {text:'逆袭！', tone:'good'};
   if(rank===1) return {text:'很棒！', tone:'good'};
-  if(rank<=Math.max(2, Math.ceil(scored.length*0.35)) && diff<70) return {text:'不错！', tone:'good'};
-  if(diff>=180) return {text:'完蛋！', tone:'bad'};
-  if(diff>=95) return {text:'昏招！', tone:'bad'};
-  if(diff>=55) return {text:'可惜！', tone:'bad'};
-  return {text:'继续！', tone:'good'};
+  if(rank<=top20 && diff<65) return {text:'不错！', tone:'good'};
+  if(rank===n && diff>=120) return {text:'完蛋！', tone:'bad'};
+  if(rank>=bad60 && diff>=70) return {text:'昏招！', tone:'bad'};
+  if(rank>=mid45 && diff>=35) return {text:'可惜！', tone:'bad'};
+  return {text:'一般', tone:'good'};
 }
 
 function handleClick(r,c) {
