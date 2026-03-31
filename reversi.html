@@ -438,18 +438,20 @@
                 // 开局：位置更重要
                 let s = evalBoard();
                 let prob = 50 + s * 0.3;
-                return {b: Math.round(Math.max(5,Math.min(95,50-s*0.3))), w: Math.round(Math.max(5,Math.min(95,50+s*0.3)))};
+                return {b: Math.round(Math.max(0,Math.min(100,50-s*0.3))), w: Math.round(Math.max(0,Math.min(100,50+s*0.3)))};
             } else if(t > 50) {
                 // 残局：用 minimax 深度搜索
                 let result = solveEndgame();
                 if(result !== null) {
-                    if(result > 100) return {b: 3, w: 97};
+                    if(result > 200) return {b: 0, w: 100};  // 绝对优势
+                    if(result > 100) return {b: 5, w: 95};
                     if(result > 30) return {b: 20, w: 80};
                     if(result > 0) return {b: 40, w: 60};
                     if(result === 0) return {b: 50, w: 50};
                     if(result > -30) return {b: 60, w: 40};
                     if(result > -100) return {b: 80, w: 20};
-                    return {b: 97, w: 3};
+                    if(result > -200) return {b: 95, w: 5};
+                    return {b: 100, w: 0};  // 绝对劣势
                 }
             }
 
@@ -457,7 +459,7 @@
             let s = evalBoard();
             let pieceRatio = t > 0 ? w/t : 0.5;
             let prob = pieceRatio * 100 * 0.3 + (50 + s * 0.2) * 0.7;
-            prob = Math.max(2, Math.min(98, Math.round(prob)));
+            prob = Math.max(0, Math.min(100, Math.round(prob)));
             return {b: 100-prob, w: prob};
         }
 
