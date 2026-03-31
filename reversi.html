@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.43 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.41 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.43 - Reversi</title>
+<title>黑白棋 v1.41 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -93,7 +93,6 @@ h1 {
   border-radius: 50%;
   position: absolute;
   transition: transform 0.2s;
-  overflow: visible;
 }
 .piece.black {
   background: radial-gradient(circle at 30% 30%, #555, #111);
@@ -137,75 +136,12 @@ h1 {
 .weight-overlay.corner { color: #ffd700; font-size: 11px; opacity: 1; }
 .weight-overlay.danger { color: #ff4444; font-size: 11px; opacity: 1; }
 .piece.animate { animation: placepiece 0.25s ease-out; }
-.piece.flip-lightning {
-  animation: electroPulse 0.52s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow:
-    0 0 0 2px rgba(250, 204, 21, 0.6),
-    0 0 16px rgba(96, 165, 250, 0.9),
-    0 0 26px rgba(250, 204, 21, 0.65);
-}
-.piece.flip-lightning::before,
-.piece.flip-lightning::after {
-  content: '';
-  position: absolute;
-  inset: -9px;
-  border-radius: 50%;
-  pointer-events: none;
-}
-.piece.flip-lightning::before {
-  border: 2px solid rgba(147, 197, 253, 0.85);
-  box-shadow: 0 0 10px rgba(147,197,253,0.75);
-  animation: electroRing 0.52s ease-out;
-}
-.piece.flip-lightning::after {
-  background:
-    linear-gradient(120deg, transparent 32%, rgba(253,224,71,0.95) 46%, transparent 60%),
-    linear-gradient(300deg, transparent 25%, rgba(191,219,254,0.9) 42%, transparent 58%),
-    linear-gradient(210deg, transparent 36%, rgba(250,204,21,0.85) 52%, transparent 66%);
-  filter: drop-shadow(0 0 8px rgba(250,204,21,0.9));
-  animation: electroArc 0.52s ease-out;
-}
-.cell.flip-cell::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid rgba(125, 211, 252, 0.95);
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 16px rgba(56,189,248,0.8);
-  animation: cellShockwave 0.52s ease-out;
-  pointer-events: none;
-}
 body.ai-thinking .piece { animation: none !important; }
 body.replay-mode #probCanvas { cursor: ew-resize; }
 @keyframes placepiece {
   0% { transform: scale(0); }
   70% { transform: scale(1.1); }
   100% { transform: scale(1); }
-}
-@keyframes electroPulse {
-  0% { transform: scale(0.8) rotate(-2deg); filter: brightness(1.8) saturate(1.25); }
-  35% { transform: scale(1.14) rotate(1.6deg); filter: brightness(2.15) saturate(1.35); }
-  60% { transform: scale(0.98) rotate(-0.8deg); filter: brightness(1.25) saturate(1.1); }
-  100% { transform: scale(1) rotate(0deg); filter: brightness(1) saturate(1); }
-}
-@keyframes electroRing {
-  0% { opacity: 0.95; transform: scale(0.5); }
-  75% { opacity: 0.4; transform: scale(1.22); }
-  100% { opacity: 0; transform: scale(1.38); }
-}
-@keyframes electroArc {
-  0% { opacity: 0; transform: scale(0.75) rotate(-20deg); }
-  18% { opacity: 1; transform: scale(1.15) rotate(8deg); }
-  55% { opacity: 0.78; transform: scale(1.05) rotate(-6deg); }
-  100% { opacity: 0; transform: scale(0.92) rotate(10deg); }
-}
-@keyframes cellShockwave {
-  0% { opacity: 0.95; width: 10px; height: 10px; border-width: 2px; }
-  100% { opacity: 0; width: 56px; height: 56px; border-width: 1px; }
 }
 .status {
   background: rgba(0,0,0,0.25);
@@ -470,7 +406,6 @@ let aiMoveTimer = null;
 let undoStack = [];
 let lastAutoReplayKey = '';
 let replayDirHandle = null;
-let lightningFlipKeys = new Set();
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -504,7 +439,6 @@ function initBoard() {
   replayIndex = -1;
   undoStack = [];
   lastAutoReplayKey = '';
-  lightningFlipKeys.clear();
   document.body.classList.remove('replay-mode');
   probDirty = true;
   render();
@@ -550,7 +484,6 @@ function restoreGameState(state) {
   replayMode = state.replayMode;
   replayIndex = state.replayIndex;
   moveScores = state.moveScores.map(s=>({...s}));
-  clearLightningFlips(false);
   // 悔棋后强制恢复到可继续计算的“干净状态”
   isAiThinking = false;
   searchAbort = false;
@@ -566,16 +499,6 @@ function restoreGameState(state) {
 
 function cloneBoardState(srcBoard) {
   return srcBoard.map(row => [...row]);
-}
-
-function cellKey(r,c) {
-  return `${r},${c}`;
-}
-
-function clearLightningFlips(shouldRender=false) {
-  if(lightningFlipKeys.size===0) return;
-  lightningFlipKeys.clear();
-  if(shouldRender && !replayMode) render();
 }
 
 function countBoard(srcBoard) {
@@ -1384,18 +1307,16 @@ function render() {
     for(let c=0;c<SIZE;c++) {
       const cell = document.createElement('div');
       cell.className='cell';
-      const flippedCell = !replayMode && lightningFlipKeys.has(cellKey(r,c));
-      if(flippedCell) cell.classList.add('flip-cell');
       if(displayBoard[r][c]===BLACK) {
         const animate = replayMode
           ? !!(prevReplayState && prevReplayState.board[r][c]===EMPTY)
           : (r===displayLastMoveR && c===displayLastMoveC);
-        cell.innerHTML=`<div class="piece black${animate ? ' animate' : ''}${flippedCell ? ' flip-lightning' : ''}"></div>`;
+        cell.innerHTML=`<div class="piece black${animate ? ' animate' : ''}"></div>`;
       } else if(displayBoard[r][c]===WHITE) {
         const animate = replayMode
           ? !!(prevReplayState && prevReplayState.board[r][c]===EMPTY)
           : (r===displayLastMoveR && c===displayLastMoveC);
-        cell.innerHTML=`<div class="piece white${animate ? ' animate' : ''}${flippedCell ? ' flip-lightning' : ''}"></div>`;
+        cell.innerHTML=`<div class="piece white${animate ? ' animate' : ''}"></div>`;
       } else {
         cell.innerHTML='<div class="hint"></div>';
       }
@@ -1560,7 +1481,6 @@ function applyReplayIndex(idx) {
 
 function startReplay() {
   if(gameHistory.length===0) return;
-  clearLightningFlips(false);
   document.getElementById('winOverlay').classList.remove('show');
   replayMode = true;
   document.body.classList.add('replay-mode');
@@ -1737,7 +1657,6 @@ function openImportedReplay(data) {
   }
   searchAbort = true;
   isAiThinking = false;
-  clearLightningFlips(false);
   document.body.classList.remove('ai-thinking');
   document.getElementById('winOverlay').classList.remove('show');
 
@@ -1889,8 +1808,6 @@ function handleClick(r,c) {
 async function doMove(r,c,player,feedback=null) {
   const flips = getFlips(r,c,player);
   if(flips.length===0) return;
-  clearLightningFlips(false);
-  lightningFlipKeys = new Set(flips.map(([fr,fc]) => cellKey(fr,fc)));
   undoStack.push(captureGameState());
   move(r,c,player);
   lastMoveR=r; lastMoveC=c;
@@ -1920,7 +1837,6 @@ async function doMove(r,c,player,feedback=null) {
   
   render();
   updateStatus();
-  setTimeout(() => clearLightningFlips(true), 540);
 
   if(feedback && gameMode==='ai' && player===BLACK) {
     showMoveFeedback(feedback.text, feedback.tone);
@@ -2024,7 +1940,6 @@ function resetGame() {
   }
   replayMode = false;
   replayIndex = -1;
-  clearLightningFlips(false);
   document.body.classList.remove('replay-mode');
   initBoard();
 }
