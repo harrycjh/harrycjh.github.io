@@ -286,6 +286,12 @@ let lastMoveR = -1, lastMoveC = -1;
 let moveScores = []; // 每步评分 [{r,c,score},...]
 let showMoveScores = true; // 显示每步评分
 let showWeightOverlay = false; // 显示位置权重热力图
+let searchDeadline = 0;
+let searchNodes = 0;
+let searchAbort = false;
+let isAiThinking = false;
+let lastProbSnapshot = {black:50, white:50};
+let probDirty = true;
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -313,6 +319,7 @@ function initBoard() {
   gameOver = false;
   lastMoveR = -1; lastMoveC = -1;
   probHistory = [{black:50, white:50}];
+  probDirty = true;
   render();
   updateStatus();
 }
@@ -657,6 +664,12 @@ function countStable(player) {
 }
 
 function alphaBeta(depth, alpha, beta, maximizing) {
+  if (searchAbort) return maximizing ? -Infinity : Infinity;
+  searchNodes++;
+  if (searchNodes % 2048 === 0 && Date.now() >= searchDeadline) {
+    searchAbort = true;
+    return maximizing ? -Infinity : Infinity;
+  }
   const player = maximizing ? WHITE : BLACK;
   const moves = getValidMoves(player);
   
@@ -734,29 +747,34 @@ async function findBestMove(onProgress) {
   
   const startTime = Date.now();
   const TIME_LIMIT = 10000;
+  searchDeadline = startTime + TIME_LIMIT;
+  searchAbort = false;
+  searchNodes = 0;
   
   // 迭代加深（连续深度，每层完成后检查时间，满10秒用上一深度结果）
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
   const startDepth = empty > 40 ? 4 : 2;
-  const maxDepth = Math.min(aiDepth, 20);
+  const maxDepth = Math.min(aiDepth, 16);
   
   for(let d=startDepth; d<=maxDepth; d++) {
-    const depthStart = Date.now();
-    
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
     const depthScores = [];
     
     for(let [r,c] of sorted) {
+      if (Date.now() >= searchDeadline || searchAbort) break;
       const flips = getFlips(r,c,player);
       board[r][c]=player;
       let ev = -alphaBeta(d-1, -Infinity, Infinity, false);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
+      if (searchAbort) break;
       
       depthScores.push({r,c,score:ev});
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
+      await new Promise(r => setTimeout(r, 0));
     }
+    if(depthScores.length===0) break;
     
     // 保存上一轮结果
     if(bestMove !== null) { prevBestMove = bestMove; }
@@ -776,7 +794,7 @@ async function findBestMove(onProgress) {
     await new Promise(r => setTimeout(r, 0));
     
     // 深度完成后检查：满10秒则用上一深度结果
-    if(elapsed >= TIME_LIMIT) {
+    if(elapsed >= TIME_LIMIT || searchAbort) {
       return prevBestMove !== null ? prevBestMove : bestMove;
     }
   }
@@ -791,6 +809,9 @@ async function findEndgameMoveAsync(onProgress) {
   
   const startTime = Date.now();
   const TIME_LIMIT = 10000;
+  searchDeadline = startTime + TIME_LIMIT;
+  searchAbort = false;
+  searchNodes = 0;
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
   const maxDepth = Math.min(emptyCount(), 20);
   
@@ -799,15 +820,19 @@ async function findEndgameMoveAsync(onProgress) {
     const depthScores = [];
     
     for(let [r,c] of moves) {
+      if (Date.now() >= searchDeadline || searchAbort) break;
       const flips = getFlips(r,c,player);
       board[r][c]=player;
       let ev = -solveEndgame(d-1, -Infinity, Infinity, false);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
+      if (searchAbort) break;
       
       depthScores.push({r,c,score:ev});
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
+      await new Promise(r => setTimeout(r, 0));
     }
+    if(depthScores.length===0) break;
     
     // 保存上一轮结果
     if(bestMove !== null) { prevBestMove = bestMove; }
@@ -826,7 +851,7 @@ async function findEndgameMoveAsync(onProgress) {
     await new Promise(r => setTimeout(r, 0));
     
     // 深度完成后检查：满10秒则用上一深度结果
-    if(elapsed >= TIME_LIMIT) {
+    if(elapsed >= TIME_LIMIT || searchAbort) {
       return prevBestMove !== null ? prevBestMove : bestMove;
     }
   }
@@ -846,7 +871,13 @@ function moveScore(m) {
 let endgameNodes = 0;
 
 function solveEndgame(depth, alpha, beta, maximizing) {
+  if (searchAbort) return maximizing ? -Infinity : Infinity;
   endgameNodes++;
+  searchNodes++;
+  if (searchNodes % 1024 === 0 && Date.now() >= searchDeadline) {
+    searchAbort = true;
+    return maximizing ? -Infinity : Infinity;
+  }
   const player = maximizing ? WHITE : BLACK;
   const moves = getValidMoves(player);
   
@@ -905,13 +936,13 @@ function solveEndgame(depth, alpha, beta, maximizing) {
 // 胜率计算
 // ============================================================
 function calcProb() {
+  if (isAiThinking && !probDirty) return {b:lastProbSnapshot.black, w:lastProbSnapshot.white};
   const [b,w] = count();
   const empty = emptyCount();
   
   if(empty <= 20) {
-    // 残局：深度搜索求解
-    endgameNodes = 0;
-    const result = -solveEndgame(Math.min(empty, 14), -Infinity, Infinity, false);
+    // 残局胜率估计使用轻量搜索，避免阻塞主线程
+    const result = evalBoard(WHITE) + (w - b) * 6;
     if(result > 300) return {b:0, w:100};
     if(result > 100) return {b:5, w:95};
     if(result > 30) return {b:20, w:80};
@@ -1033,6 +1064,8 @@ function updateProb() {
   const {b,w} = calcProb();
   document.getElementById('probBlack').textContent=b+'%';
   document.getElementById('probWhite').textContent=w+'%';
+  lastProbSnapshot = {black:b, white:w};
+  probDirty = false;
   
   probHistory.push({black:b, white:w});
   drawProbChart();
@@ -1083,6 +1116,7 @@ function doMove(r,c,player) {
   if(flips.length===0) return;
   move(r,c,player);
   lastMoveR=r; lastMoveC=c;
+  probDirty = true;
   
   // 切换玩家
   const next = player===BLACK?WHITE:BLACK;
@@ -1113,26 +1147,32 @@ function doMove(r,c,player) {
 
 async function doAIMove() {
   thinkStart=Date.now();
+  isAiThinking = true;
   let currentDepth = 0;
+  const formatElapsedSeconds = (elapsedMs) => Math.floor(elapsedMs / 1000);
+  const updateModeInfo = (depth, elapsedMs) => {
+    document.getElementById('modeInfo').textContent=`🔥 深度${depth} | ⏱ ${formatElapsedSeconds(elapsedMs)}秒`;
+  };
   
   // 进度回调
   const onProgress = (depth, elapsed) => {
     currentDepth = depth;
-    document.getElementById('modeInfo').textContent=`🔥 深度${depth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
+    updateModeInfo(depth, elapsed);
   };
   
-  // 独立计时器，每100ms更新时间显示
+  // 独立计时器：严格每秒刷新一次
   const timer = setInterval(() => {
     const elapsed = Date.now() - thinkStart;
-    document.getElementById('modeInfo').textContent=`🔥 深度${currentDepth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
-  }, 100);
+    updateModeInfo(currentDepth, elapsed);
+  }, 1000);
   
-  document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0.0秒';
+  document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0秒';
   
   const m = await findBestMove(onProgress);
   clearInterval(timer);
+  isAiThinking = false;
   const elapsed = Date.now()-thinkStart;
-  document.getElementById('modeInfo').textContent=`⏱ ${(elapsed/1000).toFixed(1)}秒`;
+  document.getElementById('modeInfo').textContent=`⏱ ${formatElapsedSeconds(elapsed)}秒`;
   moveScores = []; // 清空评分显示
   
   if(m) {
