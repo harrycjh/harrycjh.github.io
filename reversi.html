@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.39 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.40 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.39 - Reversi</title>
+<title>黑白棋 v1.40 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -195,8 +195,47 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   transition: background 0.2s;
 }
 .controls button:hover { background: rgba(255,255,255,0.35); }
-.depth-control { margin-top: 10px; font-size: 0.85em; }
-.depth-control input { width: 60px; }
+.depth-control {
+  margin-top: 10px;
+  font-size: 0.85em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.depth-control label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.depth-control select,
+.depth-control button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
+.depth-control select:hover,
+.depth-control button:hover { background: rgba(255,255,255,0.25); }
+.depth-control select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 26px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.9) 50%),
+    linear-gradient(135deg, rgba(255,255,255,0.9) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) calc(50% + 1px),
+    calc(100% - 9px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.depth-control button.active { background: #4ade80; color: #1a472a; font-weight: bold; }
 .win-overlay {
   display: none;
   position: fixed;
@@ -1976,8 +2015,9 @@ function applyHintPolicy() {
 
 function toggleWeightOverlay() {
   showWeightOverlay=!showWeightOverlay;
-  document.getElementById('btnWeight').textContent='权重: '+(showWeightOverlay?'开':'关');
-  document.getElementById('btnWeight').style.background=showWeightOverlay?'#4ade80':'rgba(255,255,255,0.2)';
+  const btnWeight = document.getElementById('btnWeight');
+  btnWeight.textContent='权重: '+(showWeightOverlay?'开':'关');
+  btnWeight.classList.toggle('active', showWeightOverlay);
   render();
 }
 
