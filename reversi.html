@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.4 | 每层计算后显示各落子评分热力图 -->
+<!-- 黑白棋 Reversi v1.5 | C格惩罚-12→-30 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.4 - Reversi</title>
+<title>黑白棋 v1.5 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -438,7 +438,7 @@ function lookupOpeningBook() {
 
 // 评估函数权重
 const W_CORNER = 25;
-const W_CORNER_ADJ = -12;  // 角落周边惩罚
+const W_CORNER_ADJ = -30;  // C格惩罚（-30表示极危险，尽量不占）
 const W_STABLE = 10;
 const W_MOBILITY = 5;
 const W_POTENTIAL = 3;
