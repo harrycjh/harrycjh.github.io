@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.44 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.45 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.44 - Reversi</title>
+<title>黑白棋 v1.45 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -137,8 +137,30 @@ h1 {
 .weight-overlay.corner { color: #ffd700; font-size: 11px; opacity: 1; }
 .weight-overlay.danger { color: #ff4444; font-size: 11px; opacity: 1; }
 .piece.animate { animation: placepiece 0.25s ease-out; }
-.piece.flip-change { animation: flipchange 0.42s ease-in-out; }
-body.ai-thinking .piece { animation: none !important; }
+.flip-piece {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  transform-style: preserve-3d;
+  animation: flipchange 0.63s ease-in-out;
+}
+.flip-piece .face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  backface-visibility: hidden;
+}
+.flip-piece .face.black {
+  background: radial-gradient(circle at 30% 30%, #555, #111);
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.5);
+}
+.flip-piece .face.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+}
+.flip-piece .face.back { transform: rotateY(180deg); }
+body.ai-thinking .piece,
+body.ai-thinking .flip-piece { animation: none !important; }
 body.replay-mode #probCanvas { cursor: ew-resize; }
 @keyframes placepiece {
   0% { transform: scale(0); }
@@ -149,7 +171,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   0% { transform: rotateY(0deg) scale(1); filter: brightness(1); }
   45% { transform: rotateY(90deg) scale(0.92); filter: brightness(1.4); }
   55% { transform: rotateY(90deg) scale(0.92); filter: brightness(1.5); }
-  100% { transform: rotateY(0deg) scale(1); filter: brightness(1); }
+  100% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
 }
 .status {
   background: rgba(0,0,0,0.25);
@@ -414,7 +436,7 @@ let aiMoveTimer = null;
 let undoStack = [];
 let lastAutoReplayKey = '';
 let replayDirHandle = null;
-let flipAnimKeys = new Set();
+let flipAnimInfo = new Map();
 let flipAnimTimer = null;
 
 // ============================================================
@@ -449,7 +471,7 @@ function initBoard() {
   replayIndex = -1;
   undoStack = [];
   lastAutoReplayKey = '';
-  flipAnimKeys.clear();
+  flipAnimInfo.clear();
   if(flipAnimTimer) { clearTimeout(flipAnimTimer); flipAnimTimer = null; }
   document.body.classList.remove('replay-mode');
   probDirty = true;
@@ -496,7 +518,7 @@ function restoreGameState(state) {
   replayMode = state.replayMode;
   replayIndex = state.replayIndex;
   moveScores = state.moveScores.map(s=>({...s}));
-  flipAnimKeys.clear();
+  flipAnimInfo.clear();
   if(flipAnimTimer) { clearTimeout(flipAnimTimer); flipAnimTimer = null; }
   // 悔棋后强制恢复到可继续计算的“干净状态”
   isAiThinking = false;
@@ -1326,17 +1348,29 @@ function render() {
       const cell = document.createElement('div');
       cell.className='cell';
       if(displayBoard[r][c]===BLACK) {
-        const flipped = !replayMode && flipAnimKeys.has(cellKey(r,c));
+        const flipInfo = !replayMode ? flipAnimInfo.get(cellKey(r,c)) : null;
         const animate = replayMode
           ? !!(prevReplayState && prevReplayState.board[r][c]===EMPTY)
           : (r===displayLastMoveR && c===displayLastMoveC);
-        cell.innerHTML=`<div class="piece black${animate ? ' animate' : ''}${flipped ? ' flip-change' : ''}"></div>`;
+        if(flipInfo) {
+          const frontClass = flipInfo.from===BLACK ? 'black' : 'white';
+          const backClass = flipInfo.to===BLACK ? 'black' : 'white';
+          cell.innerHTML=`<div class="flip-piece"><div class="face ${frontClass}"></div><div class="face back ${backClass}"></div></div>`;
+        } else {
+          cell.innerHTML=`<div class="piece black${animate ? ' animate' : ''}"></div>`;
+        }
       } else if(displayBoard[r][c]===WHITE) {
-        const flipped = !replayMode && flipAnimKeys.has(cellKey(r,c));
+        const flipInfo = !replayMode ? flipAnimInfo.get(cellKey(r,c)) : null;
         const animate = replayMode
           ? !!(prevReplayState && prevReplayState.board[r][c]===EMPTY)
           : (r===displayLastMoveR && c===displayLastMoveC);
-        cell.innerHTML=`<div class="piece white${animate ? ' animate' : ''}${flipped ? ' flip-change' : ''}"></div>`;
+        if(flipInfo) {
+          const frontClass = flipInfo.from===BLACK ? 'black' : 'white';
+          const backClass = flipInfo.to===BLACK ? 'black' : 'white';
+          cell.innerHTML=`<div class="flip-piece"><div class="face ${frontClass}"></div><div class="face back ${backClass}"></div></div>`;
+        } else {
+          cell.innerHTML=`<div class="piece white${animate ? ' animate' : ''}"></div>`;
+        }
       } else {
         cell.innerHTML='<div class="hint"></div>';
       }
@@ -1501,7 +1535,7 @@ function applyReplayIndex(idx) {
 
 function startReplay() {
   if(gameHistory.length===0) return;
-  flipAnimKeys.clear();
+  flipAnimInfo.clear();
   if(flipAnimTimer) { clearTimeout(flipAnimTimer); flipAnimTimer = null; }
   document.getElementById('winOverlay').classList.remove('show');
   replayMode = true;
@@ -1679,7 +1713,7 @@ function openImportedReplay(data) {
   }
   searchAbort = true;
   isAiThinking = false;
-  flipAnimKeys.clear();
+  flipAnimInfo.clear();
   if(flipAnimTimer) { clearTimeout(flipAnimTimer); flipAnimTimer = null; }
   document.body.classList.remove('ai-thinking');
   document.getElementById('winOverlay').classList.remove('show');
@@ -1833,7 +1867,7 @@ async function doMove(r,c,player,feedback=null) {
   const flips = getFlips(r,c,player);
   if(flips.length===0) return;
   if(flipAnimTimer) { clearTimeout(flipAnimTimer); flipAnimTimer = null; }
-  flipAnimKeys = new Set(flips.map(([fr,fc])=>cellKey(fr,fc)));
+  flipAnimInfo = new Map(flips.map(([fr,fc])=>[cellKey(fr,fc), {from: board[fr][fc], to: player}]));
   undoStack.push(captureGameState());
   move(r,c,player);
   lastMoveR=r; lastMoveC=c;
@@ -1865,10 +1899,10 @@ async function doMove(r,c,player,feedback=null) {
   updateStatus();
   flipAnimTimer = setTimeout(()=>{
     flipAnimTimer = null;
-    if(flipAnimKeys.size===0) return;
-    flipAnimKeys.clear();
+    if(flipAnimInfo.size===0) return;
+    flipAnimInfo.clear();
     if(!replayMode) render();
-  }, 450);
+  }, 680);
 
   if(feedback && gameMode==='ai' && player===BLACK) {
     showMoveFeedback(feedback.text, feedback.tone);
@@ -1972,7 +2006,7 @@ function resetGame() {
   }
   replayMode = false;
   replayIndex = -1;
-  flipAnimKeys.clear();
+  flipAnimInfo.clear();
   if(flipAnimTimer) { clearTimeout(flipAnimTimer); flipAnimTimer = null; }
   document.body.classList.remove('replay-mode');
   initBoard();
