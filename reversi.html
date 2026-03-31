@@ -558,18 +558,22 @@ function countStable(player) {
   return stable;
 }
 
-function alphaBeta(depth, alpha, beta, maximizing) {
+function alphaBeta(depth, alpha, beta, maximizing, searchCtx) {
+  if(Date.now() - searchCtx.startTime > searchCtx.timeLimit) {
+    searchCtx.aborted = true;
+    return maximizing ? Infinity : -Infinity;
+  }
+  
   const player = maximizing ? WHITE : BLACK;
   const moves = getValidMoves(player);
   
   if(moves.length===0) {
     const oppMoves = getValidMoves(player===WHITE?BLACK:WHITE);
     if(oppMoves.length===0) {
-      // 游戏结束
       const [b,w]=count();
       return (w-b)*1000;
     }
-    return alphaBeta(depth, alpha, beta, !maximizing);
+    return alphaBeta(depth, alpha, beta, !maximizing, searchCtx);
   }
   
   if(depth===0) return evalBoard(player);
@@ -577,9 +581,7 @@ function alphaBeta(depth, alpha, beta, maximizing) {
   // 落子排序（优先角落）
   function moveScore(m) {
     let [r,c]=m;
-    // 角落最高
     for(let [cr,cc] of CORNERS) if(r===cr&&c===cc) return 100;
-    // C格最低
     for(let [cr,cc] of C_SQUARES) if(r===cr&&c===cc) return -100;
     return 0;
   }
@@ -590,9 +592,10 @@ function alphaBeta(depth, alpha, beta, maximizing) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = alphaBeta(depth-1, alpha, beta, false);
+      let ev = alphaBeta(depth-1, alpha, beta, false, searchCtx);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
+      if(searchCtx.aborted) return Infinity;
       maxEval = Math.max(maxEval, ev);
       alpha = Math.max(alpha, ev);
       if(beta <= alpha) break;
@@ -603,9 +606,10 @@ function alphaBeta(depth, alpha, beta, maximizing) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = alphaBeta(depth-1, alpha, beta, true);
+      let ev = alphaBeta(depth-1, alpha, beta, true, searchCtx);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
+      if(searchCtx.aborted) return -Infinity;
       minEval = Math.min(minEval, ev);
       beta = Math.min(beta, ev);
       if(beta <= alpha) break;
@@ -636,6 +640,7 @@ async function findBestMove(onProgress) {
   
   const TIME_LIMIT = 10000; // 10秒
   const startTime = Date.now();
+  const searchCtx = { startTime, timeLimit: TIME_LIMIT, aborted: false };
   
   // 迭代加深（从深度2开始连续加深，直到时间到）
   let bestMove=null, bestScore=-Infinity;
@@ -652,12 +657,14 @@ async function findBestMove(onProgress) {
     for(let [r,c] of sorted) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = -alphaBeta(d-1, -Infinity, Infinity, false);
+      let ev = -alphaBeta(d-1, -Infinity, Infinity, false, searchCtx);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
       
+      if(searchCtx.aborted) break;
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
+    if(searchCtx.aborted) break;
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
     
     // 报告进度并让浏览器刷新UI
@@ -679,7 +686,12 @@ function moveScore(m) {
 // ============================================================
 let endgameNodes = 0;
 
-function solveEndgame(depth, alpha, beta, maximizing) {
+function solveEndgame(depth, alpha, beta, maximizing, searchCtx) {
+  if(Date.now() - searchCtx.startTime > searchCtx.timeLimit) {
+    searchCtx.aborted = true;
+    return maximizing ? Infinity : -Infinity;
+  }
+  
   endgameNodes++;
   const player = maximizing ? WHITE : BLACK;
   const moves = getValidMoves(player);
@@ -691,17 +703,13 @@ function solveEndgame(depth, alpha, beta, maximizing) {
       const [b,w]=count();
       return (w-b)*1000;
     }
-    return solveEndgame(depth, alpha, beta, !maximizing);
+    return solveEndgame(depth, alpha, beta, !maximizing, searchCtx);
   }
   
   if(depth===0) {
     const [b,w]=count();
     return (w-b)*100;
   }
-  
-  // 奇偶剪枝：空格奇偶性决定谁最后落子
-  const empty = emptyCount();
-  const parity = empty % 2;
   
   // 落子排序：优先行动力最少的（MLOS）
   moves.sort((a,b)=>getFlips(a[0],a[1],player).length - getFlips(b[0],b[1],player).length);
@@ -711,9 +719,10 @@ function solveEndgame(depth, alpha, beta, maximizing) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = solveEndgame(depth-1, alpha, beta, false);
+      let ev = solveEndgame(depth-1, alpha, beta, false, searchCtx);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
+      if(searchCtx.aborted) return Infinity;
       maxEval = Math.max(maxEval, ev);
       alpha = Math.max(alpha, ev);
       if(beta <= alpha) break;
@@ -724,9 +733,10 @@ function solveEndgame(depth, alpha, beta, maximizing) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = solveEndgame(depth-1, alpha, beta, true);
+      let ev = solveEndgame(depth-1, alpha, beta, true, searchCtx);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
+      if(searchCtx.aborted) return -Infinity;
       minEval = Math.min(minEval, ev);
       beta = Math.min(beta, ev);
       if(beta <= alpha) break;
@@ -744,6 +754,7 @@ function findEndgameMove() {
   // 残局完美求解（时间自适应：10秒内逐步加深到12）
   const TIME_LIMIT = 10000;
   const startTime = Date.now();
+  const searchCtx = { startTime, timeLimit: TIME_LIMIT, aborted: false };
   let bestMove=null, bestScore=-Infinity;
   const maxDepth = Math.min(emptyCount(), 12);
   
@@ -756,10 +767,11 @@ function findEndgameMove() {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = -solveEndgame(d-1, -Infinity, Infinity, false);
+      let ev = -solveEndgame(d-1, -Infinity, Infinity, false, searchCtx);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
       
+      if(searchCtx.aborted) break;
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
@@ -777,6 +789,7 @@ async function findEndgameMoveAsync(onProgress) {
   // 残局完美求解（时间自适应：10秒内逐步加深到12）
   const TIME_LIMIT = 10000;
   const startTime = Date.now();
+  const searchCtx = { startTime, timeLimit: TIME_LIMIT, aborted: false };
   let bestMove=null, bestScore=-Infinity;
   const maxDepth = Math.min(emptyCount(), 12);
   
@@ -789,12 +802,14 @@ async function findEndgameMoveAsync(onProgress) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = -solveEndgame(d-1, -Infinity, Infinity, false);
+      let ev = -solveEndgame(d-1, -Infinity, Infinity, false, searchCtx);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
       
+      if(searchCtx.aborted) break;
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
+    if(searchCtx.aborted) break;
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
     
     // 报告进度并让浏览器刷新UI
@@ -813,10 +828,11 @@ function calcProb() {
   const empty = emptyCount();
   
   if(empty <= 20) {
-    // 残局：深度搜索求解（从8到10逐步加深）
+    // 残局：深度搜索求解（从8到10逐步加深，限时3秒）
     endgameNodes = 0;
     const searchDepth = empty > 14 ? 8 : 10;
-    const result = -solveEndgame(searchDepth, -Infinity, Infinity, false);
+    const probCtx = { startTime: Date.now(), timeLimit: 3000, aborted: false };
+    const result = -solveEndgame(searchDepth, -Infinity, Infinity, false, probCtx);
     if(result > 300) return {b:0, w:100};
     if(result > 100) return {b:5, w:95};
     if(result > 30) return {b:20, w:80};
