@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.25 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.26 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.25 - Reversi</title>
+<title>黑白棋 v1.26 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -286,7 +286,13 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
       </div>
     </div>
     <div class="depth-control">
-      <label>AI深度：<input type="number" id="depthInput" value="20" min="4" max="20" onchange="setDepth(this.value)"></label>
+      <label>AI深度：
+        <select id="depthInput" onchange="setDepth(this.value)">
+          <option value="1">大头鬼LV1</option>
+          <option value="2" selected>小狗子LV2</option>
+          <option value="3">臭胖子LV3</option>
+        </select>
+      </label>
       <button id="btnWeight" onclick="toggleWeightOverlay()">权重: 关</button>
     </div>
     <div class="controls">
@@ -325,7 +331,7 @@ let board = [];
 let currentPlayer = BLACK;
 let gameOver = false;
 let gameMode = 'ai';
-let aiDepth = 20;
+let aiDepth = 2;
 let hintOn = true;
 let probHistory = [{black:50, white:50}];
 let thinkStart = 0;
@@ -919,8 +925,8 @@ async function findBestMove(onProgress) {
   
   // 迭代加深（连续深度，每层完成后检查时间，满10秒用上一深度结果）
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
-  const startDepth = empty > 40 ? 4 : 2;
-  const maxDepth = Math.min(aiDepth, 16);
+  const startDepth = 1;
+  const maxDepth = Math.max(1, Math.min(aiDepth, 3));
   
   for(let d=startDepth; d<=maxDepth; d++) {
     let currentBest=null, currentScore=-Infinity;
@@ -978,9 +984,9 @@ async function findEndgameMoveAsync(onProgress) {
   searchNodes = 0;
   transTable.clear();
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
-  const maxDepth = Math.min(emptyCount(), 20);
+  const maxDepth = Math.max(1, Math.min(emptyCount(), aiDepth));
   
-  for(let d=4; d<=maxDepth; d++) {
+  for(let d=1; d<=maxDepth; d++) {
     let currentBest=null, currentScore=-Infinity;
     const depthScores = [];
     
@@ -1549,7 +1555,7 @@ function setMode(m) {
 }
 
 function setDepth(d) {
-  aiDepth=Math.max(4, Math.min(16, parseInt(d)));
+  aiDepth=Math.max(1, Math.min(3, parseInt(d)));
   document.getElementById('depthInput').value=aiDepth;
 }
 
