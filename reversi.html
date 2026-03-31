@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.35 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.36 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.35 - Reversi</title>
+<title>黑白棋 v1.36 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1140,16 +1140,94 @@ function whiteScoreToProb(score, empty) {
   return Math.max(0, Math.min(100, logistic + c.bias));
 }
 
+function getFlipsOnBoard(b, r, c, player) {
+  if(r<0 || r>=SIZE || c<0 || c>=SIZE || b[r][c]!==EMPTY) return [];
+  const opp = player===BLACK ? WHITE : BLACK;
+  const flips = [];
+  for(const [dr,dc] of DIRS) {
+    const line = [];
+    let nr = r + dr, nc = c + dc;
+    while(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && b[nr][nc]===opp) {
+      line.push([nr,nc]);
+      nr += dr; nc += dc;
+    }
+    if(line.length>0 && nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && b[nr][nc]===player) {
+      flips.push(...line);
+    }
+  }
+  return flips;
+}
+
+function getValidMovesOnBoard(b, player) {
+  const moves = [];
+  for(let r=0;r<SIZE;r++) {
+    for(let c=0;c<SIZE;c++) {
+      if(getFlipsOnBoard(b,r,c,player).length>0) moves.push([r,c]);
+    }
+  }
+  return moves;
+}
+
+function applyMoveOnBoard(b, r, c, player) {
+  const flips = getFlipsOnBoard(b,r,c,player);
+  if(flips.length===0) return false;
+  b[r][c] = player;
+  for(const [fr,fc] of flips) b[fr][fc] = player;
+  return true;
+}
+
+function randomMoveWeighted(moves) {
+  if(moves.length<=1) return moves[0];
+  const corners = moves.filter(([r,c]) => CORNERS.some(([cr,cc]) => cr===r && cc===c));
+  if(corners.length>0) return corners[Math.floor(Math.random()*corners.length)];
+  return moves[Math.floor(Math.random()*moves.length)];
+}
+
+function runSingleRandomPlayout(startBoard, startPlayer) {
+  const sim = cloneBoardState(startBoard);
+  let player = startPlayer;
+  let pass = 0;
+  let guard = 0;
+  while(pass < 2 && guard < 120) {
+    guard++;
+    const moves = getValidMovesOnBoard(sim, player);
+    if(moves.length===0) {
+      pass++;
+      player = player===BLACK ? WHITE : BLACK;
+      continue;
+    }
+    pass = 0;
+    const [r,c] = randomMoveWeighted(moves);
+    applyMoveOnBoard(sim, r, c, player);
+    player = player===BLACK ? WHITE : BLACK;
+  }
+  const [b,w] = countBoard(sim);
+  if(w>b) return 1;
+  if(w===b) return 0.5;
+  return 0;
+}
+
+function estimateWhiteMonteCarloProb(empty) {
+  const playouts = empty > 44 ? 56 : (empty > 28 ? 44 : (empty > 16 ? 30 : 18));
+  let sum = 0;
+  for(let i=0;i<playouts;i++) {
+    sum += runSingleRandomPlayout(board, currentPlayer);
+  }
+  return (sum / playouts) * 100;
+}
+
 // ============================================================
 // 胜率计算
 // ============================================================
 function calcProb() {
   if (isAiThinking && !probDirty) return {b:lastProbSnapshot.black, w:lastProbSnapshot.white};
-  const [b,w] = count();
   const empty = emptyCount();
 
   const whiteScore = estimateWhiteScoreForProb(empty);
-  const wProb = whiteScoreToProb(whiteScore, empty);
+  const searchProb = whiteScoreToProb(whiteScore, empty);
+  const mcProb = estimateWhiteMonteCarloProb(empty);
+  const mcWeight = empty > 44 ? 0.60 : (empty > 28 ? 0.48 : (empty > 16 ? 0.34 : 0.20));
+  const wProb = searchProb * (1 - mcWeight) + mcProb * mcWeight;
 
   const white = Math.max(0, Math.min(100, Math.round(wProb)));
   return {b:100-white, w:white};
