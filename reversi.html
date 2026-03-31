@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.22 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.23 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.22 - Reversi</title>
+<title>黑白棋 v1.23 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -228,6 +228,25 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
 .pass-notice.show { display: block; }
 .pass-notice.white { background: #f3f4f6; color: #111827; }
 .pass-notice.black { background: #111827; color: #f9fafb; border: 1px solid rgba(255,255,255,0.25); }
+.move-feedback {
+  position: fixed;
+  left: 50%;
+  top: 76px;
+  transform: translateX(-50%);
+  z-index: 130;
+  display: none;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.95em;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  background: rgba(20,20,20,0.9);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
+}
+.move-feedback.show { display: block; }
+.move-feedback.good { background: rgba(17,94,44,0.92); }
+.move-feedback.bad { background: rgba(127,29,29,0.92); }
 </style>
 </head>
 <body>
@@ -285,6 +304,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   </div>
 </div>
 <div class="pass-notice" id="passNotice"></div>
+<div class="move-feedback" id="moveFeedback"></div>
 
 <script>
 // ============================================================
@@ -324,6 +344,7 @@ let gameHistory = [];
 let replayMode = false;
 let replayIndex = -1;
 let passNoticeActive = false;
+let moveFeedbackTimer = null;
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -1298,20 +1319,87 @@ function showPassNotice(text, sideClass) {
   });
 }
 
+function showMoveFeedback(text, tone='good') {
+  const el = document.getElementById('moveFeedback');
+  if(!el) return;
+  if(moveFeedbackTimer) clearTimeout(moveFeedbackTimer);
+  el.textContent = text;
+  el.className = `move-feedback show ${tone}`;
+  moveFeedbackTimer = setTimeout(() => {
+    el.className = 'move-feedback';
+    moveFeedbackTimer = null;
+  }, 1100);
+}
+
+function quickMoveEvalForBlack(r,c,depth) {
+  const flips = applyMove(r,c,BLACK);
+  const score = -negamax(WHITE, depth-1, -INF, INF, 0);
+  undoMove(r,c,BLACK,flips);
+  return score;
+}
+
+function analyzeHumanMoveQuality(r,c) {
+  const moves = getValidMoves(BLACK);
+  if(moves.length<=1) return {text:'稳住！', tone:'good'};
+
+  const prevDeadline = searchDeadline;
+  const prevAbort = searchAbort;
+  const prevNodes = searchNodes;
+  const empty = emptyCount();
+  const depth = empty > 34 ? 3 : 4;
+  const budgetMs = 180;
+  const beforeScore = evalForPlayer(BLACK);
+
+  searchDeadline = Date.now() + budgetMs;
+  searchAbort = false;
+  searchNodes = 0;
+  transTable.clear();
+
+  const scored = [];
+  for(const [mr,mc] of moves) {
+    if(Date.now() >= searchDeadline || searchAbort) break;
+    const s = quickMoveEvalForBlack(mr,mc,depth);
+    scored.push({r:mr,c:mc,score:s});
+  }
+
+  searchDeadline = prevDeadline;
+  searchAbort = prevAbort;
+  searchNodes = prevNodes;
+
+  if(scored.length===0) return {text:'继续！', tone:'good'};
+  scored.sort((a,b)=>b.score-a.score);
+  const picked = scored.find(m=>m.r===r&&m.c===c) || scored[scored.length-1];
+  const rank = scored.findIndex(m=>m.r===picked.r&&m.c===picked.c) + 1;
+  const best = scored[0].score;
+  const second = scored.length>1 ? scored[1].score : best;
+  const diff = best - picked.score;
+  const corner = CORNERS.some(([cr,cc])=>cr===r&&cc===c);
+
+  if(rank===1 && corner && best-second>=90) return {text:'神之一手！', tone:'good'};
+  if(rank===1 && beforeScore<-80 && picked.score>40) return {text:'逆袭！', tone:'good'};
+  if(rank===1) return {text:'很棒！', tone:'good'};
+  if(rank<=Math.max(2, Math.ceil(scored.length*0.35)) && diff<70) return {text:'不错！', tone:'good'};
+  if(diff>=180) return {text:'完蛋！', tone:'bad'};
+  if(diff>=95) return {text:'昏招！', tone:'bad'};
+  if(diff>=55) return {text:'可惜！', tone:'bad'};
+  return {text:'继续！', tone:'good'};
+}
+
 function handleClick(r,c) {
   if(passNoticeActive) return;
   if(replayMode) return;
   if(gameOver) return;
   if(gameMode==='ai' && currentPlayer===BLACK) {
     if(!isValid(r,c,BLACK)) return;
-    doMove(r,c,BLACK);
+    const feedback = analyzeHumanMoveQuality(r,c);
+    doMove(r,c,BLACK,feedback);
   } else if(gameMode==='pvp') {
     if(!isValid(r,c,currentPlayer)) return;
     doMove(r,c,currentPlayer);
   }
 }
 
-async function doMove(r,c,player) {
+async function doMove(r,c,player,feedback=null) {
   const flips = getFlips(r,c,player);
   if(flips.length===0) return;
   move(r,c,player);
@@ -1342,6 +1430,10 @@ async function doMove(r,c,player) {
   
   render();
   updateStatus();
+
+  if(feedback && gameMode==='ai' && player===BLACK) {
+    showMoveFeedback(feedback.text, feedback.tone);
+  }
 
   if(passInfo) {
     await showPassNotice(passInfo.text, passInfo.sideClass);
@@ -1416,6 +1508,12 @@ function resetGame() {
   const passEl = document.getElementById('passNotice');
   if(passEl) passEl.className = 'pass-notice';
   passNoticeActive = false;
+  const feedbackEl = document.getElementById('moveFeedback');
+  if(feedbackEl) feedbackEl.className = 'move-feedback';
+  if(moveFeedbackTimer) {
+    clearTimeout(moveFeedbackTimer);
+    moveFeedbackTimer = null;
+  }
   replayMode = false;
   replayIndex = -1;
   document.body.classList.remove('replay-mode');
