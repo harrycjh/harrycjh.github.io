@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.26 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.27 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.26 - Reversi</title>
+<title>黑白棋 v1.27 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -291,6 +291,8 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
           <option value="1">大头鬼LV1</option>
           <option value="2" selected>小狗子LV2</option>
           <option value="3">臭胖子LV3</option>
+          <option value="4">小兔子LV4</option>
+          <option value="5">小龙虾LV5</option>
         </select>
       </label>
       <button id="btnWeight" onclick="toggleWeightOverlay()">权重: 关</button>
@@ -926,7 +928,7 @@ async function findBestMove(onProgress) {
   // 迭代加深（连续深度，每层完成后检查时间，满10秒用上一深度结果）
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
   const startDepth = 1;
-  const maxDepth = Math.max(1, Math.min(aiDepth, 3));
+  const maxDepth = Math.max(1, Math.min(aiDepth, 5));
   
   for(let d=startDepth; d<=maxDepth; d++) {
     let currentBest=null, currentScore=-Infinity;
@@ -984,7 +986,7 @@ async function findEndgameMoveAsync(onProgress) {
   searchNodes = 0;
   transTable.clear();
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
-  const maxDepth = Math.max(1, Math.min(emptyCount(), aiDepth));
+  const maxDepth = Math.max(1, Math.min(emptyCount(), aiDepth, 5));
   
   for(let d=1; d<=maxDepth; d++) {
     let currentBest=null, currentScore=-Infinity;
@@ -1555,7 +1557,7 @@ function setMode(m) {
 }
 
 function setDepth(d) {
-  aiDepth=Math.max(1, Math.min(3, parseInt(d)));
+  aiDepth=Math.max(1, Math.min(5, parseInt(d)));
   document.getElementById('depthInput').value=aiDepth;
 }
 
