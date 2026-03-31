@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.36 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.37 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.36 - Reversi</title>
+<title>黑白棋 v1.37 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -36,10 +36,13 @@ h1 {
 .info-bar .value { font-weight: bold; color: #7fff7f; }
 .mode-select {
   margin-bottom: 14px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 .mode-select button {
   padding: 8px 18px;
-  margin: 0 4px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -158,6 +161,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   background: rgba(0,0,0,0.2);
   border-radius: 8px;
   padding: 10px;
+  text-align: center;
 }
 .prob-title { font-size: 0.85em; opacity: 0.8; margin-bottom: 6px; }
 .prob-current {
@@ -171,9 +175,9 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
 }
 .prob-current .black { color: #aaa; }
 .prob-current .white { color: #fff; }
-.prob-chart { margin-top: 8px; }
+.prob-chart { margin-top: 8px; display: flex; justify-content: center; }
 .prob-canvas { width: 180px; height: 60px; background: rgba(0,0,0,0.2); border-radius: 4px; }
-.prob-legend { display: flex; gap: 12px; font-size: 0.75em; margin-top: 4px; opacity: 0.7; }
+.prob-legend { display: flex; gap: 12px; font-size: 0.75em; margin-top: 4px; opacity: 0.7; justify-content: center; }
 .legend-item { display: flex; align-items: center; gap: 4px; }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 .legend-dot.black { background: #666; }
@@ -256,6 +260,8 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   <button id="btnPvp" onclick="setMode('pvp')">双人对战</button>
   <button id="btnAi" onclick="setMode('ai')" class="active">人机对战</button>
   <button id="btnImportReplay" onclick="triggerReplayImport()">导入录像</button>
+  <button onclick="exportReplay()">保存录像</button>
+  <button onclick="pickReplayDirectory()">选择录像目录</button>
 </div>
 <input type="file" id="replayFileInput" accept=".json,application/json" style="display:none" onchange="handleReplayImport(event)">
 
@@ -302,8 +308,6 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
     <div class="controls">
       <button onclick="resetGame()">重新开始</button>
       <button onclick="undoLastMove()">悔棋</button>
-      <button onclick="exportReplay()">保存录像</button>
-      <button onclick="pickReplayDirectory()">选择录像目录</button>
       <button onclick="toggleHint()">提示: <span id="hintBtn">开</span></button>
     </div>
   </div>
