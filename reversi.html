@@ -629,19 +629,25 @@ function findBestMove() {
     return findEndgameMove();
   }
   
-  // 中局Alpha-Beta（根据空格数限制深度，避免爆炸）
+  // 中局Alpha-Beta（时间自适应：10秒内尽可能加深）
   const player = WHITE;
   const moves = getValidMoves(player);
   if(moves.length===0) return null;
   
-  // 中局深度上限：开局库之后从6开始，逐步加深到8
-  const maxSearchDepth = empty > 40 ? 6 : 8;
-  const effectiveDepth = Math.min(aiDepth, maxSearchDepth);
+  const TIME_LIMIT = 10000; // 10秒
+  const startTime = Date.now();
   
-  // 迭代加深（开局库之后从深度6开始，逐步加深到8）
+  // 迭代加深（开局库后从深度6开始，逐步加深）
   let bestMove=null, bestScore=-Infinity;
   const startDepth = empty > 40 ? 6 : 2;
-  for(let d=startDepth; d<=effectiveDepth; d+=2) {
+  const maxDepth = Math.min(aiDepth, 10);
+  
+  for(let d=startDepth; d<=maxDepth; d+=2) {
+    const elapsed = Date.now() - startTime;
+    if(elapsed >= TIME_LIMIT) {
+      break; // 时间到了，返回当前最佳
+    }
+    
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
     
@@ -733,11 +739,16 @@ function findEndgameMove() {
   const moves = getValidMoves(player);
   if(moves.length===0) return null;
   
-  // 迭代加深搜索（从深度8开始，逐步加深到10）
+  // 残局完美求解（时间自适应：10秒内逐步加深到12）
+  const TIME_LIMIT = 10000;
+  const startTime = Date.now();
   let bestMove=null, bestScore=-Infinity;
-  const maxDepth = Math.min(emptyCount(), 10);
+  const maxDepth = Math.min(emptyCount(), 12);
   
   for(let d=8; d<=maxDepth; d+=2) {
+    const elapsed = Date.now() - startTime;
+    if(elapsed >= TIME_LIMIT) break;
+    
     let currentBest=null, currentScore=-Infinity;
     
     for(let [r,c] of moves) {
