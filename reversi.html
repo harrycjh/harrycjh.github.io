@@ -634,13 +634,14 @@ function findBestMove() {
   const moves = getValidMoves(player);
   if(moves.length===0) return null;
   
-  // 中局深度上限：空格越多越浅
-  const maxSearchDepth = empty > 40 ? 4 : (empty > 30 ? 6 : 8);
+  // 中局深度上限：开局库之后从6开始，逐步加深到8
+  const maxSearchDepth = empty > 40 ? 6 : 8;
   const effectiveDepth = Math.min(aiDepth, maxSearchDepth);
   
-  // 迭代加深
+  // 迭代加深（开局库之后从深度6开始，逐步加深到8）
   let bestMove=null, bestScore=-Infinity;
-  for(let d=2; d<=effectiveDepth; d+=2) {
+  const startDepth = empty > 40 ? 6 : 2;
+  for(let d=startDepth; d<=effectiveDepth; d+=2) {
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
     
@@ -732,11 +733,11 @@ function findEndgameMove() {
   const moves = getValidMoves(player);
   if(moves.length===0) return null;
   
-  // 迭代加深搜索
+  // 迭代加深搜索（从深度8开始，逐步加深到10）
   let bestMove=null, bestScore=-Infinity;
-  const maxDepth = Math.min(emptyCount(), 20);
+  const maxDepth = Math.min(emptyCount(), 10);
   
-  for(let d=2; d<=maxDepth; d+=2) {
+  for(let d=8; d<=maxDepth; d+=2) {
     let currentBest=null, currentScore=-Infinity;
     
     for(let [r,c] of moves) {
@@ -762,9 +763,9 @@ function calcProb() {
   const empty = emptyCount();
   
   if(empty <= 20) {
-    // 残局：深度搜索求解（限制深度避免卡顿）
+    // 残局：深度搜索求解（从8到10逐步加深）
     endgameNodes = 0;
-    const searchDepth = empty > 14 ? 8 : (empty > 10 ? 10 : 12);
+    const searchDepth = empty > 14 ? 8 : 10;
     const result = -solveEndgame(searchDepth, -Infinity, Infinity, false);
     if(result > 300) return {b:0, w:100};
     if(result > 100) return {b:5, w:95};
