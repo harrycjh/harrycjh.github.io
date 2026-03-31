@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.32 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.33 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.32 - Reversi</title>
+<title>黑白棋 v1.33 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -303,6 +303,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
       <button onclick="resetGame()">重新开始</button>
       <button onclick="undoLastMove()">悔棋</button>
       <button onclick="exportReplay()">保存录像</button>
+      <button onclick="pickReplayDirectory()">选择录像目录</button>
       <button onclick="toggleHint()">提示: <span id="hintBtn">开</span></button>
     </div>
   </div>
@@ -361,6 +362,7 @@ let moveFeedbackTimer = null;
 let aiMoveTimer = null;
 let undoStack = [];
 let lastAutoReplayKey = '';
+let replayDirHandle = null;
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -1439,10 +1441,38 @@ function saveReplayToLocalDirectory(fileName, payload) {
   localStorage.setItem(itemKey, JSON.stringify(payload));
 }
 
+async function pickReplayDirectory() {
+  if(!window.showDirectoryPicker) {
+    showMoveFeedback('当前浏览器不支持目录选择', 'bad');
+    return;
+  }
+  try {
+    replayDirHandle = await window.showDirectoryPicker({mode:'readwrite'});
+    const dirName = replayDirHandle && replayDirHandle.name ? replayDirHandle.name : '已选目录';
+    showMoveFeedback(`录像目录：${dirName}`, 'good');
+  } catch (e) {
+    if(e && e.name==='AbortError') return;
+    showMoveFeedback('选择目录失败', 'bad');
+  }
+}
+
 async function autoSaveReplay() {
   const payload = buildReplayPayload();
   const ts = new Date().toISOString().replace(/[:.]/g,'-');
   const fileName = `reversi-replay-${ts}.json`;
+
+  try {
+    if(replayDirHandle) {
+      const fileHandle = await replayDirHandle.getFileHandle(fileName, {create:true});
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(payload, null, 2));
+      await writable.close();
+      showMoveFeedback('已自动保存到所选目录', 'good');
+      return;
+    }
+  } catch (e) {
+    // 所选目录写入失败时回退到下方方案
+  }
 
   try {
     if(navigator.storage && navigator.storage.getDirectory) {
