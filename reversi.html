@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.37 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.38 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.37 - Reversi</title>
+<title>黑白棋 v1.38 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -308,7 +308,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
     <div class="controls">
       <button onclick="resetGame()">重新开始</button>
       <button onclick="undoLastMove()">悔棋</button>
-      <button onclick="toggleHint()">提示: <span id="hintBtn">开</span></button>
+      <button id="btnHintToggle" onclick="toggleHint()">提示: <span id="hintBtn">开</span></button>
     </div>
   </div>
 </div>
@@ -1934,6 +1934,7 @@ function setMode(m) {
   document.getElementById('btnPvp').classList.toggle('active', m==='pvp');
   document.getElementById('btnAi').classList.toggle('active', m==='ai');
   document.getElementById('oppLabel').textContent=m==='ai'?'AI':'玩家2';
+  applyHintPolicy();
   resetGame();
 }
 
@@ -1944,9 +1945,32 @@ function setDepth(d) {
 }
 
 function toggleHint() {
+  if(gameMode==='pvp') {
+    hintOn = true;
+    applyHintPolicy();
+    render();
+    return;
+  }
   hintOn=!hintOn;
-  document.getElementById('hintBtn').textContent=hintOn?'开':'关';
+  applyHintPolicy();
   render();
+}
+
+function applyHintPolicy() {
+  const hintBtn = document.getElementById('hintBtn');
+  const hintToggleBtn = document.getElementById('btnHintToggle');
+  if(gameMode==='pvp') {
+    hintOn = true;
+    hintBtn.textContent='开';
+    hintToggleBtn.disabled = true;
+    hintToggleBtn.style.opacity = '0.7';
+    hintToggleBtn.style.cursor = 'not-allowed';
+    return;
+  }
+  hintBtn.textContent=hintOn?'开':'关';
+  hintToggleBtn.disabled = false;
+  hintToggleBtn.style.opacity = '';
+  hintToggleBtn.style.cursor = '';
 }
 
 function toggleWeightOverlay() {
@@ -1959,6 +1983,7 @@ function toggleWeightOverlay() {
 // 初始化
 setupReplayScrubber();
 setupReplayKeyboard();
+applyHintPolicy();
 initBoard();
 </script>
 </body>
