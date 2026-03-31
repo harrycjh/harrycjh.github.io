@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.20 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.21 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.20 - Reversi</title>
+<title>黑白棋 v1.21 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -159,7 +159,15 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   padding: 10px;
 }
 .prob-title { font-size: 0.85em; opacity: 0.8; margin-bottom: 6px; }
-.prob-current { font-size: 1.4em; font-weight: bold; }
+.prob-current {
+  font-size: 1.4em;
+  font-weight: bold;
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.15);
+}
 .prob-current .black { color: #aaa; }
 .prob-current .white { color: #fff; }
 .prob-chart { margin-top: 8px; }
@@ -204,6 +212,22 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
 .win-box h2 { font-size: 1.8em; margin-bottom: 8px; }
 .win-box .final-score { font-size: 1.2em; opacity: 0.85; margin: 8px 0; }
 .win-box button { margin-top: 16px; padding: 10px 24px; background: #4ade80; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; }
+.pass-notice {
+  position: fixed;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  z-index: 120;
+  display: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.95em;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+}
+.pass-notice.show { display: block; }
+.pass-notice.white { background: #f3f4f6; color: #111827; }
+.pass-notice.black { background: #111827; color: #f9fafb; border: 1px solid rgba(255,255,255,0.25); }
 </style>
 </head>
 <body>
@@ -260,6 +284,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
     <button onclick="resetGame()">再来一局</button>
   </div>
 </div>
+<div class="pass-notice" id="passNotice"></div>
 
 <script>
 // ============================================================
@@ -298,6 +323,7 @@ let probDirty = true;
 let gameHistory = [];
 let replayMode = false;
 let replayIndex = -1;
+let passNoticeActive = false;
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -1166,6 +1192,17 @@ function drawProbChart() {
   
   if(probHistory.length<2) return;
   const step = w/(probHistory.length-1);
+
+  // 50% 参考虚线
+  ctx.save();
+  ctx.setLineDash([4,4]);
+  ctx.strokeStyle='rgba(255,255,255,0.35)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(0,h/2);
+  ctx.lineTo(w,h/2);
+  ctx.stroke();
+  ctx.restore();
   
   // 黑线
   ctx.strokeStyle='#666';
@@ -1246,7 +1283,23 @@ function setupReplayKeyboard() {
   });
 }
 
+function showPassNotice(text, sideClass) {
+  const el = document.getElementById('passNotice');
+  if(!el) return Promise.resolve();
+  passNoticeActive = true;
+  el.textContent = text;
+  el.className = `pass-notice show ${sideClass}`;
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      el.className = 'pass-notice';
+      passNoticeActive = false;
+      resolve();
+    }, 1000);
+  });
+}
+
 function handleClick(r,c) {
+  if(passNoticeActive) return;
   if(replayMode) return;
   if(gameOver) return;
   if(gameMode==='ai' && currentPlayer===BLACK) {
@@ -1258,7 +1311,7 @@ function handleClick(r,c) {
   }
 }
 
-function doMove(r,c,player) {
+async function doMove(r,c,player) {
   const flips = getFlips(r,c,player);
   if(flips.length===0) return;
   move(r,c,player);
@@ -1275,7 +1328,12 @@ function doMove(r,c,player) {
     // 对方无棋，检查当前玩家是否能继续
     const currMoves = getValidMoves(player);
     if(currMoves.length>0) {
-      // 对方无棋，当前玩家继续
+      currentPlayer = player;
+      render();
+      updateStatus();
+      const passText = next===WHITE ? '白旗无子可下' : '黑旗无子可下';
+      const passClass = next===WHITE ? 'white' : 'black';
+      await showPassNotice(passText, passClass);
     } else {
       // 双方都无棋，游戏结束
       gameOver=true;
@@ -1351,6 +1409,9 @@ function showWinOverlay() {
 
 function resetGame() {
   document.getElementById('winOverlay').classList.remove('show');
+  const passEl = document.getElementById('passNotice');
+  if(passEl) passEl.className = 'pass-notice';
+  passNoticeActive = false;
   replayMode = false;
   replayIndex = -1;
   document.body.classList.remove('replay-mode');
