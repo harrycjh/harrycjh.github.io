@@ -1278,8 +1278,14 @@ async function doAIMove() {
     if(llmResult) {
       m = llmResult.bestMove;
       moveScores = llmResult.scores;
+      // 显示LLM分析理由
+      const bestScore = llmResult.scores.find(s => s.isBest);
+      if(bestScore && bestScore.reason) {
+        document.getElementById('modeInfo').textContent=`🤖 ${bestScore.reason}`;
+      }
     } else {
       // LLM失败，降级到Alpha-Beta
+      document.getElementById('modeInfo').textContent='⚠️ LLM失败，使用AB搜索...';
       m = await findBestMove(null);
       moveScores = [];
     }
