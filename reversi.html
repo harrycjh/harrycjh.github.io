@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.13 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.14 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.13 - Reversi</title>
+<title>黑白棋 v1.14 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -468,6 +468,28 @@ const W_POTENTIAL = 3;
 const W_PIECES = 1;
 const W_SECOND_EDGE = 10;    // 次外圈边缘惩罚（正数配合 score -= ... 表示惩罚）
 const W_SECOND_MID = 8;      // 次外圈中间惩罚（正数配合 score -= ... 表示惩罚）
+const W_X_SQUARE = 40;       // X格惩罚（角斜对角，危险位）
+const W_FRONTIER = 4;        // 前线棋子惩罚（越少越好）
+
+function getPhaseWeights(empty) {
+  // 开局 / 中局 / 残局的阶段化权重
+  if (empty > 44) {
+    return {
+      corner: 28, cPenalty: 26, xPenalty: 45, stable: 6, mobility: 9, potential: 6,
+      secondEdge: 8, secondMid: 6, thirdCorner: 3, thirdEdge: 1, frontier: 7, piece: 0
+    };
+  }
+  if (empty > 16) {
+    return {
+      corner: 32, cPenalty: 30, xPenalty: 42, stable: 10, mobility: 7, potential: 4,
+      secondEdge: 10, secondMid: 8, thirdCorner: 4, thirdEdge: 2, frontier: 5, piece: 2
+    };
+  }
+  return {
+    corner: 40, cPenalty: 18, xPenalty: 24, stable: 18, mobility: 3, potential: 1,
+    secondEdge: 6, secondMid: 4, thirdCorner: 2, thirdEdge: 1, frontier: 2, piece: 10
+  };
+}
 
 // 角落位置
 const CORNERS = [[0,0],[0,7],[7,0],[7,7]];
@@ -511,6 +533,7 @@ function evalBoard(player) {
   let whitePieces=0, blackPieces=0;
   let whiteCorner=0, blackCorner=0;
   let whiteC=0, blackC=0;
+  let whiteX=0, blackX=0;
   let whiteFrontier=0, blackFrontier=0;
   let wSecondEdge=0, bSecondEdge=0;
   let wSecondMid=0, bSecondMid=0;
@@ -535,6 +558,13 @@ function evalBoard(player) {
         const [cr,cc]=C_SQUARES[i];
         if(r===cr&&c===cc) {
           if(isWhite) whiteC++; else blackC++;
+        }
+      }
+      // X格惩罚
+      for(let i=0;i<4;i++) {
+        const [xr,xc]=X_SQUARES[i];
+        if(r===xr&&c===xc) {
+          if(isWhite) whiteX++; else blackX++;
         }
       }
       // 次外圈惩罚
@@ -598,25 +628,27 @@ function evalBoard(player) {
   const bStable = countStable(BLACK);
   
   const empty = emptyCount();
+  const phase = getPhaseWeights(empty);
   
   // 组合评估
-  score += (whiteCorner - blackCorner) * W_CORNER;
-  score -= (whiteC - blackC) * W_CORNER_ADJ;
-  score += (wStable - bStable) * W_STABLE;
-  score += (wm - bm) * W_MOBILITY;
-  score += (wPotential - bPotential) * W_POTENTIAL;
+  score += (whiteCorner - blackCorner) * phase.corner;
+  score -= (whiteC - blackC) * phase.cPenalty;
+  score -= (whiteX - blackX) * phase.xPenalty;
+  score += (wStable - bStable) * phase.stable;
+  score += (wm - bm) * phase.mobility;
+  score += (wPotential - bPotential) * phase.potential;
+  score -= (whiteFrontier - blackFrontier) * phase.frontier;
   
   // 次外圈惩罚
-  score -= (wSecondEdge - bSecondEdge) * W_SECOND_EDGE;
-  score -= (wSecondMid - bSecondMid) * W_SECOND_MID;
+  score -= (wSecondEdge - bSecondEdge) * phase.secondEdge;
+  score -= (wSecondMid - bSecondMid) * phase.secondMid;
   
   // 第三圈鼓励（靠角的位置 +4，边缘位置 +2）
-  score += (wThirdCorner - bThirdCorner) * 4;
-  score += (wThirdEdge - bThirdEdge) * 2;
+  score += (wThirdCorner - bThirdCorner) * phase.thirdCorner;
+  score += (wThirdEdge - bThirdEdge) * phase.thirdEdge;
   
-  // 棋子数量（残局权重高）
-  const pieceWeight = empty > 20 ? 1 : (empty > 10 ? 3 : 8);
-  score += (whitePieces - blackPieces) * pieceWeight;
+  // 棋子数量（阶段化）
+  score += (whitePieces - blackPieces) * phase.piece;
   
   return score;
 }
