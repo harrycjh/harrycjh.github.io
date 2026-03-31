@@ -629,14 +629,18 @@ function findBestMove() {
     return findEndgameMove();
   }
   
-  // 中局Alpha-Beta
+  // 中局Alpha-Beta（根据空格数限制深度，避免爆炸）
   const player = WHITE;
   const moves = getValidMoves(player);
   if(moves.length===0) return null;
   
+  // 中局深度上限：空格越多越浅
+  const maxSearchDepth = empty > 40 ? 4 : (empty > 30 ? 6 : 8);
+  const effectiveDepth = Math.min(aiDepth, maxSearchDepth);
+  
   // 迭代加深
   let bestMove=null, bestScore=-Infinity;
-  for(let d=2; d<=aiDepth; d+=2) {
+  for(let d=2; d<=effectiveDepth; d+=2) {
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
     
@@ -758,9 +762,10 @@ function calcProb() {
   const empty = emptyCount();
   
   if(empty <= 20) {
-    // 残局：深度搜索求解
+    // 残局：深度搜索求解（限制深度避免卡顿）
     endgameNodes = 0;
-    const result = -solveEndgame(Math.min(empty, 14), -Infinity, Infinity, false);
+    const searchDepth = empty > 14 ? 8 : (empty > 10 ? 10 : 12);
+    const result = -solveEndgame(searchDepth, -Infinity, Infinity, false);
     if(result > 300) return {b:0, w:100};
     if(result > 100) return {b:5, w:95};
     if(result > 30) return {b:20, w:80};
