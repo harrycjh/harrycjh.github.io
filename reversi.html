@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.21 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.22 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.21 - Reversi</title>
+<title>黑白棋 v1.22 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1317,6 +1317,7 @@ async function doMove(r,c,player) {
   move(r,c,player);
   lastMoveR=r; lastMoveC=c;
   probDirty = true;
+  let passInfo = null;
   
   // 切换玩家
   const next = player===BLACK?WHITE:BLACK;
@@ -1329,11 +1330,10 @@ async function doMove(r,c,player) {
     const currMoves = getValidMoves(player);
     if(currMoves.length>0) {
       currentPlayer = player;
-      render();
-      updateStatus();
-      const passText = next===WHITE ? '白旗无子可下' : '黑旗无子可下';
-      const passClass = next===WHITE ? 'white' : 'black';
-      await showPassNotice(passText, passClass);
+      passInfo = {
+        text: next===WHITE ? '🏳️ 白旗无子可下' : '🏴 黑旗无子可下',
+        sideClass: next===WHITE ? 'white' : 'black'
+      };
     } else {
       // 双方都无棋，游戏结束
       gameOver=true;
@@ -1342,6 +1342,10 @@ async function doMove(r,c,player) {
   
   render();
   updateStatus();
+
+  if(passInfo) {
+    await showPassNotice(passInfo.text, passInfo.sideClass);
+  }
   
   if(gameMode==='ai' && currentPlayer===WHITE && !gameOver) {
     setTimeout(doAIMove,100);
