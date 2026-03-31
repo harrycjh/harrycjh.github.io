@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.10 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.11 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.10 - Reversi</title>
+<title>黑白棋 v1.11 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -663,66 +663,102 @@ function countStable(player) {
   return stable;
 }
 
-function alphaBeta(depth, alpha, beta, maximizing) {
-  if (searchAbort) return maximizing ? -Infinity : Infinity;
-  searchNodes++;
-  if (searchNodes % 2048 === 0 && Date.now() >= searchDeadline) {
-    searchAbort = true;
-    return maximizing ? -Infinity : Infinity;
-  }
-  const player = maximizing ? WHITE : BLACK;
+const INF = 1e9;
+const transTable = new Map();
+
+function evalForPlayer(player) {
+  const whiteView = evalBoard(WHITE);
+  return player===WHITE ? whiteView : -whiteView;
+}
+
+function terminalScore(player) {
+  const [b,w]=count();
+  const diff = w - b;
+  return (player===WHITE ? diff : -diff) * 1000;
+}
+
+function applyMove(r,c,player) {
+  const flips = getFlips(r,c,player);
+  board[r][c]=player;
+  for(let [fr,fc] of flips) board[fr][fc]=player;
+  return flips;
+}
+
+function undoMove(r,c,player,flips) {
+  board[r][c]=EMPTY;
+  const opp = player===WHITE ? BLACK : WHITE;
+  for(let [fr,fc] of flips) board[fr][fc]=opp;
+}
+
+function ttKey(player) {
+  return `${player}|${computeKey(board)}`;
+}
+
+function orderedMoves(player, ttBestMove) {
   const moves = getValidMoves(player);
-  
+  moves.sort((a,b)=>{
+    const sa = moveScore(a) * 100 + getFlips(a[0],a[1],player).length;
+    const sb = moveScore(b) * 100 + getFlips(b[0],b[1],player).length;
+    return sb - sa;
+  });
+  if(ttBestMove) {
+    const idx = moves.findIndex(([r,c])=>r===ttBestMove[0] && c===ttBestMove[1]);
+    if(idx > 0) {
+      const [m] = moves.splice(idx,1);
+      moves.unshift(m);
+    }
+  }
+  return moves;
+}
+
+function negamax(player, depth, alpha, beta, passCount=0) {
+  if(searchAbort) return -INF;
+  searchNodes++;
+  if(searchNodes % 1024 === 0 && Date.now() >= searchDeadline) {
+    searchAbort = true;
+    return -INF;
+  }
+  if(depth===0) return evalForPlayer(player);
+
+  const alphaOrig = alpha;
+  const key = ttKey(player);
+  const tt = transTable.get(key);
+  if(tt && tt.depth >= depth) {
+    if(tt.flag==='exact') return tt.score;
+    if(tt.flag==='lower') alpha = Math.max(alpha, tt.score);
+    else if(tt.flag==='upper') beta = Math.min(beta, tt.score);
+    if(alpha >= beta) return tt.score;
+  }
+
+  const moves = orderedMoves(player, tt ? tt.bestMove : null);
   if(moves.length===0) {
-    const oppMoves = getValidMoves(player===WHITE?BLACK:WHITE);
-    if(oppMoves.length===0) {
-      // 游戏结束
-      const [b,w]=count();
-      return (w-b)*1000;
-    }
-    return alphaBeta(depth, alpha, beta, !maximizing);
+    const opp = player===WHITE ? BLACK : WHITE;
+    if(passCount===1) return terminalScore(player);
+    return -negamax(opp, depth, -beta, -alpha, 1);
   }
-  
-  if(depth===0) return evalBoard(player);
-  
-  // 落子排序（优先角落）
-  function moveScore(m) {
-    let [r,c]=m;
-    // 角落最高
-    for(let [cr,cc] of CORNERS) if(r===cr&&c===cc) return 100;
-    // C格最低
-    for(let [cr,cc] of C_SQUARES) if(r===cr&&c===cc) return -100;
-    return 0;
-  }
-  moves.sort((a,b)=>moveScore(b)-moveScore(a));
-  
-  if(maximizing) {
-    let maxEval = -Infinity;
-    for(let [r,c] of moves) {
-      const flips = getFlips(r,c,player);
-      board[r][c]=player;
-      let ev = alphaBeta(depth-1, alpha, beta, false);
-      board[r][c]=EMPTY;
-      for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      maxEval = Math.max(maxEval, ev);
-      alpha = Math.max(alpha, ev);
-      if(beta <= alpha) break;
+
+  let bestScore = -INF;
+  let bestMove = null;
+  const opp = player===WHITE ? BLACK : WHITE;
+  for(let [r,c] of moves) {
+    const flips = applyMove(r,c,player);
+    const score = -negamax(opp, depth-1, -beta, -alpha, 0);
+    undoMove(r,c,player,flips);
+    if(searchAbort) return -INF;
+
+    if(score > bestScore) {
+      bestScore = score;
+      bestMove = [r,c];
     }
-    return maxEval;
-  } else {
-    let minEval = Infinity;
-    for(let [r,c] of moves) {
-      const flips = getFlips(r,c,player);
-      board[r][c]=player;
-      let ev = alphaBeta(depth-1, alpha, beta, true);
-      board[r][c]=EMPTY;
-      for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      minEval = Math.min(minEval, ev);
-      beta = Math.min(beta, ev);
-      if(beta <= alpha) break;
-    }
-    return minEval;
+    if(score > alpha) alpha = score;
+    if(alpha >= beta) break;
   }
+
+  let flag = 'exact';
+  if(bestScore <= alphaOrig) flag = 'upper';
+  else if(bestScore >= beta) flag = 'lower';
+  transTable.set(key, {depth, score: bestScore, flag, bestMove});
+  return bestScore;
 }
 
 async function findBestMove(onProgress) {
@@ -750,6 +786,7 @@ async function findBestMove(onProgress) {
   searchDeadline = startTime + TIME_LIMIT;
   searchAbort = false;
   searchNodes = 0;
+  transTable.clear();
   
   // 迭代加深（连续深度，每层完成后检查时间，满10秒用上一深度结果）
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
@@ -758,16 +795,14 @@ async function findBestMove(onProgress) {
   
   for(let d=startDepth; d<=maxDepth; d++) {
     let currentBest=null, currentScore=-Infinity;
-    const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
+    const sorted = orderedMoves(player, null);
     const depthScores = [];
     
     for(let [r,c] of sorted) {
       if (Date.now() >= searchDeadline || searchAbort) break;
-      const flips = getFlips(r,c,player);
-      board[r][c]=player;
-      let ev = -alphaBeta(d-1, -Infinity, Infinity, false);
-      board[r][c]=EMPTY;
-      for(let [fr,fc] of flips) board[fr][fc]=BLACK;
+      const flips = applyMove(r,c,player);
+      let ev = -negamax(BLACK, d-1, -INF, INF, 0);
+      undoMove(r,c,player,flips);
       if (searchAbort) break;
       
       depthScores.push({r,c,score:ev});
@@ -812,6 +847,7 @@ async function findEndgameMoveAsync(onProgress) {
   searchDeadline = startTime + TIME_LIMIT;
   searchAbort = false;
   searchNodes = 0;
+  transTable.clear();
   let bestMove=null, bestScore=-Infinity, prevBestMove=null;
   const maxDepth = Math.min(emptyCount(), 20);
   
@@ -819,13 +855,11 @@ async function findEndgameMoveAsync(onProgress) {
     let currentBest=null, currentScore=-Infinity;
     const depthScores = [];
     
-    for(let [r,c] of moves) {
+    for(let [r,c] of orderedMoves(player, null)) {
       if (Date.now() >= searchDeadline || searchAbort) break;
-      const flips = getFlips(r,c,player);
-      board[r][c]=player;
-      let ev = -solveEndgame(d-1, -Infinity, Infinity, false);
-      board[r][c]=EMPTY;
-      for(let [fr,fc] of flips) board[fr][fc]=BLACK;
+      const flips = applyMove(r,c,player);
+      let ev = -negamax(BLACK, d-1, -INF, INF, 0);
+      undoMove(r,c,player,flips);
       if (searchAbort) break;
       
       depthScores.push({r,c,score:ev});
@@ -869,68 +903,6 @@ function moveScore(m) {
 // 第三阶段：残局完美求解（≤20空格，迭代加深+奇偶剪枝）
 // ============================================================
 let endgameNodes = 0;
-
-function solveEndgame(depth, alpha, beta, maximizing) {
-  if (searchAbort) return maximizing ? -Infinity : Infinity;
-  endgameNodes++;
-  searchNodes++;
-  if (searchNodes % 1024 === 0 && Date.now() >= searchDeadline) {
-    searchAbort = true;
-    return maximizing ? -Infinity : Infinity;
-  }
-  const player = maximizing ? WHITE : BLACK;
-  const moves = getValidMoves(player);
-  
-  if(moves.length===0) {
-    const opp = player===WHITE?BLACK:WHITE;
-    const oppMoves = getValidMoves(opp);
-    if(oppMoves.length===0) {
-      const [b,w]=count();
-      return (w-b)*1000;
-    }
-    return solveEndgame(depth, alpha, beta, !maximizing);
-  }
-  
-  if(depth===0) {
-    const [b,w]=count();
-    return (w-b)*100;
-  }
-  
-  // 奇偶剪枝：空格奇偶性决定谁最后落子
-  const empty = emptyCount();
-  const parity = empty % 2;
-  
-  // 落子排序：优先行动力最少的（MLOS）
-  moves.sort((a,b)=>getFlips(a[0],a[1],player).length - getFlips(b[0],b[1],player).length);
-  
-  if(maximizing) {
-    let maxEval = -Infinity;
-    for(let [r,c] of moves) {
-      const flips = getFlips(r,c,player);
-      board[r][c]=player;
-      let ev = solveEndgame(depth-1, alpha, beta, false);
-      board[r][c]=EMPTY;
-      for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      maxEval = Math.max(maxEval, ev);
-      alpha = Math.max(alpha, ev);
-      if(beta <= alpha) break;
-    }
-    return maxEval;
-  } else {
-    let minEval = Infinity;
-    for(let [r,c] of moves) {
-      const flips = getFlips(r,c,player);
-      board[r][c]=player;
-      let ev = solveEndgame(depth-1, alpha, beta, true);
-      board[r][c]=EMPTY;
-      for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      minEval = Math.min(minEval, ev);
-      beta = Math.min(beta, ev);
-      if(beta <= alpha) break;
-    }
-    return minEval;
-  }
-}
 
 // ============================================================
 // 胜率计算
