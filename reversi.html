@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.9 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.10 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.9 - Reversi</title>
+<title>黑白棋 v1.10 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -1149,23 +1149,25 @@ async function doAIMove() {
   thinkStart=Date.now();
   isAiThinking = true;
   let currentDepth = 0;
-  const formatElapsedSeconds = (elapsedMs) => Math.floor(elapsedMs / 1000);
+  const formatElapsedSeconds = (elapsedMs) => (elapsedMs / 1000).toFixed(1);
   const updateModeInfo = (depth, elapsedMs) => {
     document.getElementById('modeInfo').textContent=`🔥 深度${depth} | ⏱ ${formatElapsedSeconds(elapsedMs)}秒`;
   };
   
   // 进度回调
-  const onProgress = (depth, elapsed) => {
+  const onProgress = (depth) => {
     currentDepth = depth;
+    const elapsedNow = Date.now() - thinkStart;
+    updateModeInfo(depth, elapsedNow);
   };
   
-  // 独立计时器：严格每秒刷新一次
+  // 高频刷新计时显示，提升秒数滚动观感
   const timer = setInterval(() => {
     const elapsed = Date.now() - thinkStart;
     updateModeInfo(currentDepth, elapsed);
-  }, 1000);
+  }, 100);
   
-  document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0秒';
+  document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0.0秒';
   
   const m = await findBestMove(onProgress);
   clearInterval(timer);
