@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.45 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.46 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.45 - Reversi</title>
+<title>黑白棋 v1.46 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -141,14 +141,18 @@ h1 {
   position: absolute;
   width: 40px;
   height: 40px;
+  left: 50%;
+  top: 50%;
   transform-style: preserve-3d;
-  animation: flipchange 0.63s ease-in-out;
+  transform: translate(-50%, -50%) rotateY(0deg);
+  animation: flipchange 0.95s ease-in-out;
 }
 .flip-piece .face {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 .flip-piece .face.black {
   background: radial-gradient(circle at 30% 30%, #555, #111);
@@ -159,8 +163,13 @@ h1 {
   box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
 }
 .flip-piece .face.back { transform: rotateY(180deg); }
+.flip-piece .face:not(.back) { animation: faceFront 0.95s ease-in-out both; }
+.flip-piece .face.back { animation: faceBack 0.95s ease-in-out both; }
 body.ai-thinking .piece,
-body.ai-thinking .flip-piece { animation: none !important; }
+body.ai-thinking .flip-piece,
+body.ai-thinking .flip-piece .face,
+body.replay-mode .flip-piece,
+body.replay-mode .flip-piece .face { animation: none !important; }
 body.replay-mode #probCanvas { cursor: ew-resize; }
 @keyframes placepiece {
   0% { transform: scale(0); }
@@ -168,10 +177,23 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   100% { transform: scale(1); }
 }
 @keyframes flipchange {
-  0% { transform: rotateY(0deg) scale(1); filter: brightness(1); }
-  45% { transform: rotateY(90deg) scale(0.92); filter: brightness(1.4); }
-  55% { transform: rotateY(90deg) scale(0.92); filter: brightness(1.5); }
-  100% { transform: rotateY(180deg) scale(1); filter: brightness(1); }
+  0% { transform: translate(-50%, -50%) rotateY(0deg) scale(1); filter: brightness(1); }
+  40% { transform: translate(-50%, -50%) rotateY(88deg) scale(0.92); filter: brightness(1.18); }
+  50% { transform: translate(-50%, -50%) rotateY(90deg) scale(0.9); filter: brightness(1.5); }
+  60% { transform: translate(-50%, -50%) rotateY(92deg) scale(0.92); filter: brightness(1.18); }
+  100% { transform: translate(-50%, -50%) rotateY(180deg) scale(1); filter: brightness(1); }
+}
+@keyframes faceFront {
+  0% { opacity: 1; }
+  49% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes faceBack {
+  0% { opacity: 0; }
+  49% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 1; }
 }
 .status {
   background: rgba(0,0,0,0.25);
@@ -1902,7 +1924,7 @@ async function doMove(r,c,player,feedback=null) {
     if(flipAnimInfo.size===0) return;
     flipAnimInfo.clear();
     if(!replayMode) render();
-  }, 680);
+  }, 980);
 
   if(feedback && gameMode==='ai' && player===BLACK) {
     showMoveFeedback(feedback.text, feedback.tone);
