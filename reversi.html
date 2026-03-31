@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.31 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.32 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.31 - Reversi</title>
+<title>黑白棋 v1.32 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -360,6 +360,7 @@ let passNoticeActive = false;
 let moveFeedbackTimer = null;
 let aiMoveTimer = null;
 let undoStack = [];
+let lastAutoReplayKey = '';
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -392,6 +393,7 @@ function initBoard() {
   replayMode = false;
   replayIndex = -1;
   undoStack = [];
+  lastAutoReplayKey = '';
   document.body.classList.remove('replay-mode');
   probDirty = true;
   render();
@@ -1427,6 +1429,44 @@ function exportReplay() {
   showMoveFeedback('录像已保存', 'good');
 }
 
+function saveReplayToLocalDirectory(fileName, payload) {
+  const indexKey = 'replay-dir:index';
+  const itemKey = `replay-dir:${fileName}`;
+  const raw = localStorage.getItem(indexKey);
+  const list = raw ? JSON.parse(raw) : [];
+  if(!list.includes(fileName)) list.unshift(fileName);
+  localStorage.setItem(indexKey, JSON.stringify(list.slice(0, 200)));
+  localStorage.setItem(itemKey, JSON.stringify(payload));
+}
+
+async function autoSaveReplay() {
+  const payload = buildReplayPayload();
+  const ts = new Date().toISOString().replace(/[:.]/g,'-');
+  const fileName = `reversi-replay-${ts}.json`;
+
+  try {
+    if(navigator.storage && navigator.storage.getDirectory) {
+      const root = await navigator.storage.getDirectory();
+      const dir = await root.getDirectoryHandle('录像目录', {create:true});
+      const fileHandle = await dir.getFileHandle(fileName, {create:true});
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(payload, null, 2));
+      await writable.close();
+      showMoveFeedback('已自动保存到录像目录', 'good');
+      return;
+    }
+  } catch (e) {
+    // 忽略后走回退路径
+  }
+
+  try {
+    saveReplayToLocalDirectory(fileName, payload);
+    showMoveFeedback('已自动保存到录像目录（本地）', 'good');
+  } catch (e) {
+    showMoveFeedback('自动保存失败', 'bad');
+  }
+}
+
 function triggerReplayImport() {
   const input = document.getElementById('replayFileInput');
   if(!input) return;
@@ -1719,6 +1759,11 @@ function showWinOverlay() {
   el.classList.add('show');
   document.getElementById('winText').textContent=b>w?'🏆 黑方胜利！':w>b?'🏆 白方胜利！':'⚖️ 平局！';
   document.getElementById('finalScore').textContent=`最终比分：黑 ${b} : ${w} 白`;
+  const replayKey = `${computeKey(board)}|${b}:${w}`;
+  if(lastAutoReplayKey !== replayKey) {
+    lastAutoReplayKey = replayKey;
+    autoSaveReplay();
+  }
 }
 
 function resetGame() {
