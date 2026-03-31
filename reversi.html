@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.8 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.9 | 新增LLM战略评估（需配置API Key） -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.8 - Reversi</title>
+<title>黑白棋 v1.9 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -242,6 +242,7 @@ h1 {
     <div class="depth-control">
       <label>AI深度：<input type="number" id="depthInput" value="20" min="4" max="20" onchange="setDepth(this.value)"></label>
       <button id="btnWeight" onclick="toggleWeightOverlay()">权重: 关</button>
+      <button id="btnLLM" onclick="toggleLLM()" style="background:#4ade80">LLM: 开</button>
     </div>
     <div class="controls">
       <button onclick="resetGame()">重新开始</button>
@@ -286,6 +287,10 @@ let lastMoveR = -1, lastMoveC = -1;
 let moveScores = []; // 每步评分 [{r,c,score},...]
 let showMoveScores = true; // 显示每步评分
 let showWeightOverlay = false; // 显示位置权重热力图
+let useLLM = true; // 使用LLM评估
+// LLM API配置（请替换为您的OpenRouter API Key）
+const LLM_API_KEY = 'sk-or-v2-default-key';
+const LLM_MODEL = 'google/gemini-2.0-flash-thinking-exp';
 
 // ============================================================
 // 常用开局库（15手以内经典开局）格式：前12个字节是棋盘编码，末4位是最佳落子
@@ -656,6 +661,111 @@ function countStable(player) {
   return stable;
 }
 
+// ============================================================
+// LLM 战略评估（调用大模型分析棋局）
+// ============================================================
+
+function boardToText() {
+  const pieces = {0:'.', 1:'X', 2:'O'};
+  const cols = '  ABCDEFGH';
+  let text = '    1 2 3 4 5 6 7 8\n  ┌─────────────────┐\n';
+  for(let r=0;r<SIZE;r++) {
+    text += cols[r+1] + ' │';
+    for(let c=0;c<SIZE;c++) {
+      text += ' ' + pieces[board[r][c]];
+    }
+    text += ' │\n';
+  }
+  text += '  └─────────────────┘\n';
+  const [b,w] = count();
+  text += `\n棋子数：黑${b} 白${w}，空格${64-b-w}`;
+  return text;
+}
+
+async function callLLMEvaluate(moves) {
+  if(!useLLM) return null;
+  
+  const boardText = boardToText();
+  const moveList = moves.map(([r,c],i) => `${i+1}. ${String.fromCharCode(65+c)}${r+1}`).join('\n');
+  
+  const prompt = `你是黑白棋(Reversi/Othello)高手。分析以下棋局，给出各落子点的战略评价。
+
+棋盘(X=黑方/玩家, O=白方/AI, .=空):
+${boardText}
+
+可选落子:
+${moveList}
+
+请分析每个落子的优劣，重点考虑：
+1. 角落控制（占角=必争）
+2. C格危险（邻角位易被翻）
+3. 行动力（能走越多步越好）
+4. 形状（连线、包围）
+
+请用以下JSON格式回复（只回复JSON，不要其他内容）：
+{
+  "analysis": "简要战略分析（30字内）",
+  "recommendations": [
+    {"move": "D3", "score": 85, "reason": "占角必争，控制边线"},
+    {"move": "C4", "score": 70, "reason": "位置尚可但临角危险"}
+  ]
+}`;
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + LLM_API_KEY,
+        'HTTP-Referer': 'https://example.com',
+        'X-Title': 'Reversi AI'
+      },
+      body: JSON.stringify({
+        model: LLM_MODEL,
+        messages: [{role: 'user', content: prompt}],
+        max_tokens: 500,
+        temperature: 0.3
+      })
+    });
+    
+    if(!response.ok) throw new Error('API error: ' + response.status);
+    
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    // 解析JSON
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if(jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch(e) {
+    console.log('LLM评估失败:', e.message);
+  }
+  return null;
+}
+
+async function evaluateWithLLM(moves) {
+  const result = await callLLMEvaluate(moves);
+  if(!result) return null;
+  
+  // 转换LLM结果为评分
+  const scores = [];
+  for(let [r,c] of moves) {
+    const col = String.fromCharCode(65+c);
+    const row = r+1;
+    const moveStr = col + row;
+    
+    const rec = result.recommendations.find(r => r.move === moveStr);
+    if(rec) {
+      scores.push({r, c, score: rec.score, reason: rec.reason});
+    } else {
+      scores.push({r, c, score: 50, reason: '一般'});
+    }
+  }
+  
+  return {analysis: result.analysis, scores};
+}
+
 function alphaBeta(depth, alpha, beta, maximizing) {
   const player = maximizing ? WHITE : BLACK;
   const moves = getValidMoves(player);
@@ -780,6 +890,23 @@ async function findBestMove(onProgress) {
       return prevBestMove !== null ? prevBestMove : bestMove;
     }
   }
+  
+  // Alpha-Beta完成，调用LLM做战略评估（与Alpha-Beta结果对比）
+  const llmResult = await evaluateWithLLM(moves);
+  if(llmResult) {
+    // 合并评分：Alpha-Beta占70%，LLM占30%
+    for(let s of moveScores) {
+      const llmScore = llmResult.scores.find(ls => ls.r === s.r && ls.c === s.c);
+      if(llmScore) {
+        // 归一化：Alpha-Beta分数范围约-500~+500，归一化到0-100
+        const abNorm = Math.max(0, Math.min(100, 50 + s.score / 10));
+        s.score = Math.round(abNorm * 0.7 + llmScore.score * 0.3);
+      }
+    }
+    // 更新显示
+    render();
+  }
+  
   return bestMove;
 }
 
@@ -1187,6 +1314,12 @@ function toggleWeightOverlay() {
   document.getElementById('btnWeight').textContent='权重: '+(showWeightOverlay?'开':'关');
   document.getElementById('btnWeight').style.background=showWeightOverlay?'#4ade80':'rgba(255,255,255,0.2)';
   render();
+}
+
+function toggleLLM() {
+  useLLM=!useLLM;
+  document.getElementById('btnLLM').textContent='LLM: '+(useLLM?'开':'关');
+  document.getElementById('btnLLM').style.background=useLLM?'#4ade80':'rgba(255,255,255,0.2)';
 }
 
 // 初始化
