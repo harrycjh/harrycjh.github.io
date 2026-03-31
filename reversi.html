@@ -263,185 +263,92 @@ let lastMoveR = -1, lastMoveC = -1;
 // ============================================================
 const OPENING_BOOK = new Map();
 
-// ============================================================
-// 完整10手开局库（已验证 - 标准C4开局主分支）
-// 坐标: board[row][col], chess C4=[3,2], D3=[2,3], C5=[4,2], D6=[5,3]
-// 初始: W@D4[3,3], B@E4[3,4]
-// ============================================================
+// 经典开局 - DIAMOND（最常见开局之一）
+const DIAMOND = [
+  [0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0],
+  [0,0,0,1,2,0,0,0],
+  [0,0,0,2,1,0,0,0],
+  [0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0]
+];
 
-(function buildOpeningBook() {
-  // Step 0: 黑C4 [3,2] (第一手下C4)
-  const o0 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,1,0,0,0,0,0],  // [3,2]=B
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 1: 白D3 [2,3] (翻[3,3])
-  const o1 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,0,0,0,0],  // [2,3]=W(D3)
-    [0,0,1,0,0,0,0,0],  // [3,2]=B(C4), [3,3]=W(翻)
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 2: 黑C5 [4,2] (翻[4,3])
-  const o2 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,0,0,0,0],
-    [0,0,1,0,0,0,0,0],
-    [0,0,1,0,0,0,0,0],  // [4,2]=B(C5), [4,3]=W(翻)
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 3: 白D6 [5,3] (翻[4,4])
-  const o3 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,0,0,0,0],
-    [0,0,1,0,0,0,0,0],
-    [0,0,1,2,0,0,0,0],  // [4,3]=W(翻), [4,4]=B(被翻)
-    [0,0,0,2,0,0,0,0],  // [5,3]=W(D6)
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 4: 黑E6 [5,4] (翻[5,5])
-  const o4 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,0,0,0,0],
-    [0,0,1,0,0,0,0,0],
-    [0,0,1,2,0,0,0,0],
-    [0,0,0,2,1,0,0,0],  // [5,4]=B(E6), [5,5]=W(被翻)
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 5: 白F4 [3,5] (翻[3,4])
-  const o5 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,0,0,0,0],
-    [0,0,1,0,0,2,0,0],  // [3,5]=W(F4), [3,4]=B(被翻)
-    [0,0,1,2,0,0,0,0],
-    [0,0,0,2,1,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 6: 黑E3 [2,4] (翻[3,4])
-  const o6 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,1,0,0,0],  // [2,4]=B(E3), [3,4]=W(被翻)
-    [0,0,1,0,0,2,0,0],
-    [0,0,1,2,0,0,0,0],
-    [0,0,0,2,1,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 7: 白F5 [4,5] (翻[5,5])
-  const o7 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,1,0,0,0],
-    [0,0,1,0,0,2,0,0],
-    [0,0,1,2,0,2,0,0],  // [4,5]=W(F5), [5,5]=B(被翻)
-    [0,0,0,2,1,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 8: 黑F6 [5,5] (翻[4,5])
-  const o8 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,1,0,0,0],
-    [0,0,1,0,0,2,0,0],
-    [0,0,1,2,0,2,0,0],
-    [0,0,0,2,1,1,0,0],  // [5,5]=B(F6), [4,5]=W(被翻)
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 9: 白G5 [4,6]
-  const o9 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,1,0,0,0],
-    [0,0,1,0,0,2,0,0],
-    [0,0,1,2,0,2,2,0],  // [4,6]=W(G5)
-    [0,0,0,2,1,1,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 10: 黑E2 [1,4] (翻[2,4])
-  const o10 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,1,0,0,0],  // [1,4]=B(E2), [2,4]=W(被翻)
-    [0,0,0,2,0,0,0,0],
-    [0,0,1,0,0,2,0,0],
-    [0,0,1,2,0,2,2,0],
-    [0,0,0,2,1,1,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // Step 11: 白F2 [2,5] (翻[1,4])
-  const o11 = [
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,2,0,2,0,0],  // [2,5]=W(F2), [1,4]=B(被翻)
-    [0,0,1,0,0,2,0,0],
-    [0,0,1,2,0,2,2,0],
-    [0,0,0,2,1,1,0,0],
-    [0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0]
-  ];
-
-  // 开局库：格式 [boardState, bestRow, bestCol]
-  const entries = [
-    [o0,  2, 3],   // 黑C4 -> 白D3 [2,3]
-    [o1,  4, 2],   // C4-D3 -> 黑C5 [4,2]
-    [o2,  5, 3],   // C4-D3-C5 -> 白D6 [5,3]
-    [o3,  5, 4],   // C4-D3-C5-D6 -> 黑E6 [5,4]
-    [o4,  3, 5],   // C4-D3-C5-D6-E6 -> 白F4 [3,5]
-    [o5,  2, 4],   // C4-D3-C5-D6-E6-F4 -> 黑E3 [2,4]
-    [o6,  4, 5],   // C4-D3-C5-D6-E6-F4-E3 -> 白F5 [4,5]
-    [o7,  5, 5],   // C4-D3-C5-D6-E6-F4-E3-F5 -> 黑F6 [5,5]
-    [o8,  4, 6],   // C4-D3-C5-D6-E6-F4-E3-F5-F6 -> 白G5 [4,6]
-    [o9,  1, 4],   // C4-D3-C5-D6-E6-F4-E3-F5-F6-G5 -> 黑E2 [1,4]
-    [o10, 2, 5],   // C4-D3-C5-D6-E6-F4-E3-F5-F6-G5-E2 -> 白F2 [2,5]
-  ];
-
-  for(let [b, br, bc] of entries) {
-    const key = normalizeBoard(b);
-    OPENING_BOOK.set(key, [br, bc]);
-  }
-})();
-
-function lookupOpeningBook() {
-  const empty = emptyCount();
-  if(empty < 42) return null; // 超过10手不用开局库
-  const key = normalizeBoard(board);
-  return OPENING_BOOK.get(key) || null;
+// 初始化棋盘
+function initBoard() {
+  board = Array(8).fill(null).map(()=>Array(8).fill(EMPTY));
+  board[3][3]=WHITE; board[3][4]=BLACK;
+  board[4][3]=BLACK; board[4][4]=WHITE;
+  currentPlayer = BLACK;
+  gameOver = false;
+  lastMoveR = -1; lastMoveC = -1;
+  probHistory = [{black:50, white:50}];
+  render();
+  updateStatus();
 }
 
+// 统计棋子
+function count() {
+  let b=0, w=0;
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){
+    if(board[r][c]===BLACK) b++; else if(board[r][c]===WHITE) w++;
+  }
+  return [b,w];
+}
+
+function emptyCount() {
+  let e=0;
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++) if(board[r][c]===EMPTY) e++;
+  return e;
+}
+
+// 翻转方向
+function getFlips(r,c,player) {
+  const opp = player===BLACK?WHITE:BLACK;
+  let flips=[];
+  for(let [dr,dc] of DIRS) {
+    let fr=[], nr=r+dr, nc=c+dc;
+    while(nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&board[nr][nc]===opp){
+      fr.push([nr,nc]); nr+=dr; nc+=dc;
+    }
+    if(fr.length>0 && nr>=0&&nr<SIZE&&nc>=0&&nc<SIZE&&board[nr][nc]===player) flips.push(...fr);
+  }
+  return flips;
+}
+
+function isValid(r,c,player) {
+  if(r<0||r>=SIZE||c<0||c>=SIZE||board[r][c]!==EMPTY) return false;
+  return getFlips(r,c,player).length>0;
+}
+
+function getValidMoves(player) {
+  let moves=[];
+  for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++) if(isValid(r,c,player)) moves.push([r,c]);
+  return moves;
+}
+
+function move(r,c,player) {
+  const flips = getFlips(r,c,player);
+  board[r][c]=player;
+  for(let [fr,fc] of flips) board[fr][fc]=player;
+  return flips.length;
+}
+
+function unmove(r,c,player,flips,oldBoard) {
+  board[r][c]=EMPTY;
+  for(let [fr,fc] of flips) board[fr][fc]=player;
+}
+
+// ============================================================
+// 第一阶段：开局库查找（对称性压缩）
+// ============================================================
+function boardToKey(b) {
+  // 只编码中心6x6区域（开局时四角落都是空的）
+  let key='';
+  for(let r=1;r<7;r++) for(let c=1;c<7;c++) key+=b[r][c];
+  return key;
+}
 
 function normalizeBoard(b) {
   // 8种对称变换，返回最小的那个key
@@ -464,6 +371,58 @@ function rot180(b) { const nb=Array(8).fill(null).map(()=>Array(8).fill(0)); for
 function rot270(b) { const nb=Array(8).fill(null).map(()=>Array(8).fill(0)); for(let r=0;r<8;r++) for(let c=0;c<8;c++) nb[7-c][r]=b[r][c]; return nb; }
 
 // 手动构建开局库（经典开局模式 + 响应）
+(function buildOpeningBook() {
+  // 格式：[棋盘key, bestRow, bestCol]
+  // 这里放最常见的开局及其应答
+  
+  // Standard开局
+  const std1 = [
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,1,2,0,0,0],
+    [0,0,0,2,1,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0]
+  ];
+  
+  // C4开局（黑占C4，白占D3）
+  const c4_1 = [
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,2,0,0,0],
+    [0,0,0,1,1,0,0,0],
+    [0,0,0,2,1,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0]
+  ];
+  
+  // 记录开局（记录最优应答）
+  const entries = [
+    // Standard开局 -> C4（最优应答）
+    [std1, 2, 4],
+    [c4_1, 2, 3],
+  ];
+  
+  for(let [b, br, bc] of entries) {
+    const key = normalizeBoard(b);
+    OPENING_BOOK.set(key, [br, bc]);
+  }
+})();
+
+function lookupOpeningBook() {
+  const empty = emptyCount();
+  if(empty < 52) return null; // 超过12手不用开局库
+  const key = normalizeBoard(board);
+  return OPENING_BOOK.get(key) || null;
+}
+
+// ============================================================
+// 第二阶段：Alpha-Beta 搜索
+// ============================================================
+
 // 评估函数权重
 const W_CORNER = 25;
 const W_CORNER_ADJ = -12;  // 角落周边惩罚
@@ -599,22 +558,18 @@ function countStable(player) {
   return stable;
 }
 
-function alphaBeta(depth, alpha, beta, maximizing, searchCtx) {
-  if(Date.now() - searchCtx.startTime > searchCtx.timeLimit) {
-    searchCtx.aborted = true;
-    return maximizing ? Infinity : -Infinity;
-  }
-  
+function alphaBeta(depth, alpha, beta, maximizing) {
   const player = maximizing ? WHITE : BLACK;
   const moves = getValidMoves(player);
   
   if(moves.length===0) {
     const oppMoves = getValidMoves(player===WHITE?BLACK:WHITE);
     if(oppMoves.length===0) {
+      // 游戏结束
       const [b,w]=count();
       return (w-b)*1000;
     }
-    return alphaBeta(depth, alpha, beta, !maximizing, searchCtx);
+    return alphaBeta(depth, alpha, beta, !maximizing);
   }
   
   if(depth===0) return evalBoard(player);
@@ -622,7 +577,9 @@ function alphaBeta(depth, alpha, beta, maximizing, searchCtx) {
   // 落子排序（优先角落）
   function moveScore(m) {
     let [r,c]=m;
+    // 角落最高
     for(let [cr,cc] of CORNERS) if(r===cr&&c===cc) return 100;
+    // C格最低
     for(let [cr,cc] of C_SQUARES) if(r===cr&&c===cc) return -100;
     return 0;
   }
@@ -633,10 +590,9 @@ function alphaBeta(depth, alpha, beta, maximizing, searchCtx) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = alphaBeta(depth-1, alpha, beta, false, searchCtx);
+      let ev = alphaBeta(depth-1, alpha, beta, false);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      if(searchCtx.aborted) return Infinity;
       maxEval = Math.max(maxEval, ev);
       alpha = Math.max(alpha, ev);
       if(beta <= alpha) break;
@@ -647,10 +603,9 @@ function alphaBeta(depth, alpha, beta, maximizing, searchCtx) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = alphaBeta(depth-1, alpha, beta, true, searchCtx);
+      let ev = alphaBeta(depth-1, alpha, beta, true);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      if(searchCtx.aborted) return -Infinity;
       minEval = Math.min(minEval, ev);
       beta = Math.min(beta, ev);
       if(beta <= alpha) break;
@@ -659,7 +614,7 @@ function alphaBeta(depth, alpha, beta, maximizing, searchCtx) {
   }
 }
 
-async function findBestMove(onProgress) {
+function findBestMove() {
   const empty = emptyCount();
   
   // 第一阶段：查开局库
@@ -670,47 +625,31 @@ async function findBestMove(onProgress) {
   
   // 第二/三阶段
   if(empty <= 20) {
-    // 残局完美求解（异步，报告进度）
-    return await findEndgameMoveAsync(onProgress);
+    // 残局完美求解
+    return findEndgameMove();
   }
   
-  // 中局Alpha-Beta（时间自适应：10秒内尽可能加深）
+  // 中局Alpha-Beta
   const player = WHITE;
   const moves = getValidMoves(player);
   if(moves.length===0) return null;
   
-  const TIME_LIMIT = 10000; // 10秒
-  const startTime = Date.now();
-  const searchCtx = { startTime, timeLimit: TIME_LIMIT, aborted: false };
-  
-  // 迭代加深（从深度2开始连续加深，直到时间到）
+  // 迭代加深
   let bestMove=null, bestScore=-Infinity;
-  const startDepth = empty > 40 ? 4 : 2;
-  const maxDepth = Math.min(aiDepth, 10);
-  
-  for(let d=startDepth; d<=maxDepth; d++) {
-    const elapsed = Date.now() - startTime;
-    if(elapsed >= TIME_LIMIT) break;
-    
+  for(let d=2; d<=aiDepth; d+=2) {
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
     
     for(let [r,c] of sorted) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = -alphaBeta(d-1, -Infinity, Infinity, false, searchCtx);
+      let ev = -alphaBeta(d-1, -Infinity, Infinity, false);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
       
-      if(searchCtx.aborted) break;
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
-    if(searchCtx.aborted) break;
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
-    
-    // 报告进度并让浏览器刷新UI
-    onProgress(d, Date.now()-startTime);
-    await new Promise(r => setTimeout(r, 0));
   }
   return bestMove;
 }
@@ -727,12 +666,7 @@ function moveScore(m) {
 // ============================================================
 let endgameNodes = 0;
 
-function solveEndgame(depth, alpha, beta, maximizing, searchCtx) {
-  if(Date.now() - searchCtx.startTime > searchCtx.timeLimit) {
-    searchCtx.aborted = true;
-    return maximizing ? Infinity : -Infinity;
-  }
-  
+function solveEndgame(depth, alpha, beta, maximizing) {
   endgameNodes++;
   const player = maximizing ? WHITE : BLACK;
   const moves = getValidMoves(player);
@@ -744,13 +678,17 @@ function solveEndgame(depth, alpha, beta, maximizing, searchCtx) {
       const [b,w]=count();
       return (w-b)*1000;
     }
-    return solveEndgame(depth, alpha, beta, !maximizing, searchCtx);
+    return solveEndgame(depth, alpha, beta, !maximizing);
   }
   
   if(depth===0) {
     const [b,w]=count();
     return (w-b)*100;
   }
+  
+  // 奇偶剪枝：空格奇偶性决定谁最后落子
+  const empty = emptyCount();
+  const parity = empty % 2;
   
   // 落子排序：优先行动力最少的（MLOS）
   moves.sort((a,b)=>getFlips(a[0],a[1],player).length - getFlips(b[0],b[1],player).length);
@@ -760,10 +698,9 @@ function solveEndgame(depth, alpha, beta, maximizing, searchCtx) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = solveEndgame(depth-1, alpha, beta, false, searchCtx);
+      let ev = solveEndgame(depth-1, alpha, beta, false);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      if(searchCtx.aborted) return Infinity;
       maxEval = Math.max(maxEval, ev);
       alpha = Math.max(alpha, ev);
       if(beta <= alpha) break;
@@ -774,10 +711,9 @@ function solveEndgame(depth, alpha, beta, maximizing, searchCtx) {
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = solveEndgame(depth-1, alpha, beta, true, searchCtx);
+      let ev = solveEndgame(depth-1, alpha, beta, true);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=player===WHITE?BLACK:WHITE;
-      if(searchCtx.aborted) return -Infinity;
       minEval = Math.min(minEval, ev);
       beta = Math.min(beta, ev);
       if(beta <= alpha) break;
@@ -792,70 +728,23 @@ function findEndgameMove() {
   const moves = getValidMoves(player);
   if(moves.length===0) return null;
   
-  // 残局完美求解（时间自适应：10秒内逐步加深到12）
-  const TIME_LIMIT = 10000;
-  const startTime = Date.now();
-  const searchCtx = { startTime, timeLimit: TIME_LIMIT, aborted: false };
+  // 迭代加深搜索
   let bestMove=null, bestScore=-Infinity;
-  const maxDepth = Math.min(emptyCount(), 12);
+  const maxDepth = Math.min(emptyCount(), 20);
   
-  for(let d=4; d<=maxDepth; d++) {
-    const elapsed = Date.now() - startTime;
-    if(elapsed >= TIME_LIMIT) break;
-    
+  for(let d=2; d<=maxDepth; d+=2) {
     let currentBest=null, currentScore=-Infinity;
     
     for(let [r,c] of moves) {
       const flips = getFlips(r,c,player);
       board[r][c]=player;
-      let ev = -solveEndgame(d-1, -Infinity, Infinity, false, searchCtx);
+      let ev = -solveEndgame(d-1, -Infinity, Infinity, false);
       board[r][c]=EMPTY;
       for(let [fr,fc] of flips) board[fr][fc]=BLACK;
       
-      if(searchCtx.aborted) break;
       if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
     }
     if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
-  }
-  
-  return bestMove;
-}
-
-async function findEndgameMoveAsync(onProgress) {
-  endgameNodes = 0;
-  const player = WHITE;
-  const moves = getValidMoves(player);
-  if(moves.length===0) return null;
-  
-  // 残局完美求解（时间自适应：10秒内逐步加深到12）
-  const TIME_LIMIT = 10000;
-  const startTime = Date.now();
-  const searchCtx = { startTime, timeLimit: TIME_LIMIT, aborted: false };
-  let bestMove=null, bestScore=-Infinity;
-  const maxDepth = Math.min(emptyCount(), 12);
-  
-  for(let d=4; d<=maxDepth; d++) {
-    const elapsed = Date.now() - startTime;
-    if(elapsed >= TIME_LIMIT) break;
-    
-    let currentBest=null, currentScore=-Infinity;
-    
-    for(let [r,c] of moves) {
-      const flips = getFlips(r,c,player);
-      board[r][c]=player;
-      let ev = -solveEndgame(d-1, -Infinity, Infinity, false, searchCtx);
-      board[r][c]=EMPTY;
-      for(let [fr,fc] of flips) board[fr][fc]=BLACK;
-      
-      if(searchCtx.aborted) break;
-      if(ev > currentScore) { currentScore=ev; currentBest=[r,c]; }
-    }
-    if(searchCtx.aborted) break;
-    if(currentBest) { bestMove=currentBest; bestScore=currentScore; }
-    
-    // 报告进度并让浏览器刷新UI
-    onProgress(d, Date.now()-startTime);
-    await new Promise(r => setTimeout(r, 0));
   }
   
   return bestMove;
@@ -869,11 +758,9 @@ function calcProb() {
   const empty = emptyCount();
   
   if(empty <= 20) {
-    // 残局：深度搜索求解（从8到10逐步加深，限时3秒）
+    // 残局：深度搜索求解
     endgameNodes = 0;
-    const searchDepth = empty > 14 ? 8 : 10;
-    const probCtx = { startTime: Date.now(), timeLimit: 3000, aborted: false };
-    const result = -solveEndgame(searchDepth, -Infinity, Infinity, false, probCtx);
+    const result = -solveEndgame(Math.min(empty, 14), -Infinity, Infinity, false);
     if(result > 300) return {b:0, w:100};
     if(result > 100) return {b:5, w:95};
     if(result > 30) return {b:20, w:80};
@@ -1043,48 +930,35 @@ function doMove(r,c,player) {
   updateStatus();
   
   if(gameMode==='ai' && currentPlayer===WHITE && !gameOver) {
-    doAIMove();
+    setTimeout(doAIMove,100);
   } else if(gameOver) {
     showWinOverlay();
   }
 }
 
-async function doAIMove() {
+function doAIMove() {
   thinkStart=Date.now();
-  let currentDepth = 0;
+  document.getElementById('modeInfo').textContent='🔥 AI思考中...';
   
-  // 进度回调：更新思考时间和深度显示
-  const onProgress = (depth, elapsed) => {
-    currentDepth = depth;
-    document.getElementById('modeInfo').textContent=`🔥 深度${depth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
-  };
-  
-  // 启动独立计时器，每100ms更新时间显示
-  const timer = setInterval(() => {
-    const elapsed = Date.now() - thinkStart;
-    document.getElementById('modeInfo').textContent=`🔥 深度${currentDepth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
-  }, 100);
-  
-  document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0.0秒';
-  
-  const m = await findBestMove(onProgress);
-  clearInterval(timer);
-  const elapsed = Date.now()-thinkStart;
-  document.getElementById('modeInfo').textContent=`⏱ ${(elapsed/1000).toFixed(1)}秒`;
-  
-  if(m) {
-    doMove(m[0],m[1],WHITE);
-  } else {
-    // AI无棋，跳过
-    const currMoves = getValidMoves(BLACK);
-    if(currMoves.length>0) {
-      currentPlayer=BLACK;
-      render(); updateStatus();
+  setTimeout(()=>{
+    const m = findBestMove();
+    const elapsed = Date.now()-thinkStart;
+    document.getElementById('modeInfo').textContent=`⏱ ${(elapsed/1000).toFixed(1)}秒`;
+    
+    if(m) {
+      doMove(m[0],m[1],WHITE);
     } else {
-      gameOver=true;
-      render(); updateStatus(); showWinOverlay();
+      // AI无棋，跳过
+      const currMoves = getValidMoves(BLACK);
+      if(currMoves.length>0) {
+        currentPlayer=BLACK;
+        render(); updateStatus();
+      } else {
+        gameOver=true;
+        render(); updateStatus(); showWinOverlay();
+      }
     }
-  }
+  }, 50);
 }
 
 function showWinOverlay() {
