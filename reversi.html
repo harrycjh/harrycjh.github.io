@@ -1157,7 +1157,6 @@ async function doAIMove() {
   // 进度回调
   const onProgress = (depth, elapsed) => {
     currentDepth = depth;
-    updateModeInfo(depth, elapsed);
   };
   
   // 独立计时器：严格每秒刷新一次
