@@ -683,16 +683,14 @@ async function findBestMove(onProgress) {
   const startTime = Date.now();
   const searchCtx = { startTime, timeLimit: TIME_LIMIT, aborted: false };
   
-  // 迭代加深（开局库后从深度6开始，逐步加深）
+  // 迭代加深（从深度2开始连续加深，直到时间到）
   let bestMove=null, bestScore=-Infinity;
-  const startDepth = empty > 40 ? 6 : 2;
+  const startDepth = empty > 40 ? 4 : 2;
   const maxDepth = Math.min(aiDepth, 10);
   
-  for(let d=startDepth; d<=maxDepth; d+=2) {
+  for(let d=startDepth; d<=maxDepth; d++) {
     const elapsed = Date.now() - startTime;
-    if(elapsed >= TIME_LIMIT) {
-      break; // 时间到了，返回当前最佳
-    }
+    if(elapsed >= TIME_LIMIT) break;
     
     let currentBest=null, currentScore=-Infinity;
     const sorted = moves.slice().sort((a,b)=>moveScore(b)-moveScore(a));
@@ -801,7 +799,7 @@ function findEndgameMove() {
   let bestMove=null, bestScore=-Infinity;
   const maxDepth = Math.min(emptyCount(), 12);
   
-  for(let d=8; d<=maxDepth; d+=2) {
+  for(let d=4; d<=maxDepth; d++) {
     const elapsed = Date.now() - startTime;
     if(elapsed >= TIME_LIMIT) break;
     
@@ -836,7 +834,7 @@ async function findEndgameMoveAsync(onProgress) {
   let bestMove=null, bestScore=-Infinity;
   const maxDepth = Math.min(emptyCount(), 12);
   
-  for(let d=8; d<=maxDepth; d+=2) {
+  for(let d=4; d<=maxDepth; d++) {
     const elapsed = Date.now() - startTime;
     if(elapsed >= TIME_LIMIT) break;
     
@@ -1053,15 +1051,24 @@ function doMove(r,c,player) {
 
 async function doAIMove() {
   thinkStart=Date.now();
+  let currentDepth = 0;
   
   // 进度回调：更新思考时间和深度显示
   const onProgress = (depth, elapsed) => {
+    currentDepth = depth;
     document.getElementById('modeInfo').textContent=`🔥 深度${depth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
   };
   
-  document.getElementById('modeInfo').textContent='🔥 深度? | ⏱ 0.0秒';
+  // 启动独立计时器，每100ms更新时间显示
+  const timer = setInterval(() => {
+    const elapsed = Date.now() - thinkStart;
+    document.getElementById('modeInfo').textContent=`🔥 深度${currentDepth} | ⏱ ${(elapsed/1000).toFixed(1)}秒`;
+  }, 100);
+  
+  document.getElementById('modeInfo').textContent='🔥 深度0 | ⏱ 0.0秒';
   
   const m = await findBestMove(onProgress);
+  clearInterval(timer);
   const elapsed = Date.now()-thinkStart;
   document.getElementById('modeInfo').textContent=`⏱ ${(elapsed/1000).toFixed(1)}秒`;
   
