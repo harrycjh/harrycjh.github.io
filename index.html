@@ -1,307 +1,137 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v2.1 -->
+<!-- 法兰城 v3.0 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v2.1</title>
+<title>法兰城 v3.0</title>
 <style>
 :root {
-  --ink: #102016;
-  --panel: rgba(13, 29, 21, 0.88);
-  --panel-border: rgba(201, 240, 175, 0.18);
-  --accent: #cbe992;
-  --accent-strong: #f8d86c;
-  --mist: rgba(214, 238, 194, 0.08);
+  --bg: #0f1711;
+  --panel: rgba(26, 40, 30, 0.92);
+  --panel-2: rgba(20, 30, 22, 0.94);
+  --line: rgba(219, 231, 189, 0.18);
+  --ink: #f2edc9;
+  --muted: rgba(237, 241, 214, 0.75);
+  --gold: #e8cc86;
+  --jade: #8db57a;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: "Courier New", "PingFang SC", monospace;
-  color: #f7f8df;
+  color: var(--ink);
+  font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
   background:
-    radial-gradient(circle at top, rgba(255, 240, 184, 0.18), transparent 24%),
-    linear-gradient(180deg, #3a5d55 0%, #20392f 30%, #102117 100%);
-  overflow-x: hidden;
-  transition: opacity 0.18s ease;
-}
-body.leaving { opacity: 0; }
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-}
-body::before {
-  background:
-    linear-gradient(transparent 96%, rgba(0, 0, 0, 0.06) 96%),
-    linear-gradient(90deg, transparent 96%, rgba(0, 0, 0, 0.05) 96%);
-  background-size: 8px 8px;
-  opacity: 0.16;
-}
-body::after {
-  background:
-    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.12), transparent 18%),
-    radial-gradient(circle at 78% 10%, rgba(255, 235, 170, 0.18), transparent 14%);
+    radial-gradient(circle at top, rgba(134, 170, 120, 0.18), transparent 24%),
+    linear-gradient(180deg, #18251b 0%, #0f1711 58%, #0b120d 100%);
 }
 .page {
-  width: min(1180px, calc(100vw - 24px));
+  width: min(1380px, calc(100vw - 28px));
   margin: 0 auto;
-  padding: 20px 0 26px;
+  padding: 22px 0 28px;
+}
+.hero,
+.side-card,
+.map-shell {
+  border: 2px solid var(--line);
+  background: linear-gradient(180deg, rgba(35, 55, 42, 0.95), rgba(16, 24, 19, 0.96));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
 }
 .hero {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  align-items: end;
-  margin-bottom: 18px;
-}
-.title-block {
-  padding: 14px 18px;
-  border: 2px solid rgba(242, 255, 197, 0.14);
-  background: linear-gradient(180deg, rgba(53, 78, 55, 0.72), rgba(18, 28, 21, 0.82));
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  padding: 20px 22px;
+  margin-bottom: 16px;
 }
 .eyebrow {
-  color: #ffe99a;
+  color: var(--gold);
   font-size: 0.82rem;
   letter-spacing: 2px;
   text-transform: uppercase;
-}
-h1 {
-  margin: 0;
-  font-size: clamp(1.8rem, 4vw, 3rem);
-  line-height: 1;
-  letter-spacing: 3px;
-  color: #fbffd8;
-  text-shadow: 4px 4px 0 rgba(12, 18, 13, 0.28);
 }
 .title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 8px 0;
+  gap: 12px;
+  margin: 6px 0 10px;
 }
-.title-version {
-  padding: 6px 10px 5px;
-  border: 2px solid rgba(255, 232, 150, 0.18);
-  background: rgba(23, 36, 25, 0.86);
-  color: #ffe79c;
-  font-size: 0.86rem;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.16);
-}
-.subtitle {
-  max-width: 540px;
-  line-height: 1.7;
-  color: rgba(245, 247, 220, 0.86);
-}
-.hero-chip {
-  padding: 12px 14px;
-  align-self: center;
-  background: rgba(14, 28, 20, 0.75);
-  border: 2px solid rgba(255, 224, 135, 0.18);
-  color: #ffe8a2;
-  font-size: 0.86rem;
-  letter-spacing: 1px;
-  min-width: 220px;
-}
-.entry-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 18px;
-  background: rgba(4, 9, 6, 0.38);
-  backdrop-filter: blur(3px);
-  z-index: 20;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s ease;
-}
-.entry-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-.entry-modal {
-  width: min(980px, calc(100vw - 20px));
-  max-height: calc(100vh - 36px);
-  overflow: auto;
-  padding: 18px;
-  border: 2px solid rgba(255, 233, 170, 0.22);
-  background:
-    linear-gradient(180deg, rgba(56, 77, 57, 0.92), rgba(18, 28, 21, 0.96)),
-    radial-gradient(circle at top right, rgba(255, 228, 159, 0.12), transparent 24%);
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-.entry-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 14px;
-}
-.entry-kicker {
-  color: #ffe99a;
-  font-size: 0.82rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-.entry-head h2 {
-  margin: 6px 0 8px;
-  font-size: clamp(1.5rem, 3.2vw, 2.4rem);
-  letter-spacing: 2px;
-  color: #fbffd8;
-}
-.entry-head p {
+h1 {
   margin: 0;
-  max-width: 560px;
-  color: rgba(246, 248, 220, 0.86);
-  line-height: 1.7;
+  line-height: 1;
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
 }
-.entry-stamp {
-  padding: 10px 12px;
-  min-width: 132px;
-  border: 2px solid rgba(255, 232, 150, 0.16);
-  background: rgba(12, 22, 16, 0.8);
-  color: #ffe79c;
-  text-align: center;
-  font-size: 0.82rem;
-  line-height: 1.55;
-  letter-spacing: 1px;
+.version {
+  padding: 4px 10px;
+  border: 2px solid rgba(232, 204, 134, 0.24);
+  color: var(--gold);
+  font-size: 0.9rem;
 }
-.entry-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.entry-card {
-  border: 2px solid rgba(230, 242, 196, 0.12);
-  background: linear-gradient(180deg, rgba(19, 31, 23, 0.82), rgba(12, 20, 15, 0.96));
-  color: inherit;
-  cursor: pointer;
-  padding: 12px 10px;
-  text-align: left;
-  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-}
-.entry-card:hover,
-.entry-card:focus-visible {
-  transform: translateY(-2px);
-  border-color: rgba(255, 232, 150, 0.3);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-}
-.entry-card.selected {
-  border-color: rgba(255, 232, 150, 0.48);
-  background:
-    linear-gradient(180deg, rgba(74, 99, 71, 0.9), rgba(21, 32, 24, 0.96)),
-    radial-gradient(circle at top, rgba(255, 228, 159, 0.1), transparent 30%);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
-}
-.entry-portrait {
-  position: relative;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 10px;
-  border: 2px solid rgba(255, 240, 194, 0.16);
-  background: rgba(12, 20, 15, 0.84);
-  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.18);
-}
-.entry-portrait img,
-.entry-avatar img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-.entry-card strong {
-  display: block;
-  color: #fbffd8;
-  font-size: 0.96rem;
-  margin-bottom: 4px;
-}
-.entry-card span {
-  display: block;
-  color: #ffe79c;
-  font-size: 0.82rem;
-  margin-bottom: 6px;
-}
-.entry-card p {
+.hero p {
   margin: 0;
-  color: rgba(245, 247, 225, 0.76);
-  line-height: 1.5;
-  font-size: 0.8rem;
-}
-.entry-preview {
-  display: grid;
-  grid-template-columns: 132px minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
-  padding: 14px;
-  margin-bottom: 14px;
-  border: 2px solid rgba(255, 248, 204, 0.12);
-  background: linear-gradient(180deg, rgba(63, 95, 63, 0.24), rgba(19, 31, 24, 0.86));
-}
-.entry-avatar {
-  position: relative;
-  width: 132px;
-  height: 132px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  border: 2px solid rgba(255, 240, 194, 0.18);
-  background: rgba(12, 20, 15, 0.84);
-  box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.18);
-}
-.entry-preview h3 {
-  margin: 0 0 6px;
-  color: #fbffd8;
-  font-size: 1.24rem;
-}
-.entry-preview .preview-level {
-  color: #ffe79c;
-  font-size: 0.88rem;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-.entry-preview p {
-  margin: 0;
-  color: rgba(245, 247, 225, 0.84);
-  line-height: 1.7;
-}
-.entry-actions {
-  display: flex;
-  justify-content: flex-end;
+  max-width: 920px;
+  line-height: 1.75;
+  color: var(--muted);
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 360px);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.38fr) minmax(280px, 0.62fr);
+  gap: 16px;
 }
-.scene-card,
-.panel {
-  background: var(--panel);
-  border: 2px solid var(--panel-border);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
-}
-.scene-card {
-  padding: 14px;
-}
-.frame {
+.map-shell {
   position: relative;
+  padding: 16px;
   overflow: hidden;
-  border: 4px solid rgba(253, 255, 221, 0.14);
+}
+.map-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.map-head h2,
+.side-card h2 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 1.18rem;
+}
+.map-head p,
+.side-card p {
+  margin: 6px 0 0;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.map-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.badge {
+  padding: 6px 10px;
+  border: 1px solid rgba(232, 204, 134, 0.18);
+  background: rgba(13, 21, 16, 0.46);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.canvas-wrap {
+  position: relative;
+  border: 2px solid rgba(221, 230, 196, 0.1);
   background:
-    linear-gradient(180deg, rgba(255, 250, 230, 0.05), transparent 10%),
-    rgba(7, 14, 10, 0.6);
+    linear-gradient(180deg, rgba(167, 202, 188, 0.1), rgba(11, 18, 13, 0.3)),
+    radial-gradient(circle at 50% 0%, rgba(255, 241, 184, 0.08), transparent 38%),
+    #142017;
+  overflow: hidden;
+}
+.canvas-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 100%);
+  background-size: 12px 12px;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.12;
 }
 canvas {
   display: block;
@@ -310,1012 +140,601 @@ canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
-.canvas-overlay {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 12px;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  pointer-events: none;
-}
-.badge {
-  padding: 8px 10px;
-  background: rgba(14, 25, 18, 0.8);
-  border: 2px solid rgba(238, 255, 211, 0.14);
-  font-size: 0.75rem;
-  letter-spacing: 1px;
-}
-.badge strong {
-  color: var(--accent);
-  font-size: 0.9rem;
-}
-.scene-tip {
+.note {
   margin-top: 12px;
-  padding: 12px 14px;
-  min-height: 60px;
-  border: 2px solid rgba(255, 248, 204, 0.12);
-  background: linear-gradient(180deg, rgba(63, 95, 63, 0.24), rgba(19, 31, 24, 0.86));
-  line-height: 1.6;
-  color: #f2f7d8;
+  color: rgba(237, 241, 214, 0.66);
+  line-height: 1.65;
+  font-size: 0.92rem;
 }
-.panel {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
+.side {
+  display: grid;
   gap: 14px;
 }
-.panel h2 {
-  margin: 0;
-  font-size: 1rem;
-  letter-spacing: 2px;
-  color: #fff0ad;
+.side-card {
+  padding: 16px;
 }
-.panel p,
-.panel li {
-  line-height: 1.7;
-  color: rgba(245, 247, 225, 0.86);
+.info-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(219, 231, 189, 0.08);
+  color: var(--muted);
 }
-.panel ul {
-  margin: 0;
-  padding-left: 18px;
+.info-line strong {
+  color: var(--ink);
+  font-weight: 600;
 }
-.status-box {
-  padding: 12px 14px;
-  border: 2px solid rgba(203, 233, 146, 0.16);
-  background: rgba(13, 22, 17, 0.72);
-}
-.status-box strong {
-  display: block;
-  color: var(--accent);
-  margin-bottom: 6px;
-}
-.button-row {
-  display: grid;
-  gap: 10px;
-}
-.btn {
-  border: 0;
-  cursor: pointer;
-  text-decoration: none;
-  text-align: center;
-  padding: 12px 14px;
-  background: #dff2a8;
-  color: #17311f;
-  font-weight: 700;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 0 #90ab54;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
-}
-.btn:hover,
-.btn:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 #90ab54;
-  filter: brightness(1.03);
-}
-.btn.secondary {
-  background: #ffe7a2;
-  box-shadow: 0 4px 0 #b88d37;
-}
-.btn.secondary:hover,
-.btn.secondary:focus-visible {
-  box-shadow: 0 6px 0 #b88d37;
-}
-.controls {
-  display: none;
+.traveler {
+  display: flex;
+  align-items: center;
   gap: 12px;
   margin-top: 12px;
 }
-.dpad {
+.portrait {
+  width: 84px;
+  height: 84px;
+  border: 2px solid rgba(232, 204, 134, 0.22);
+  background: linear-gradient(180deg, rgba(57, 78, 61, 0.96), rgba(18, 27, 20, 0.98));
   display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(3, 56px);
-  gap: 6px;
+  place-items: center;
 }
-.pad,
-.action {
-  border: 0;
+.portrait img {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.controls {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+button {
+  appearance: none;
+  border: 1px solid rgba(232, 204, 134, 0.18);
+  background: linear-gradient(180deg, rgba(59, 78, 62, 0.94), rgba(26, 39, 28, 0.96));
+  color: var(--ink);
+  padding: 10px 12px;
   font: inherit;
-  color: #f5f7df;
-  background: rgba(22, 36, 27, 0.92);
-  border: 2px solid rgba(240, 252, 198, 0.14);
-  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
-.pad:active,
-.pad.active,
-.action:active,
-.action.active {
-  transform: translateY(2px);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-  background: rgba(62, 84, 52, 0.98);
+button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(232, 204, 134, 0.32);
+  background: linear-gradient(180deg, rgba(77, 99, 80, 0.96), rgba(31, 45, 33, 0.98));
 }
-.pad.blank {
-  visibility: hidden;
+.legend {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
 }
-.action-pad {
+.legend-item {
   display: flex;
   align-items: center;
+  gap: 10px;
+  color: var(--muted);
 }
-.action {
-  width: 110px;
-  height: 110px;
-  background: rgba(102, 68, 18, 0.92);
-  border-color: rgba(255, 225, 164, 0.16);
+.swatch {
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
-.footer-note {
-  margin-top: 14px;
-  font-size: 0.82rem;
-  color: rgba(244, 247, 223, 0.6);
+.foot {
+  margin-top: 12px;
+  color: rgba(237, 241, 214, 0.56);
+  font-size: 0.88rem;
 }
-@media (max-width: 940px) {
-  .hero {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .hero-chip {
-    min-width: 0;
-  }
-  .layout {
-    grid-template-columns: 1fr;
-  }
-  .entry-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@media (max-width: 760px) {
-  .page {
-    width: min(100vw - 14px, 760px);
-    padding-top: 10px;
-  }
-  .scene-card,
-  .panel {
-    padding: 12px;
-  }
-  .controls {
-    display: flex;
-    justify-content: space-between;
-  }
-  .subtitle {
-    max-width: none;
-  }
-  .entry-head,
-  .entry-preview {
-    grid-template-columns: 1fr;
-    display: grid;
-  }
-  .entry-head {
-    justify-content: stretch;
-  }
-  .entry-stamp {
-    min-width: 0;
-  }
-  .entry-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .entry-avatar {
-    width: 104px;
-    height: 112px;
-  }
+@media (max-width: 1080px) {
+  .layout { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 <body>
   <main class="page">
     <section class="hero">
-      <div class="title-block">
-        <div class="eyebrow">Falan City Gate</div>
-        <div class="title-row">
-          <h1>法兰城</h1>
-          <span class="title-version">v2.1</span>
-        </div>
-        <div class="subtitle">法兰城已经扩成主城框架了。现在可以从南门一路走到里谢里雅城，再顺路去东南角的黑白棋会馆。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
+      <div class="eyebrow">Falan Isometric Trial</div>
+      <div class="title-row">
+        <h1>法兰城</h1>
+        <div class="version">v3.0</div>
       </div>
-      <div class="hero-chip" id="heroChip">今日城况：晴<br>今日安排：逛法兰城，打黑白棋</div>
+      <p>这是法兰城首页的 45 度等角试装版。现在不只是地面转成等角，城堡、圣堂、旅馆、工房、医院、竞技场和会馆本身也都改成了等角建筑 sprite，方便你直接判断值不值得继续往这个方向做。</p>
     </section>
 
     <section class="layout">
-      <div class="scene-card">
-        <div class="frame">
-          <canvas id="world" width="320" height="180" aria-label="法兰城"></canvas>
-          <div class="canvas-overlay">
-            <div class="badge">位置<br><strong id="coordLabel">法兰城南门</strong></div>
-            <div class="badge">互动<br><strong id="promptLabel">散步中</strong></div>
+      <div class="map-shell">
+        <div class="map-head">
+          <div>
+            <h2>晨光法兰城</h2>
+            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这个版本已经接入首页，但我保留了旧版入口，方便你随时对比。</p>
+          </div>
+          <div class="map-badges">
+            <div class="badge">45° 等角投影</div>
+            <div class="badge">建筑已转等角</div>
+            <div class="badge">首页试装版</div>
           </div>
         </div>
-        <div class="scene-tip" id="sceneTip">用方向键或 WASD 在法兰城里散步。沿南门大道往北能看到城堡，往东南继续走就能到黑白棋会馆。</div>
-
-        <div class="controls" aria-label="触屏控制">
-          <div class="dpad">
-            <button class="pad blank" tabindex="-1" aria-hidden="true"></button>
-            <button class="pad" data-key="up" aria-label="向上">▲</button>
-            <button class="pad blank" tabindex="-1" aria-hidden="true"></button>
-            <button class="pad" data-key="left" aria-label="向左">◀</button>
-            <button class="pad blank" tabindex="-1" aria-hidden="true"></button>
-            <button class="pad" data-key="right" aria-label="向右">▶</button>
-            <button class="pad blank" tabindex="-1" aria-hidden="true"></button>
-            <button class="pad" data-key="down" aria-label="向下">▼</button>
-            <button class="pad blank" tabindex="-1" aria-hidden="true"></button>
-          </div>
-          <div class="action-pad">
-            <button class="action" id="enterBtn" aria-label="进入黑白棋">进入<br>会馆</button>
-          </div>
+        <div class="canvas-wrap">
+          <canvas id="isoCanvas" width="720" height="480"></canvas>
         </div>
+        <div class="note">当前地图里已经摆进里谢里雅城、圣堂、旅馆工会、工房、医院、竞技场和黑白棋会馆。你主要看两件事：一是 45 度观感顺不顺，二是建筑和道路的比例是不是更像一座真正的主城。</div>
       </div>
 
-      <aside class="panel">
-        <section>
-          <h2>玩法</h2>
-          <ul>
-            <li>电脑：方向键 / <code>WASD</code> 移动，<code>Enter</code> 或空格互动。</li>
-            <li>手机：直接按方向键，靠近会馆后点“进入会馆”。</li>
-            <li>不想散步也可以直接跳转进黑白棋。</li>
-          </ul>
+      <aside class="side">
+        <section class="side-card">
+          <h2>当前状态</h2>
+          <div class="info-line"><span>当前区域</span><strong id="zoneName">中央广场</strong></div>
+          <div class="info-line"><span>旅人位置</span><strong id="coordLabel">09, 10</strong></div>
+          <div class="info-line"><span>当前目标</span><strong id="focusLabel">黑白棋会馆</strong></div>
+          <div class="info-line"><span>可行性判断</span><strong>适合先平滑迁移</strong></div>
+          <div class="traveler">
+            <div class="portrait"><img id="portraitImg" src="./assets/falan/avatars/dog.png" alt="旅人头像"></div>
+            <div>
+              <div id="travelerName" style="color:var(--gold);font-size:1.08rem;">小狗子</div>
+              <p id="travelerDesc">人型狗狗旅人，适合作为法兰城等角版的默认看板角色。</p>
+            </div>
+          </div>
+          <div class="controls">
+            <button type="button" id="prevTravelerBtn">上一个旅人</button>
+            <button type="button" id="nextTravelerBtn">下一个旅人</button>
+            <button type="button" id="enterReversiBtn">进入黑白棋</button>
+            <button type="button" id="viewClassicBtn">查看旧版</button>
+          </div>
         </section>
 
-        <section class="status-box">
-          <strong id="statusTitle">法兰城公告</strong>
-          <div id="statusText">法兰城主城已经扩建完成，南门大道、中央广场和北侧城堡都能走到了。</div>
+        <section class="side-card">
+          <h2>地块图例</h2>
+          <div class="legend">
+            <div class="legend-item"><span class="swatch" style="background:#7eb463;"></span>城内草地</div>
+            <div class="legend-item"><span class="swatch" style="background:#c89d68;"></span>主路与城门大道</div>
+            <div class="legend-item"><span class="swatch" style="background:#d7c6aa;"></span>王城前石砖区</div>
+            <div class="legend-item"><span class="swatch" style="background:#6db4c0;"></span>中央喷泉水面</div>
+          </div>
+          <p class="foot">如果你觉得这版方向不对，可以直接点“查看旧版”对比；如果方向对，我下一步就把交互、建筑精度和城镇结构继续往这个等角版本上提。</p>
         </section>
-
-        <div class="button-row">
-          <button class="btn" id="directPlayBtn" type="button">直接进入黑白棋</button>
-          <button class="btn secondary" id="focusCabinBtn" type="button">传送到会馆门口</button>
-          <button class="btn secondary" id="backToSelectionBtn" type="button">回到选人界面</button>
-        </div>
-
-        <div class="footer-note">现在法兰城已经有了大地图、城堡、中轴大道和分区骨架。后面我们可以继续往里补旅馆、银行、宠物店、武器店和更多 NPC。</div>
       </aside>
     </section>
   </main>
 
-  <div class="entry-overlay show" id="entryOverlay" aria-label="法兰城选人界面">
-    <div class="entry-modal">
-      <div class="entry-head">
-        <div>
-          <div class="entry-kicker">Falan City Entry</div>
-          <h2>选择旅人</h2>
-          <p>法兰城背景会保留在后面，你先在这张大窗口里选一个旅人，再正式进入城里散步。选中的人会成为你这次进入法兰城的身份。</p>
-        </div>
-        <div class="entry-stamp">法兰城入城登记<br>选择角色后进入</div>
-      </div>
-
-      <div class="entry-grid" id="travelerGrid"></div>
-
-      <div class="entry-preview">
-        <div class="entry-avatar" id="entryAvatar"></div>
-        <div>
-          <h3 id="previewName">小狗子</h3>
-          <div class="preview-level" id="previewLevel">LV2 · 法兰城常驻旅人</div>
-          <p id="previewText">今天先选个人物进城，先逛中央广场和城堡，再去东南角的黑白棋会馆继续挑战。</p>
-        </div>
-      </div>
-
-      <div class="entry-actions">
-        <button class="btn" id="enterTownBtn" type="button">进入法兰城</button>
-      </div>
-    </div>
-  </div>
-
 <script>
-const canvas = document.getElementById('world');
+const canvas = document.getElementById('isoCanvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-const heroChip = document.getElementById('heroChip');
-const sceneTip = document.getElementById('sceneTip');
-const coordLabel = document.getElementById('coordLabel');
-const promptLabel = document.getElementById('promptLabel');
-const statusTitle = document.getElementById('statusTitle');
-const statusText = document.getElementById('statusText');
-const enterBtn = document.getElementById('enterBtn');
-const directPlayBtn = document.getElementById('directPlayBtn');
-const focusCabinBtn = document.getElementById('focusCabinBtn');
-const backToSelectionBtn = document.getElementById('backToSelectionBtn');
-const entryOverlay = document.getElementById('entryOverlay');
-const travelerGrid = document.getElementById('travelerGrid');
-const previewName = document.getElementById('previewName');
-const previewLevel = document.getElementById('previewLevel');
-const previewText = document.getElementById('previewText');
-const entryAvatar = document.getElementById('entryAvatar');
-const enterTownBtn = document.getElementById('enterTownBtn');
+const zoneNameEl = document.getElementById('zoneName');
+const coordLabelEl = document.getElementById('coordLabel');
+const focusLabelEl = document.getElementById('focusLabel');
+const travelerNameEl = document.getElementById('travelerName');
+const travelerDescEl = document.getElementById('travelerDesc');
+const portraitImg = document.getElementById('portraitImg');
+const prevTravelerBtn = document.getElementById('prevTravelerBtn');
+const nextTravelerBtn = document.getElementById('nextTravelerBtn');
+const enterReversiBtn = document.getElementById('enterReversiBtn');
+const viewClassicBtn = document.getElementById('viewClassicBtn');
 
-const world = { width: 640, height: 420, viewWidth: 320, viewHeight: 180 };
-canvas.width = world.viewWidth;
-canvas.height = world.viewHeight;
-
-const player = { x: 315, y: 360, w: 10, h: 14, speed: 1.48, dir: 'up', step: 0, moving: false };
-const camera = { x: 0, y: 0 };
-const keyState = { up: false, down: false, left: false, right: false };
-const actionKeys = new Set(['Enter', ' ', 'Spacebar']);
 const travelerStorageKey = 'falan-selected-traveler';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
-  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '走进法兰城先看看风景，不急着上桌，像是在等一场悠闲的开局。', coat: '#6f81d6', accent: '#97a8f0', hair: '#88634d', avatar: './assets/falan/avatars/ghost.png', preview: './assets/falan/previews/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
-  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '熟门熟路，适合第一次进城先找找感觉，也是默认最顺手的一位。', coat: '#7f69cf', accent: '#b499ff', hair: '#7a593f', avatar: './assets/falan/avatars/dog.png', preview: './assets/falan/previews/dog.png', sprite: './assets/falan/sprites/dog.png' },
-  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋会馆。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33', avatar: './assets/falan/avatars/fat.png', preview: './assets/falan/previews/fat.png', sprite: './assets/falan/sprites/fat.png' },
-  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔会馆准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44', avatar: './assets/falan/avatars/rabbit.png', preview: './assets/falan/previews/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
-  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '压轴登场的狠角色', desc: '一进城就带着一点压迫感，像是会直接把今天的对局打成主线任务。', coat: '#b95a63', accent: '#ef99a4', hair: '#654230', avatar: './assets/falan/avatars/crayfish.png', preview: './assets/falan/previews/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
+  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '进城第一件事不是赶路，而是先看看城堡和大道在 45 度里够不够有味道。', avatar: './assets/falan/avatars/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
+  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '人型狗狗旅人，适合作为法兰城等角版的默认看板角色。', avatar: './assets/falan/avatars/dog.png', sprite: './assets/falan/sprites/dog.png' },
+  { id: 'fat', name: '臭胖子', level: 'LV3', title: '喷泉边的狠角色', desc: '适合拿来测试会馆门口和中央广场的视觉压迫感。', avatar: './assets/falan/avatars/fat.png', sprite: './assets/falan/sprites/fat.png' },
+  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '轻快的等角冒险家', desc: '脚步最适合验证 45 度视角下的移动节奏和清爽感。', avatar: './assets/falan/avatars/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
+  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '带双钳的压轴旅人', desc: '更适合测试建筑前景和角色 silhouette 是否够强。', avatar: './assets/falan/avatars/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
 ];
-const travelerSprites = Object.fromEntries(travelers.map((traveler) => {
-  const image = new Image();
-  image.src = traveler.sprite;
-  return [traveler.id, image];
-}));
-let selectedTravelerId = localStorage.getItem(travelerStorageKey) || 'dog';
-let townReady = false;
 
-const city = {
-  southGate: { x: 286, y: 372, w: 68, h: 16 },
-  castle: { x: 258, y: 42, w: 124, h: 60 },
-  cathedral: { x: 86, y: 126, w: 96, h: 56 },
-  guildInn: { x: 458, y: 126, w: 104, h: 54 },
-  workshop: { x: 70, y: 216, w: 82, h: 34 },
-  hospital: { x: 488, y: 216, w: 76, h: 36 },
-  arena: { x: 94, y: 288, w: 108, h: 48 },
-  reversiCabin: { x: 506, y: 288, w: 62, h: 40 },
-  fountain: { x: 296, y: 248, w: 48, h: 30 }
+let travelerIndex = Math.max(0, travelers.findIndex((traveler) => traveler.id === localStorage.getItem(travelerStorageKey)));
+if (travelerIndex < 0) travelerIndex = 1;
+
+const images = {
+  castle: loadImage('./assets/falan/building-drafts-iso/castle-iso-v1.png'),
+  cathedral: loadImage('./assets/falan/building-drafts-iso/cathedral-iso-v1.png'),
+  guildInn: loadImage('./assets/falan/building-drafts-iso/guild-inn-iso-v1.png'),
+  workshop: loadImage('./assets/falan/building-drafts-iso/workshop-iso-v1.png'),
+  hospital: loadImage('./assets/falan/building-drafts-iso/hospital-iso-v1.png'),
+  arena: loadImage('./assets/falan/building-drafts-iso/arena-iso-v1.png'),
+  reversiHall: loadImage('./assets/falan/building-drafts-iso/reversi-hall-iso-v1.png')
+};
+const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
+
+const keyState = { up: false, down: false, left: false, right: false };
+
+const world = {
+  cols: 18,
+  rows: 16,
+  tileW: 34,
+  tileH: 17,
+  originX: canvas.width / 2,
+  originY: 82
 };
 
-const portal = { x: city.reversiCabin.x + 18, y: city.reversiCabin.y + 32, w: 24, h: 22 };
+const player = {
+  tx: 9,
+  ty: 12.4,
+  dir: 'up',
+  step: 0,
+  moving: false,
+  speed: 0.055
+};
 
-const solids = [
-  { x: city.castle.x + 18, y: city.castle.y + 20, w: city.castle.w - 36, h: city.castle.h - 20 },
-  { x: city.castle.x - 18, y: city.castle.y + 20, w: 20, h: 56 },
-  { x: city.castle.x + city.castle.w - 2, y: city.castle.y + 20, w: 20, h: 56 },
-  { x: city.cathedral.x, y: city.cathedral.y, w: city.cathedral.w, h: city.cathedral.h },
-  { x: city.guildInn.x, y: city.guildInn.y, w: city.guildInn.w, h: city.guildInn.h },
-  { x: city.workshop.x, y: city.workshop.y, w: city.workshop.w, h: city.workshop.h },
-  { x: city.hospital.x, y: city.hospital.y, w: city.hospital.w, h: city.hospital.h },
-  { x: city.arena.x, y: city.arena.y, w: city.arena.w, h: city.arena.h },
-  { x: city.reversiCabin.x, y: city.reversiCabin.y, w: city.reversiCabin.w, h: city.reversiCabin.h - 2 },
-  { x: city.fountain.x + 5, y: city.fountain.y + 5, w: city.fountain.w - 10, h: city.fountain.h - 10 },
-  { x: 0, y: 0, w: world.width, h: 18 }
+const buildings = [
+  { id: 'castle', tx: 9, ty: 2.2, scale: 0.31, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 7.4, y: 0.8, w: 3.2, h: 2.1 } },
+  { id: 'cathedral', tx: 4.2, ty: 5.2, scale: 0.3, label: '大圣堂', focus: '西区圣堂', footprint: { x: 3.2, y: 4.1, w: 2.2, h: 1.8 } },
+  { id: 'guildInn', tx: 13.7, ty: 5.3, scale: 0.33, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 12.7, y: 4.2, w: 2.6, h: 1.9 } },
+  { id: 'workshop', tx: 3.6, ty: 9.2, scale: 0.28, label: '工房', focus: '西区工匠街', footprint: { x: 2.8, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'hospital', tx: 14.3, ty: 9.1, scale: 0.34, label: '医院', focus: '东区医院', footprint: { x: 13.6, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'arena', tx: 5.1, ty: 12.3, scale: 0.31, label: '竞技场', focus: '竞技场看台', footprint: { x: 4.2, y: 11.3, w: 2.4, h: 1.5 } },
+  { id: 'reversiHall', tx: 13.7, ty: 12.2, scale: 0.35, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 12.9, y: 11.6, w: 1.8, h: 1.5 } }
 ];
 
-const clouds = [
-  { x: 24, y: 18, speed: 0.1, scale: 1.15 },
-  { x: 152, y: 30, speed: 0.08, scale: 0.95 },
-  { x: 332, y: 16, speed: 0.07, scale: 1.1 },
-  { x: 502, y: 26, speed: 0.09, scale: 1.05 }
+const decorativeTrees = [
+  { tx: 1.1, ty: 4.6, size: 1.05 }, { tx: 1.2, ty: 7.6, size: 1.2 }, { tx: 2.2, ty: 13.4, size: 1.1 },
+  { tx: 5.8, ty: 2.8, size: 1.05 }, { tx: 11.9, ty: 2.8, size: 1.05 }, { tx: 16.2, ty: 6.8, size: 1.15 },
+  { tx: 16.5, ty: 12.8, size: 1.18 }, { tx: 8.6, ty: 14.8, size: 1.05 }, { tx: 10.8, ty: 14.9, size: 1.05 }
 ];
 
-const trees = [
-  { x: 30, y: 86 }, { x: 208, y: 88 }, { x: 404, y: 88 }, { x: 590, y: 92 },
-  { x: 36, y: 188 }, { x: 210, y: 196 }, { x: 406, y: 192 }, { x: 590, y: 196 },
-  { x: 36, y: 332 }, { x: 92, y: 344 }, { x: 544, y: 338 }, { x: 594, y: 344 }
-];
+function loadImage(src) {
+  const image = new Image();
+  image.src = src;
+  return image;
+}
 
-const lamps = [
-  { x: 304, y: 138 }, { x: 336, y: 138 }, { x: 304, y: 210 }, { x: 336, y: 210 },
-  { x: 304, y: 302 }, { x: 336, y: 302 }, { x: 246, y: 228 }, { x: 394, y: 228 }
-];
-
-const flowers = [
-  { x: 276, y: 286, color: '#ffd8aa' }, { x: 286, y: 294, color: '#ffe991' },
-  { x: 354, y: 286, color: '#ffb6c3' }, { x: 364, y: 294, color: '#c8f3b5' },
-  { x: 262, y: 306, color: '#ffb6c3' }, { x: 378, y: 306, color: '#ffe991' }
-];
-
-const marketStalls = [
-  { x: 432, y: 262, awning: '#d85d5f', wood: '#8a5b39' },
-  { x: 464, y: 260, awning: '#e7b35a', wood: '#8a5b39' },
-  { x: 534, y: 262, awning: '#7fc49f', wood: '#8a5b39' }
-];
-
-const shrubs = [
-  { x: 232, y: 124, w: 12 }, { x: 396, y: 124, w: 12 },
-  { x: 210, y: 228, w: 14 }, { x: 418, y: 228, w: 14 },
-  { x: 228, y: 320, w: 10 }, { x: 404, y: 320, w: 10 }
-];
-
-const benches = [
-  { x: 254, y: 220 }, { x: 370, y: 220 }, { x: 252, y: 318 }, { x: 372, y: 318 }
-];
+function isoToScreen(tx, ty) {
+  return {
+    x: (tx - ty) * world.tileW / 2 + world.originX,
+    y: (tx + ty) * world.tileH / 2 + world.originY
+  };
+}
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function rectsOverlap(ax, ay, aw, ah, b) {
-  return ax < b.x + b.w && ax + aw > b.x && ay < b.y + b.h && ay + ah > b.y;
+function inRect(tx, ty, rect) {
+  return tx > rect.x && tx < rect.x + rect.w && ty > rect.y && ty < rect.y + rect.h;
 }
 
-function collides(x, y) {
-  if (x < 8 || y < 20 || x + player.w > world.width - 8 || y + player.h > world.height - 10) return true;
-  return solids.some((rect) => rectsOverlap(x, y, player.w, player.h, rect));
+function collides(tx, ty) {
+  if (tx < 0.8 || ty < 0.8 || tx > world.cols - 0.8 || ty > world.rows - 0.8) return true;
+  return buildings.some((building) => inRect(tx, ty, building.footprint));
 }
 
-function updateCamera() {
-  const targetX = player.x + player.w / 2 - world.viewWidth / 2;
-  const targetY = player.y + player.h / 2 - world.viewHeight / 2;
-  camera.x = clamp(targetX, 0, world.width - world.viewWidth);
-  camera.y = clamp(targetY, 0, world.height - world.viewHeight);
+function tileType(tx, ty) {
+  const dx = Math.abs(tx - 9);
+  const dy = Math.abs(ty - 8);
+  if (tx >= 7 && tx <= 10 && ty <= 4) return 'stone';
+  if (dx <= 1 || dy <= 1) return 'road';
+  if (dx <= 2 && dy <= 2) return 'plaza';
+  if (tx >= 8 && tx <= 10 && ty >= 7 && ty <= 9) return 'fountain';
+  return 'grass';
 }
 
-function zoneDistance(zone) {
-  const cx = player.x + player.w / 2;
-  const cy = player.y + player.h / 2;
-  const zx = zone.x + zone.w / 2;
-  const zy = zone.y + zone.h / 2;
-  return Math.hypot(cx - zx, cy - zy);
-}
-
-function isNearPortal() {
-  return zoneDistance(portal) < 30;
-}
-
-function areaName() {
-  if (isNearPortal()) return '黑白棋会馆';
-  if (player.y < 132 && player.x > 230 && player.x < 410) return '里谢里雅城前';
-  if (player.y > 338) return '法兰城南门';
-  if (player.x < 214 && player.y < 252) return '西区工坊与圣堂';
-  if (player.x > 426 && player.y < 252) return '东区旅馆与医院';
-  if (player.x < 238 && player.y >= 252) return '西区竞技场';
-  if (player.x > 404 && player.y >= 252) return '东区市集';
-  return '中央广场';
-}
-
-function areaCopy(area) {
-  switch (area) {
-    case '里谢里雅城前':
-      return {
-        title: '王城前广场',
-        text: '北侧就是里谢里雅城。沿中轴大道一路往上，法兰城的气势会先从城堡压过来。',
-        tip: '现在你已经走到城堡前的石砖大道了。这里适合以后继续加卫兵、喷泉护栏和王城入口。'
-      };
-    case '西区工坊与圣堂':
-      return {
-        title: '西区公告',
-        text: '这一侧预留给圣堂和工房街，后面很适合加工匠铺、祈祷堂和更多 NPC。',
-        tip: '西区现在已经有圣堂和工房街雏形了，往南还能继续接到竞技场。'
-      };
-    case '东区旅馆与医院':
-      return {
-        title: '东区公告',
-        text: '东区更像冒险者常驻的地方，旅馆、医院和服务建筑都集中在这边。',
-        tip: '往东北是旅馆与医院，后面可以继续扩成冒险者常去的功能区。'
-      };
-    case '西区竞技场':
-      return {
-        title: '竞技场通告',
-        text: '西南一带已经留出了竞技场的位置，整体感觉会更接近法兰城的分区式布局。',
-        tip: '这里是偏西南的竞技区，适合以后加看台、训练 NPC 和挑战入口。'
-      };
-    case '东区市集':
-      return {
-        title: '市集招牌',
-        text: '东南区改成了小市集和黑白棋会馆，后面可以顺势接宠物店、银行和仓库。',
-        tip: '继续往东南就是黑白棋会馆。靠近会馆门口后，就可以直接进入对战页面。'
-      };
-    case '法兰城南门':
-      return {
-        title: '南门值守',
-        text: '从南门进入，一路直通城堡，是法兰城最有辨识度的中轴视角。',
-        tip: '你现在在法兰城南门。顺着石砖大道一直向北走，就会看到里谢里雅城。'
-      };
-    default:
-      return {
-        title: '中央广场',
-        text: '中央喷泉和十字大道把整座城串了起来，这里会是后续继续扩张 NPC 与建筑的核心。',
-        tip: '中央广场现在已经成型。你可以从这里分流去西区、东区，或者继续北上走向城堡。'
-      };
+function tilePalette(type, tx, ty) {
+  if (type === 'road') {
+    return { top: (tx + ty) % 2 ? '#c3915c' : '#ca9d68', left: '#946b43', right: '#b88455', stroke: '#f1cd8f' };
   }
-}
-
-function syncUi() {
-  const nearPortal = isNearPortal();
-  const area = areaName();
-  const copy = nearPortal
-    ? {
-        title: '会馆已开门',
-        text: '黑白棋会馆就在前面，推门进去就能开始今天的对战。',
-        tip: '你已经到会馆门口了。按 Enter / 空格，或者点“进入会馆”，就能前往黑白棋页面。'
-      }
-    : areaCopy(area);
-  coordLabel.textContent = area;
-  promptLabel.textContent = nearPortal ? '可进入' : area === '里谢里雅城前' ? '城堡前' : '散步中';
-  sceneTip.textContent = copy.tip;
-  statusTitle.textContent = copy.title;
-  statusText.textContent = copy.text;
-  enterBtn.textContent = nearPortal ? '进入\n黑白棋' : '靠近\n会馆';
-}
-
-function getSelectedTraveler() {
-  return travelers.find((traveler) => traveler.id === selectedTravelerId) || travelers[1];
-}
-
-function updateHeroChip() {
-  const traveler = getSelectedTraveler();
-  heroChip.innerHTML = `今日旅人：${traveler.name} ${traveler.level}<br>位置：${areaName()} · 目标：会馆与城堡`;
-}
-
-function updateTravelerPreview() {
-  const traveler = getSelectedTraveler();
-  previewName.textContent = traveler.name;
-  previewLevel.textContent = `${traveler.level} · ${traveler.title}`;
-  previewText.textContent = traveler.desc;
-  entryAvatar.innerHTML = `<img src="${traveler.preview}" alt="${traveler.name}全身像素立绘">`;
-}
-
-function renderTravelerCards() {
-  travelerGrid.innerHTML = '';
-  travelers.forEach((traveler) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'entry-card';
-    button.dataset.id = traveler.id;
-    if (traveler.id === selectedTravelerId) button.classList.add('selected');
-    button.innerHTML = `
-      <div class="entry-portrait"><img src="${traveler.avatar}" alt="${traveler.name}头像"></div>
-      <strong>${traveler.name}</strong>
-      <span>${traveler.level}</span>
-      <p>${traveler.title}</p>
-    `;
-    button.addEventListener('click', () => {
-      selectedTravelerId = traveler.id;
-      localStorage.setItem(travelerStorageKey, selectedTravelerId);
-      renderTravelerCards();
-      updateTravelerPreview();
-    });
-    travelerGrid.appendChild(button);
-  });
-}
-
-function confirmTravelerSelection() {
-  townReady = true;
-  localStorage.setItem(travelerStorageKey, selectedTravelerId);
-  updateCamera();
-  updateHeroChip();
-  updateTravelerPreview();
-  entryOverlay.classList.remove('show');
-  syncUi();
-}
-
-function openTravelerSelection() {
-  townReady = false;
-  player.moving = false;
-  keyState.up = false;
-  keyState.down = false;
-  keyState.left = false;
-  keyState.right = false;
-  renderTravelerCards();
-  updateTravelerPreview();
-  entryOverlay.classList.add('show');
-}
-
-function goToReversi() {
-  document.body.classList.add('leaving');
-  setTimeout(() => {
-    window.location.href = './reversi.html';
-  }, 180);
-}
-
-function tryEnter() {
-  if (!townReady) return;
-  if (!isNearPortal()) return;
-  goToReversi();
-}
-
-function setVirtualKey(key, value) {
-  keyState[key] = value;
-}
-
-function bindPadButton(button) {
-  const key = button.dataset.key;
-  if (!key) return;
-  const press = (event) => {
-    event.preventDefault();
-    setVirtualKey(key, true);
-    button.classList.add('active');
-  };
-  const release = (event) => {
-    event.preventDefault();
-    setVirtualKey(key, false);
-    button.classList.remove('active');
-  };
-  button.addEventListener('pointerdown', press);
-  button.addEventListener('pointerup', release);
-  button.addEventListener('pointerleave', release);
-  button.addEventListener('pointercancel', release);
-}
-
-document.querySelectorAll('.pad').forEach(bindPadButton);
-enterBtn.addEventListener('click', tryEnter);
-directPlayBtn.addEventListener('click', goToReversi);
-focusCabinBtn.addEventListener('click', () => {
-  if (!townReady) return;
-  player.x = portal.x + 8;
-  player.y = portal.y + 24;
-  player.dir = 'up';
-  updateCamera();
-  syncUi();
-  updateHeroChip();
-});
-backToSelectionBtn.addEventListener('click', openTravelerSelection);
-enterTownBtn.addEventListener('click', confirmTravelerSelection);
-
-window.addEventListener('keydown', (event) => {
-  if (!townReady) {
-    if (actionKeys.has(event.key)) {
-      event.preventDefault();
-      confirmTravelerSelection();
-    }
-    return;
+  if (type === 'plaza') {
+    return { top: (tx + ty) % 2 ? '#d8c6ac' : '#d0bea2', left: '#b69d7e', right: '#cab292', stroke: '#eee1cb' };
   }
-  if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') keyState.up = true;
-  if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') keyState.down = true;
-  if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') keyState.left = true;
-  if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') keyState.right = true;
-  if (actionKeys.has(event.key)) {
-    event.preventDefault();
-    tryEnter();
+  if (type === 'stone') {
+    return { top: (tx + ty) % 2 ? '#d9cbaf' : '#e4d7bf', left: '#baa181', right: '#cfb595', stroke: '#f3ead4' };
   }
-});
-
-window.addEventListener('keyup', (event) => {
-  if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') keyState.up = false;
-  if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') keyState.down = false;
-  if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') keyState.left = false;
-  if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') keyState.right = false;
-});
-
-function updatePlayer() {
-  if (!townReady) {
-    player.moving = false;
-    return;
+  if (type === 'fountain') {
+    return { top: '#6cb1bf', left: '#4e8794', right: '#5c9ca7', stroke: '#bfeef1' };
   }
-  let dx = 0;
-  let dy = 0;
-  if (keyState.left) dx -= 1;
-  if (keyState.right) dx += 1;
-  if (keyState.up) dy -= 1;
-  if (keyState.down) dy += 1;
-
-  if (dx !== 0 && dy !== 0) {
-    const scale = Math.SQRT1_2;
-    dx *= scale;
-    dy *= scale;
-  }
-
-  player.moving = dx !== 0 || dy !== 0;
-  if (dx > 0) player.dir = 'right';
-  else if (dx < 0) player.dir = 'left';
-  else if (dy < 0) player.dir = 'up';
-  else if (dy > 0) player.dir = 'down';
-
-  const nextX = player.x + dx * player.speed;
-  const nextY = player.y + dy * player.speed;
-
-  if (!collides(nextX, player.y)) player.x = nextX;
-  if (!collides(player.x, nextY)) player.y = nextY;
-
-  if (player.moving) player.step += 0.18;
+  return { top: (tx + ty) % 2 ? '#7bb161' : '#72a858', left: '#537f3d', right: '#679a4c', stroke: '#a5d188' };
 }
 
-function drawRect(x, y, w, h, color) {
-  ctx.fillStyle = color;
-  ctx.fillRect(Math.round(x - camera.x), Math.round(y - camera.y), Math.round(w), Math.round(h));
-}
+function drawDiamond(tx, ty, colors, elevation = 0) {
+  const point = isoToScreen(tx, ty);
+  const topY = point.y - elevation;
+  const halfW = world.tileW / 2;
+  const halfH = world.tileH / 2;
 
-function drawText(text, x, y, color, font = '7px monospace') {
-  ctx.fillStyle = color;
-  ctx.font = font;
-  ctx.fillText(text, Math.round(x - camera.x), Math.round(y - camera.y));
-}
+  ctx.beginPath();
+  ctx.moveTo(point.x, topY - halfH);
+  ctx.lineTo(point.x + halfW, topY);
+  ctx.lineTo(point.x, topY + halfH);
+  ctx.lineTo(point.x - halfW, topY);
+  ctx.closePath();
+  ctx.fillStyle = colors.top;
+  ctx.fill();
+  ctx.strokeStyle = colors.stroke;
+  ctx.lineWidth = 1;
+  ctx.stroke();
 
-function drawCloud(cloud, tick) {
-  const drift = (tick * cloud.speed) % (world.width + 56);
-  const x = (cloud.x + drift) % (world.width + 56) - 26;
-  const y = cloud.y;
-  const s = cloud.scale;
-  drawRect(x, y + 4, 22 * s, 6 * s, '#e5f1de');
-  drawRect(x + 4 * s, y, 16 * s, 6 * s, '#f7f9e7');
-  drawRect(x + 10 * s, y + 2 * s, 18 * s, 6 * s, '#e9f5e3');
+  ctx.beginPath();
+  ctx.moveTo(point.x - halfW, topY);
+  ctx.lineTo(point.x, topY + halfH);
+  ctx.lineTo(point.x, topY + halfH + 7);
+  ctx.lineTo(point.x - halfW, topY + 7);
+  ctx.closePath();
+  ctx.fillStyle = colors.left;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(point.x + halfW, topY);
+  ctx.lineTo(point.x, topY + halfH);
+  ctx.lineTo(point.x, topY + halfH + 7);
+  ctx.lineTo(point.x + halfW, topY + 7);
+  ctx.closePath();
+  ctx.fillStyle = colors.right;
+  ctx.fill();
 }
 
 function drawTree(tree, tick) {
-  const sway = Math.round(Math.sin(tick / 16 + tree.x * 0.02) * 1.4);
-  drawRect(tree.x + 6, tree.y + 18, 6, 14, '#6f4c2f');
-  drawRect(tree.x + 2 + sway, tree.y + 8, 14, 12, '#5c8b45');
-  drawRect(tree.x, tree.y + 12, 18, 8, '#76aa58');
-  drawRect(tree.x + 4 + sway, tree.y + 2, 10, 10, '#8fc76a');
-}
+  const point = isoToScreen(tree.tx, tree.ty);
+  const sway = Math.sin(tick / 14 + tree.tx * 0.7) * 2;
+  const size = tree.size;
+  ctx.fillStyle = 'rgba(13, 20, 14, 0.28)';
+  ctx.beginPath();
+  ctx.ellipse(point.x, point.y + 8, 12 * size, 5 * size, 0, 0, Math.PI * 2);
+  ctx.fill();
 
-function drawLamp(lamp, tick) {
-  const pulse = 0.7 + (Math.sin(tick / 9 + lamp.x * 0.04) + 1) * 0.15;
-  drawRect(lamp.x, lamp.y, 2, 14, '#5e4a30');
-  drawRect(lamp.x - 2, lamp.y - 4, 6, 4, '#2a3324');
-  drawRect(lamp.x - 1, lamp.y - 3, 4, 3, `rgba(255, 236, 169, ${pulse})`);
-}
-
-function drawMountains() {
-  drawRect(0, 18, world.width, 54, '#7ea1a6');
-  for (let x = -20; x < world.width + 40; x += 74) {
-    const top = 26 + (x % 3) * 4;
-    drawRect(x, 42, 54, 18, '#6c8f8f');
-    drawRect(x + 16, top, 62, 30, '#65807f');
-    drawRect(x + 42, 34, 68, 22, '#6f8d8b');
-  }
-}
-
-function drawRoads() {
-  drawRect(0, 348, world.width, 34, '#c89c63');
-  drawRect(0, 360, world.width, 10, '#d6ae74');
-  drawRect(296, 96, 48, world.height - 96, '#c89c63');
-  drawRect(308, 96, 24, world.height - 96, '#d6ae74');
-  drawRect(38, 216, world.width - 76, 34, '#c89c63');
-  drawRect(54, 228, world.width - 108, 10, '#d6ae74');
-  drawRect(236, 110, 168, 34, '#d9c3a0');
-  drawRect(246, 120, 148, 14, '#ece1cb');
-  drawRect(292, 220, 56, 6, '#bfa178');
-  drawRect(292, 316, 56, 6, '#bfa178');
-
-  for (let y = 102; y < world.height; y += 16) {
-    drawRect(318, y, 4, 8, '#b48852');
-    drawRect(312, y + 4, 2, 2, '#e7c487');
-    drawRect(326, y + 4, 2, 2, '#e7c487');
-  }
-  for (let x = 10; x < world.width; x += 18) {
-    drawRect(x, 364, 8, 3, '#b48852');
-    drawRect(x + 2, 356, 4, 2, '#e2c083');
-  }
-  for (let x = 54; x < world.width - 54; x += 18) {
-    drawRect(x, 232, 8, 3, '#b48852');
-    drawRect(x + 2, 224, 4, 2, '#e2c083');
-  }
-  for (let x = 246; x < 394; x += 14) {
-    drawRect(x, 124, 6, 6, '#c9b095');
-    drawRect(x + 1, 125, 4, 4, '#e8dcc7');
-  }
-}
-
-function drawSouthGate() {
-  drawRect(264, 338, 112, 14, '#7b5740');
-  drawRect(272, 330, 20, 28, '#6d4b35');
-  drawRect(348, 330, 20, 28, '#6d4b35');
-  drawRect(290, 334, 58, 10, '#9a6f4d');
-  drawRect(city.southGate.x, city.southGate.y, city.southGate.w, city.southGate.h, '#e5c188');
-  drawRect(city.southGate.x + 6, city.southGate.y + 5, city.southGate.w - 12, 4, '#b48852');
-  drawRect(280, 326, 4, 18, '#8d6644');
-  drawRect(356, 326, 4, 18, '#8d6644');
-  drawRect(284, 328, 8, 5, '#b85155');
-  drawRect(348, 328, 8, 5, '#4d65bf');
-}
-
-function drawCastle(tick) {
-  const flag = Math.round(Math.sin(tick / 11) * 2);
-  drawRect(city.castle.x - 18, city.castle.y + 18, 20, 56, '#cdc0a6');
-  drawRect(city.castle.x + city.castle.w - 2, city.castle.y + 18, 20, 56, '#cdc0a6');
-  drawRect(city.castle.x + 18, city.castle.y + 24, city.castle.w - 36, city.castle.h - 6, '#d9ceb8');
-  drawRect(city.castle.x, city.castle.y + 18, city.castle.w, city.castle.h - 10, '#d1c3aa');
-  drawRect(city.castle.x + 14, city.castle.y + 10, city.castle.w - 28, 10, '#b6a488');
-  for (let x = city.castle.x - 18; x <= city.castle.x + city.castle.w + 10; x += 9) {
-    drawRect(x, city.castle.y + 8, 5, 10, '#e8dbc1');
-  }
-  drawRect(city.castle.x + 45, city.castle.y + 24, 34, 30, '#e4d9c5');
-  drawRect(city.castle.x + 52, city.castle.y + 46, 20, 26, '#5c4533');
-  drawRect(city.castle.x + 57, city.castle.y + 32, 10, 12, '#f1efdf');
-  drawRect(city.castle.x + 17, city.castle.y + 30, 10, 14, '#f1efdf');
-  drawRect(city.castle.x + 95, city.castle.y + 30, 10, 14, '#f1efdf');
-  drawRect(city.castle.x + 8, city.castle.y + 42, 8, 12, '#f1efdf');
-  drawRect(city.castle.x + 108, city.castle.y + 42, 8, 12, '#f1efdf');
-  drawRect(city.castle.x + 44, city.castle.y + 72, 36, 6, '#be9d74');
-  drawRect(city.castle.x + 10, city.castle.y - 6, 2, 22, '#7c5a40');
-  drawRect(city.castle.x + city.castle.w - 12, city.castle.y - 6, 2, 22, '#7c5a40');
-  drawRect(city.castle.x + 12, city.castle.y - 4, 8 + flag, 6, '#b85155');
-  drawRect(city.castle.x + city.castle.w - 20 - flag, city.castle.y - 4, 8 + flag, 6, '#4d65bf');
-  drawText('里谢里雅城', city.castle.x + 30, city.castle.y + 66, '#6c4d34');
-}
-
-function drawCathedral() {
-  drawRect(city.cathedral.x, city.cathedral.y, city.cathedral.w, city.cathedral.h, '#d3bf99');
-  drawRect(city.cathedral.x + 8, city.cathedral.y - 10, city.cathedral.w - 16, 14, '#7a5544');
-  drawRect(city.cathedral.x + 18, city.cathedral.y + 14, 12, 16, '#efe5c6');
-  drawRect(city.cathedral.x + 66, city.cathedral.y + 14, 12, 16, '#efe5c6');
-  drawRect(city.cathedral.x + 39, city.cathedral.y + 24, 18, 32, '#604431');
-  drawRect(city.cathedral.x + 47, city.cathedral.y + 6, 3, 16, '#f0d98f');
-  drawRect(city.cathedral.x + 41, city.cathedral.y + 12, 15, 4, '#f0d98f');
-  drawRect(city.cathedral.x + 8, city.cathedral.y + 44, city.cathedral.w - 16, 3, '#b29569');
-}
-
-function drawGuildInn() {
-  drawRect(city.guildInn.x, city.guildInn.y, city.guildInn.w, city.guildInn.h, '#bf9f72');
-  drawRect(city.guildInn.x - 8, city.guildInn.y - 10, city.guildInn.w + 16, 16, '#6b4a33');
-  drawRect(city.guildInn.x + 12, city.guildInn.y + 16, 14, 14, '#f7eac8');
-  drawRect(city.guildInn.x + 74, city.guildInn.y + 16, 14, 14, '#f7eac8');
-  drawRect(city.guildInn.x + 42, city.guildInn.y + 26, 20, 28, '#5b3422');
-  drawRect(city.guildInn.x + 34, city.guildInn.y + 6, 36, 8, '#3e5d73');
-  drawText('旅馆', city.guildInn.x + 43, city.guildInn.y + 12, '#ffe89d');
-}
-
-function drawWorkshop() {
-  drawRect(city.workshop.x, city.workshop.y, city.workshop.w, city.workshop.h, '#c4874a');
-  drawRect(city.workshop.x - 4, city.workshop.y - 8, city.workshop.w + 8, 12, '#7f4e35');
-  drawRect(city.workshop.x + 10, city.workshop.y + 10, 12, 10, '#f7e4b1');
-  drawRect(city.workshop.x + 48, city.workshop.y + 8, 18, 16, '#4c3424');
-  drawRect(city.workshop.x + 64, city.workshop.y - 12, 6, 12, '#6d4b35');
-  drawRect(city.workshop.x + 65, city.workshop.y - 16, 4, 4, 'rgba(229,229,229,0.8)');
-  drawText('工房', city.workshop.x + 26, city.workshop.y + 30, '#2e1b11');
-}
-
-function drawHospital() {
-  drawRect(city.hospital.x, city.hospital.y, city.hospital.w, city.hospital.h, '#d9d7d8');
-  drawRect(city.hospital.x + 8, city.hospital.y + 6, city.hospital.w - 16, 8, '#b7c8d9');
-  drawRect(city.hospital.x + 12, city.hospital.y + 14, 12, 10, '#f1fbff');
-  drawRect(city.hospital.x + 52, city.hospital.y + 14, 12, 10, '#f1fbff');
-  drawRect(city.hospital.x + 30, city.hospital.y + 16, 16, 16, '#f7f0da');
-  drawRect(city.hospital.x + 36, city.hospital.y + 18, 4, 12, '#df7777');
-  drawRect(city.hospital.x + 32, city.hospital.y + 22, 12, 4, '#df7777');
-}
-
-function drawArena() {
-  drawRect(city.arena.x, city.arena.y, city.arena.w, city.arena.h, '#b8824f');
-  drawRect(city.arena.x - 6, city.arena.y + 6, city.arena.w + 12, 8, '#8d5c38');
-  drawRect(city.arena.x + 14, city.arena.y + 16, city.arena.w - 28, 18, '#d8b16c');
-  for (let x = city.arena.x + 10; x < city.arena.x + city.arena.w - 6; x += 12) {
-    drawRect(x, city.arena.y + 36, 6, 5, '#7c5738');
-  }
-  drawText('竞技场', city.arena.x + 28, city.arena.y + 30, '#5a351c');
-}
-
-function drawMarket() {
-  marketStalls.forEach((stall) => {
-    const topY = stall.x < 500 ? 262 : 260;
-    drawRect(stall.x, topY, 22, 16, stall.wood);
-    drawRect(stall.x - 2, topY - 6, 26, 7, stall.awning);
-    drawRect(stall.x + 3, topY + 16, 2, 10, '#6b4a33');
-    drawRect(stall.x + 17, topY + 16, 2, 10, '#6b4a33');
-    drawRect(stall.x + 5, topY + 4, 4, 3, '#f2dfba');
-    drawRect(stall.x + 12, topY + 4, 4, 3, '#f2dfba');
-  });
-}
-
-function drawReversiCabin(tick) {
-  drawRect(city.reversiCabin.x, city.reversiCabin.y, city.reversiCabin.w, city.reversiCabin.h, '#765133');
-  drawRect(city.reversiCabin.x - 6, city.reversiCabin.y - 10, city.reversiCabin.w + 12, 14, '#56402d');
-  drawRect(city.reversiCabin.x + 8, city.reversiCabin.y + 8, city.reversiCabin.w - 16, 10, '#2d4b3f');
-  drawRect(city.reversiCabin.x + 10, city.reversiCabin.y + 10, city.reversiCabin.w - 20, 6, '#355948');
-  drawText('REVERSI', city.reversiCabin.x + 9, city.reversiCabin.y + 18, '#ffe899');
-  drawRect(city.reversiCabin.x + 18, city.reversiCabin.y + 20, 18, 20, '#332014');
-  drawRect(city.reversiCabin.x + 22, city.reversiCabin.y + 26, 4, 4, '#ffd96d');
-  drawRect(city.reversiCabin.x + 28, city.reversiCabin.y + 26, 4, 4, '#f3b2bc');
-  const pulse = Math.floor((Math.sin(tick / 10) + 1) * 2);
-  drawRect(city.reversiCabin.x + 44, city.reversiCabin.y + 24, 7, 6, pulse > 1 ? '#8df08b' : '#f5efbe');
-  drawRect(city.reversiCabin.x + 52, city.reversiCabin.y + 20, 4, 12, '#f0d98f');
+  ctx.fillStyle = '#6d4b31';
+  ctx.fillRect(Math.round(point.x - 3 * size), Math.round(point.y - 18 * size), Math.round(6 * size), Math.round(22 * size));
+  ctx.fillStyle = '#5a8a44';
+  ctx.beginPath();
+  ctx.moveTo(point.x, point.y - 44 * size);
+  ctx.lineTo(point.x + 18 * size + sway, point.y - 14 * size);
+  ctx.lineTo(point.x - 18 * size + sway, point.y - 14 * size);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#86be63';
+  ctx.beginPath();
+  ctx.moveTo(point.x, point.y - 58 * size);
+  ctx.lineTo(point.x + 14 * size + sway, point.y - 24 * size);
+  ctx.lineTo(point.x - 14 * size + sway, point.y - 24 * size);
+  ctx.closePath();
+  ctx.fill();
 }
 
 function drawFountain(tick) {
-  drawRect(city.fountain.x, city.fountain.y, city.fountain.w, city.fountain.h, '#466875');
-  drawRect(city.fountain.x + 4, city.fountain.y + 4, city.fountain.w - 8, city.fountain.h - 8, '#6cb9c6');
-  drawRect(city.fountain.x + 20, city.fountain.y + 8, 8, 16, '#d9ddd7');
-  drawRect(city.fountain.x + 14, city.fountain.y + 12, 20, 4, '#f7f2d8');
-  const ripple = Math.sin(tick / 14) * 2;
-  drawRect(city.fountain.x + 8 + ripple, city.fountain.y + 16, 16, 2, '#bdebf0');
-  drawRect(city.fountain.x + 20 - ripple, city.fountain.y + 22, 14, 2, '#bdebf0');
-}
-
-function drawFlowerBeds(tick) {
-  drawRect(256, 278, 128, 40, '#5b482c');
-  drawRect(272, 236, 96, 10, '#7a6440');
-  flowers.forEach((flower, index) => {
-    const sway = Math.round(Math.sin(tick / 10 + index) * 1.5);
-    drawRect(flower.x, flower.y - 5, 2, 7, '#79b35f');
-    drawRect(flower.x - 1 + sway, flower.y - 8, 4, 4, flower.color);
-  });
-}
-
-function drawShrubs() {
-  shrubs.forEach((shrub) => {
-    drawRect(shrub.x, shrub.y, shrub.w, 8, '#588645');
-    drawRect(shrub.x + 2, shrub.y - 4, shrub.w - 4, 5, '#7db35f');
-  });
-}
-
-function drawBenches() {
-  benches.forEach((bench) => {
-    drawRect(bench.x, bench.y, 14, 3, '#7a5738');
-    drawRect(bench.x + 1, bench.y + 3, 2, 5, '#61462f');
-    drawRect(bench.x + 11, bench.y + 3, 2, 5, '#61462f');
-  });
-}
-
-function drawSparkle(tick) {
-  if (!isNearPortal()) return;
-  const phase = Math.floor((tick / 8) % 4);
-  const x = portal.x + 10;
-  const y = portal.y - 10;
-  drawRect(x + phase, y, 2, 6, '#fff4b7');
-  drawRect(x - 2, y + 2 + phase, 6, 2, '#ffe18e');
-}
-
-function drawPlayer(tick) {
-  const traveler = getSelectedTraveler();
-  const sprite = travelerSprites[traveler.id];
-  const bob = player.moving ? Math.round(Math.sin(player.step * 6) * 1.2) : 0;
-  const leg = player.moving && Math.sin(player.step * 8) > 0 ? 1 : 0;
-  drawRect(player.x + 1, player.y + 13, 8, 2, 'rgba(14, 18, 14, 0.25)');
-  if (sprite && sprite.complete && sprite.naturalWidth) {
-    const frameBase = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
-    const frame = frameBase + leg;
-    const drawX = Math.round(player.x - 3 - camera.x);
-    const drawY = Math.round(player.y - 3 + bob - camera.y);
-    if (player.dir === 'left') {
-      ctx.save();
-      ctx.translate(drawX + spriteFrameWidth, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, 0, drawY, spriteFrameWidth, spriteFrameHeight);
-      ctx.restore();
-      return;
+  for (let ty = 7; ty <= 9; ty++) {
+    for (let tx = 8; tx <= 10; tx++) {
+      drawDiamond(tx, ty, tilePalette('fountain', tx, ty), 1);
     }
-    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, spriteFrameWidth, spriteFrameHeight);
-    return;
   }
-  drawRect(player.x + 3, player.y + 1 + bob, 4, 3, '#f5d2ae');
-  drawRect(player.x + 2, player.y + 3 + bob, 6, 2, traveler.hair);
-  drawRect(player.x + 2, player.y + 5 + bob, 6, 5, traveler.accent);
-  drawRect(player.x + 1, player.y + 8 + bob, 8, 3, traveler.coat);
-  drawRect(player.x + 2, player.y + 11 + bob, 2, 3 + leg, '#48392b');
-  drawRect(player.x + 6, player.y + 11 + bob, 2, 3 + (1 - leg), '#48392b');
+  const point = isoToScreen(9, 8);
+  ctx.fillStyle = '#e9e5d7';
+  ctx.fillRect(Math.round(point.x - 6), Math.round(point.y - 27), 12, 22);
+  ctx.fillRect(Math.round(point.x - 16), Math.round(point.y - 16), 32, 5);
+  const ripple = Math.sin(tick / 11) * 2;
+  ctx.fillStyle = '#d9fbff';
+  ctx.fillRect(Math.round(point.x - 2), Math.round(point.y - 34), 4, 12);
+  ctx.fillRect(Math.round(point.x - 8 + ripple), Math.round(point.y - 10), 16, 3);
+}
+
+function drawBuilding(building, focusId) {
+  const image = images[building.id];
+  if (!image.complete || !image.naturalWidth) return;
+  const anchor = isoToScreen(building.tx, building.ty);
+  const width = Math.round(image.naturalWidth * building.scale);
+  const height = Math.round(image.naturalHeight * building.scale);
+  const x = Math.round(anchor.x - width / 2);
+  const y = Math.round(anchor.y - height + 2);
+
+  if (focusId === building.id) {
+    ctx.fillStyle = 'rgba(248, 223, 136, 0.12)';
+    ctx.beginPath();
+    ctx.ellipse(anchor.x, anchor.y + 6, 22, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.drawImage(image, x, y, width, height);
+
+  if (focusId === building.id) {
+    ctx.strokeStyle = 'rgba(248, 223, 136, 0.72)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - 4, y - 4, width + 8, height + 8);
+  }
+}
+
+function drawPlayer() {
+  const traveler = travelers[travelerIndex];
+  const sprite = travelerSprites[traveler.id];
+  const point = isoToScreen(player.tx, player.ty);
+  const shadowY = point.y + 6;
+  ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
+  ctx.beginPath();
+  ctx.ellipse(point.x, shadowY, 9, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!sprite.complete || !sprite.naturalWidth) return;
+  const walk = player.moving ? (Math.sin(player.step) > 0 ? 1 : 0) : 0;
+  const base = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
+  const frame = base + walk;
+  const drawX = Math.round(point.x - spriteFrameWidth / 2);
+  const drawY = Math.round(point.y - 26);
 
   if (player.dir === 'left') {
-    drawRect(player.x + 1, player.y + 6 + bob, 2, 3, '#f5d2ae');
-  } else if (player.dir === 'right') {
-    drawRect(player.x + 7, player.y + 6 + bob, 2, 3, '#f5d2ae');
+    ctx.save();
+    ctx.translate(drawX + spriteFrameWidth, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, 0, drawY, spriteFrameWidth, spriteFrameHeight);
+    ctx.restore();
   } else {
-    drawRect(player.x + 2, player.y + 6 + bob, 6, 2, traveler.accent);
+    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, spriteFrameWidth, spriteFrameHeight);
   }
+}
+
+function areaName() {
+  const { tx, ty } = player;
+  if (tx > 12 && ty > 10.5) return '黑白棋会馆';
+  if (ty < 4.3) return '里谢里雅城前';
+  if (tx < 6 && ty < 8.5) return '西区圣堂与工房';
+  if (tx > 12 && ty < 8.5) return '东区旅馆与医院';
+  if (tx < 7 && ty > 10.2) return '西区竞技场';
+  if (tx > 11.3 && ty > 8.8) return '东区市集';
+  return '中央广场';
+}
+
+function currentFocus() {
+  let best = buildings[0];
+  let bestDist = Infinity;
+  buildings.forEach((building) => {
+    const dx = player.tx - building.tx;
+    const dy = player.ty - building.ty;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = building;
+    }
+  });
+  return best;
+}
+
+function syncInfo() {
+  const traveler = travelers[travelerIndex];
+  const focus = currentFocus();
+  zoneNameEl.textContent = areaName();
+  coordLabelEl.textContent = `${player.tx.toFixed(1)}, ${player.ty.toFixed(1)}`;
+  focusLabelEl.textContent = focus.label;
+  travelerNameEl.textContent = `${traveler.name} ${traveler.level}`;
+  travelerDescEl.textContent = traveler.desc;
+  portraitImg.src = traveler.avatar;
+  portraitImg.alt = `${traveler.name}头像`;
+}
+
+function cycleTraveler(step) {
+  travelerIndex = (travelerIndex + step + travelers.length) % travelers.length;
+  localStorage.setItem(travelerStorageKey, travelers[travelerIndex].id);
+  syncInfo();
+}
+
+function setKey(event, value) {
+  if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') keyState.up = value;
+  if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') keyState.down = value;
+  if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') keyState.left = value;
+  if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') keyState.right = value;
+}
+
+window.addEventListener('keydown', (event) => {
+  setKey(event, true);
+  if (event.key === 'q' || event.key === 'Q') {
+    event.preventDefault();
+    cycleTraveler(-1);
+  }
+  if (event.key === 'e' || event.key === 'E') {
+    event.preventDefault();
+    cycleTraveler(1);
+  }
+});
+window.addEventListener('keyup', (event) => setKey(event, false));
+prevTravelerBtn.addEventListener('click', () => cycleTraveler(-1));
+nextTravelerBtn.addEventListener('click', () => cycleTraveler(1));
+enterReversiBtn.addEventListener('click', () => {
+  window.location.href = './reversi.html';
+});
+viewClassicBtn.addEventListener('click', () => {
+  window.location.href = './falan-classic-preview.html';
+});
+
+function updatePlayer() {
+  let dtx = 0;
+  let dty = 0;
+  if (keyState.up) {
+    dtx -= player.speed;
+    dty -= player.speed;
+    player.dir = 'up';
+  }
+  if (keyState.down) {
+    dtx += player.speed;
+    dty += player.speed;
+    player.dir = 'down';
+  }
+  if (keyState.left) {
+    dtx -= player.speed;
+    dty += player.speed;
+    player.dir = 'left';
+  }
+  if (keyState.right) {
+    dtx += player.speed;
+    dty -= player.speed;
+    player.dir = 'right';
+  }
+
+  player.moving = dtx !== 0 || dty !== 0;
+  if (player.moving) {
+    const nextTx = clamp(player.tx + dtx, 0.8, world.cols - 0.8);
+    const nextTy = clamp(player.ty + dty, 0.8, world.rows - 0.8);
+    if (!collides(nextTx, nextTy)) {
+      player.tx = nextTx;
+      player.ty = nextTy;
+    }
+    player.step += 0.34;
+  }
+}
+
+function drawGround(tick) {
+  for (let ty = 0; ty < world.rows; ty += 1) {
+    for (let tx = 0; tx < world.cols; tx += 1) {
+      const type = tileType(tx, ty);
+      drawDiamond(tx, ty, tilePalette(type, tx, ty), type === 'stone' ? 1 : 0);
+      if (type === 'grass' && (tx + ty) % 5 === 0) {
+        const p = isoToScreen(tx, ty);
+        ctx.fillStyle = (tx + ty) % 10 === 0 ? '#a6d07c' : '#88bf67';
+        ctx.fillRect(Math.round(p.x - 1), Math.round(p.y - 2), 2, 2);
+      }
+      if (type === 'road' && (tx + ty) % 4 === 0) {
+        const p = isoToScreen(tx, ty);
+        ctx.fillStyle = '#ecc98d';
+        ctx.fillRect(Math.round(p.x - 2), Math.round(p.y - 1), 4, 2);
+      }
+    }
+  }
+
+  const skyGlow = ctx.createRadialGradient(world.originX, 14, 40, world.originX, 14, 250);
+  skyGlow.addColorStop(0, 'rgba(255, 236, 173, 0.24)');
+  skyGlow.addColorStop(1, 'rgba(255, 236, 173, 0)');
+  ctx.fillStyle = skyGlow;
+  ctx.fillRect(0, 0, canvas.width, 140);
+
+  const pulse = 0.3 + (Math.sin(tick / 14) + 1) * 0.08;
+  ctx.fillStyle = `rgba(246, 228, 164, ${pulse})`;
+  const point = isoToScreen(13.7, 12.2);
+  ctx.beginPath();
+  ctx.ellipse(point.x, point.y + 2, 16, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function drawScene(tick) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawRect(0, 0, world.width, world.height, '#a6d7d5');
-  drawMountains();
-  clouds.forEach((cloud) => drawCloud(cloud, tick));
-  drawRect(0, 72, world.width, world.height - 72, '#76af5b');
-  drawRect(0, 342, world.width, world.height - 342, '#8dc96b');
+  ctx.fillStyle = '#1a261b';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  for (let y = 78; y < world.height; y += 12) {
-    for (let x = (y % 24 === 0 ? 4 : 10); x < world.width; x += 18) {
-      drawRect(x, y, 2, 2, '#87be66');
-    }
-  }
-
-  drawRoads();
-  drawSouthGate();
-  drawCastle(tick);
-  drawCathedral();
-  drawGuildInn();
-  drawWorkshop();
-  drawHospital();
-  drawArena();
-  drawMarket();
-  drawReversiCabin(tick);
-  drawShrubs();
-  drawBenches();
+  drawGround(tick);
   drawFountain(tick);
-  drawFlowerBeds(tick);
-  trees.forEach((tree) => drawTree(tree, tick));
-  lamps.forEach((lamp) => drawLamp(lamp, tick));
-  drawSparkle(tick);
-  drawPlayer(tick);
+
+  const renderables = [
+    ...decorativeTrees.map((tree) => ({ type: 'tree', sort: tree.tx + tree.ty + 0.15, tree })),
+    ...buildings.map((building) => ({ type: 'building', sort: building.tx + building.ty + 0.25, building })),
+    { type: 'player', sort: player.tx + player.ty + 0.22 }
+  ].sort((a, b) => a.sort - b.sort);
+
+  const focus = currentFocus();
+  renderables.forEach((item) => {
+    if (item.type === 'tree') drawTree(item.tree, tick);
+    if (item.type === 'building') drawBuilding(item.building, focus.id);
+    if (item.type === 'player') drawPlayer();
+  });
+
+  ctx.fillStyle = 'rgba(240, 229, 193, 0.85)';
+  ctx.font = '13px "Courier New", monospace';
+  ctx.fillText('FALAN ISO PROTOTYPE', 18, 26);
 }
 
 function loop(tick) {
   updatePlayer();
-  updateCamera();
-  syncUi();
-  updateHeroChip();
+  syncInfo();
   drawScene(tick / 16.6);
   requestAnimationFrame(loop);
 }
 
-renderTravelerCards();
-updateTravelerPreview();
-updateCamera();
-updateHeroChip();
-syncUi();
+syncInfo();
 requestAnimationFrame(loop);
 </script>
 </body>
