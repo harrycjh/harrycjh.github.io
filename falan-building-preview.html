@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!-- 法兰城建筑草图 v0.2 -->
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法兰城建筑草图 v0.2</title>
+<style>
+:root {
+  --bg: #122016;
+  --panel: rgba(18, 33, 23, 0.92);
+  --border: rgba(210, 235, 177, 0.18);
+  --ink: #f4efcb;
+  --muted: rgba(235, 241, 208, 0.72);
+  --accent: #f1d58a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(110, 146, 122, 0.28), transparent 34%),
+    linear-gradient(180deg, #193126, #101a14 72%);
+  color: var(--ink);
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.page {
+  width: min(1180px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 26px 0 40px;
+}
+.hero {
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  border: 2px solid var(--border);
+  background: linear-gradient(180deg, rgba(39, 61, 44, 0.94), rgba(16, 28, 20, 0.95));
+}
+.eyebrow {
+  color: var(--accent);
+  letter-spacing: 2px;
+  font-size: 0.86rem;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 10px;
+}
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.1rem);
+  line-height: 1;
+}
+.version {
+  padding: 4px 10px;
+  border: 2px solid rgba(241, 213, 138, 0.24);
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+.desc {
+  max-width: 820px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.sheet-wrap,
+.grid {
+  border: 2px solid var(--border);
+  background: var(--panel);
+}
+.sheet-wrap {
+  margin-bottom: 18px;
+  padding: 16px;
+}
+.sheet-wrap img,
+.card img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+.card {
+  padding: 14px;
+  border: 2px solid rgba(210, 235, 177, 0.12);
+  background: linear-gradient(180deg, rgba(34, 52, 39, 0.96), rgba(15, 24, 18, 0.96));
+}
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: var(--accent);
+}
+.card p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.foot {
+  margin-top: 16px;
+  color: rgba(235, 241, 208, 0.58);
+  font-size: 0.88rem;
+}
+@media (max-width: 860px) {
+  .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Falan Building Drafts</div>
+      <div class="title-row">
+        <h1>法兰城建筑草图</h1>
+        <div class="version">v0.2</div>
+      </div>
+      <div class="desc">这一页是“候选建筑资产预览”，还没有接进法兰城主地图。风格方向是：保留《魔力宝贝》法兰城的主城分区和王城气质，再借一点《星露谷》的卡通屋顶、窗框和温暖配色。</div>
+    </section>
+
+    <section class="sheet-wrap">
+      <img src="./assets/falan/building-drafts/falan-building-sheet-v1.png" alt="法兰城建筑草图总览">
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>里谢里雅城</h2>
+        <img src="./assets/falan/building-drafts/castle-v1.png" alt="里谢里雅城草图">
+        <p>做成了 chibi 化的王城比例，保留左右塔楼、中央拱门和双旗。</p>
+      </article>
+      <article class="card">
+        <h2>大圣堂</h2>
+        <img src="./assets/falan/building-drafts/cathedral-v1.png" alt="大圣堂草图">
+        <p>重点是十字、暖色石墙和更竖向的宗教感。</p>
+      </article>
+      <article class="card">
+        <h2>旅馆与公会</h2>
+        <img src="./assets/falan/building-drafts/guild-inn-v1.png" alt="旅馆与公会草图">
+        <p>走《星露谷》味道更重一点的暖色旅店风，想让它看起来有人气。</p>
+      </article>
+      <article class="card">
+        <h2>工房</h2>
+        <img src="./assets/falan/building-drafts/workshop-v1.png" alt="工房草图">
+        <p>加了烟囱和更厚的木结构，偏工匠街区。</p>
+      </article>
+      <article class="card">
+        <h2>医院</h2>
+        <img src="./assets/falan/building-drafts/hospital-v1.png" alt="医院草图">
+        <p>白蓝墙面和红十字更清楚，方便在地图上远看识别。</p>
+      </article>
+      <article class="card">
+        <h2>竞技场</h2>
+        <img src="./assets/falan/building-drafts/arena-v1.png" alt="竞技场草图">
+        <p>不是封闭建筑，而是偏看台入口式的简化竞技场门面。</p>
+      </article>
+      <article class="card">
+        <h2>黑白棋会馆</h2>
+        <img src="./assets/falan/building-drafts/reversi-hall-v1.png" alt="黑白棋会馆草图">
+        <p>延续我们现在会馆的深木色和绿招牌，但做得更像单独的像素建筑。</p>
+      </article>
+    </section>
+
+    <div class="foot">确认这批草图的方向没问题后，我再把它们真正换进法兰城地图。</div>
+  </main>
+</body>
+</html>
