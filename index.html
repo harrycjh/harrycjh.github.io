@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋小镇入口 v1.0 -->
+<!-- 法兰城入口 v1.1 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋小镇</title>
+<title>法兰城</title>
 <style>
 :root {
   --ink: #102016;
@@ -295,23 +295,23 @@ canvas {
   <main class="page">
     <section class="hero">
       <div class="title-block">
-        <div class="eyebrow">Pixel Farm Entrance</div>
-        <h1>黑白棋小镇</h1>
-        <div class="subtitle">在草地上慢慢走，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
+        <div class="eyebrow">Falan City Gate</div>
+        <h1>法兰城</h1>
+        <div class="subtitle">在法兰城里慢慢逛，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
       </div>
-      <div class="hero-chip">今日天气：晴<br>今日安排：逛小镇，打黑白棋</div>
+      <div class="hero-chip">今日城况：晴<br>今日安排：逛法兰城，打黑白棋</div>
     </section>
 
     <section class="layout">
       <div class="scene-card">
         <div class="frame">
-          <canvas id="world" width="320" height="180" aria-label="黑白棋小镇"></canvas>
+          <canvas id="world" width="320" height="180" aria-label="法兰城"></canvas>
           <div class="canvas-overlay">
-            <div class="badge">位置<br><strong id="coordLabel">农场门口</strong></div>
+            <div class="badge">位置<br><strong id="coordLabel">法兰城南门</strong></div>
             <div class="badge">互动<br><strong id="promptLabel">散步中</strong></div>
           </div>
         </div>
-        <div class="scene-tip" id="sceneTip">用方向键或 WASD 在小镇里散步。靠近右上角的小屋门口，再按 Enter / 空格 / 右侧按钮进入黑白棋。</div>
+        <div class="scene-tip" id="sceneTip">用方向键或 WASD 在法兰城里散步。靠近右上角的小屋门口，再按 Enter / 空格 / 右侧按钮进入黑白棋。</div>
 
         <div class="controls" aria-label="触屏控制">
           <div class="dpad">
@@ -342,8 +342,8 @@ canvas {
         </section>
 
         <section class="status-box">
-          <strong id="statusTitle">小镇公告</strong>
-          <div id="statusText">今天是个适合下棋的好天气。黑白棋小屋已经开门，欢迎来挑战。</div>
+          <strong id="statusTitle">法兰城公告</strong>
+          <div id="statusText">今天城里很热闹。黑白棋小屋已经开门，欢迎来挑战。</div>
         </section>
 
         <div class="button-row">
@@ -351,7 +351,7 @@ canvas {
           <button class="btn secondary" id="focusCabinBtn" type="button">传送到小屋门口</button>
         </div>
 
-        <div class="footer-note">像素风入口页已经独立于黑白棋主体页面，后续我们还可以继续往里加小路、NPC、钓鱼点或农田任务。</div>
+        <div class="footer-note">现在这里已经是法兰城雏形了，后续我们还可以继续往里加传送石、旅馆、武器店、宠物店和 NPC。</div>
       </aside>
     </section>
   </main>
@@ -429,10 +429,10 @@ function isNearPortal() {
 
 function areaName() {
   if (isNearPortal()) return '黑白棋小屋';
-  if (player.x < 88 && player.y < 118) return '农舍前院';
-  if (player.x > 204 && player.y < 118) return '游戏角';
-  if (player.x > 112 && player.x < 190 && player.y > 100) return '花园边';
-  return '草地小路';
+  if (player.x < 88 && player.y < 118) return '冒险者公会前';
+  if (player.x > 204 && player.y < 118) return '竞技小屋';
+  if (player.x > 112 && player.x < 190 && player.y > 100) return '中央花圃';
+  return '法兰城南街';
 }
 
 function syncUi() {
@@ -441,11 +441,11 @@ function syncUi() {
   promptLabel.textContent = nearPortal ? '可进入' : '散步中';
   sceneTip.textContent = nearPortal
     ? '你已经走到黑白棋小屋门口了。按 Enter / 空格，或者点“进入小屋”，就能去黑白棋页面。'
-    : '用方向键或 WASD 在小镇里散步。右上角的小屋是黑白棋机房，走近后就能进去。';
-  statusTitle.textContent = nearPortal ? '小屋已开门' : '小镇公告';
+    : '用方向键或 WASD 在法兰城里散步。右上角的小屋是黑白棋机房，走近后就能进去。';
+  statusTitle.textContent = nearPortal ? '小屋已开门' : '法兰城公告';
   statusText.textContent = nearPortal
     ? '今天的对局已经准备好了。推门进去，就能开始黑白棋挑战。'
-    : '南边的小路通向花田，北边是农舍，右上角是黑白棋小屋。逛一圈再决定要不要开战。';
+    : '南边是法兰城南门，北边是冒险者公会，右上角是黑白棋小屋。先逛一圈，再决定要不要开战。';
   enterBtn.textContent = nearPortal ? '进入\n黑白棋' : '靠近\n小屋';
 }
 
