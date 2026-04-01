@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城等角预览 v0.1 -->
+<!-- 法兰城等角预览 v0.2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城等角预览 v0.1</title>
+<title>法兰城等角预览 v0.2</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -239,9 +239,9 @@ button:hover {
       <div class="eyebrow">Falan Isometric Prototype</div>
       <div class="title-row">
         <h1>法兰城等角预览</h1>
-        <div class="version">v0.1</div>
+        <div class="version">v0.2</div>
       </div>
-      <p>这是把法兰城切到 45 度俯视角后的原型页，不替换现有首页。重点是先看“主城中轴 + 王城 + 各区建筑”在等角视角里成立不成立，再决定是否正式改造整张地图。</p>
+      <p>这是把法兰城切到 45 度俯视角后的原型页，不替换现有首页。现在不只是地面转成等角，城堡、圣堂、旅馆、工房、医院、竞技场和会馆本身也都改成了等角建筑 sprite。</p>
     </section>
 
     <section class="layout">
@@ -253,7 +253,7 @@ button:hover {
           </div>
           <div class="map-badges">
             <div class="badge">45° 等角投影</div>
-            <div class="badge">建筑草图已投放</div>
+            <div class="badge">建筑已转等角</div>
             <div class="badge">先预览后接入</div>
           </div>
         </div>
@@ -291,7 +291,7 @@ button:hover {
             <div class="legend-item"><span class="swatch" style="background:#d7c6aa;"></span>王城前石砖区</div>
             <div class="legend-item"><span class="swatch" style="background:#6db4c0;"></span>中央喷泉水面</div>
           </div>
-          <p class="foot">如果这版方向没问题，下一步我会把现有法兰城首页逐步迁到等角地块和建筑 sprite，而不是一次性全推翻。</p>
+          <p class="foot">如果这版方向没问题，下一步我会把现有法兰城首页逐步迁到等角地块和等角建筑 sprite，而不是一次性全推翻。</p>
         </section>
       </aside>
     </section>
@@ -326,13 +326,13 @@ let travelerIndex = Math.max(0, travelers.findIndex((traveler) => traveler.id ==
 if (travelerIndex < 0) travelerIndex = 1;
 
 const images = {
-  castle: loadImage('./assets/falan/building-drafts/castle-v1.png'),
-  cathedral: loadImage('./assets/falan/building-drafts/cathedral-v1.png'),
-  guildInn: loadImage('./assets/falan/building-drafts/guild-inn-v1.png'),
-  workshop: loadImage('./assets/falan/building-drafts/workshop-v1.png'),
-  hospital: loadImage('./assets/falan/building-drafts/hospital-v1.png'),
-  arena: loadImage('./assets/falan/building-drafts/arena-v1.png'),
-  reversiHall: loadImage('./assets/falan/building-drafts/reversi-hall-v1.png')
+  castle: loadImage('./assets/falan/building-drafts-iso/castle-iso-v1.png'),
+  cathedral: loadImage('./assets/falan/building-drafts-iso/cathedral-iso-v1.png'),
+  guildInn: loadImage('./assets/falan/building-drafts-iso/guild-inn-iso-v1.png'),
+  workshop: loadImage('./assets/falan/building-drafts-iso/workshop-iso-v1.png'),
+  hospital: loadImage('./assets/falan/building-drafts-iso/hospital-iso-v1.png'),
+  arena: loadImage('./assets/falan/building-drafts-iso/arena-iso-v1.png'),
+  reversiHall: loadImage('./assets/falan/building-drafts-iso/reversi-hall-iso-v1.png')
 };
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
 
@@ -357,13 +357,13 @@ const player = {
 };
 
 const buildings = [
-  { id: 'castle', tx: 9, ty: 2.2, scale: 0.5, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 7.4, y: 0.8, w: 3.2, h: 2.1 } },
-  { id: 'cathedral', tx: 4.2, ty: 5.2, scale: 0.48, label: '大圣堂', focus: '西区圣堂', footprint: { x: 3.2, y: 4.1, w: 2.2, h: 1.8 } },
-  { id: 'guildInn', tx: 13.7, ty: 5.3, scale: 0.5, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 12.7, y: 4.2, w: 2.6, h: 1.9 } },
-  { id: 'workshop', tx: 3.6, ty: 9.2, scale: 0.56, label: '工房', focus: '西区工匠街', footprint: { x: 2.8, y: 8.5, w: 1.8, h: 1.4 } },
-  { id: 'hospital', tx: 14.3, ty: 9.1, scale: 0.54, label: '医院', focus: '东区医院', footprint: { x: 13.6, y: 8.5, w: 1.8, h: 1.4 } },
-  { id: 'arena', tx: 5.1, ty: 12.3, scale: 0.56, label: '竞技场', focus: '竞技场看台', footprint: { x: 4.2, y: 11.3, w: 2.4, h: 1.5 } },
-  { id: 'reversiHall', tx: 13.7, ty: 12.2, scale: 0.58, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 12.9, y: 11.6, w: 1.8, h: 1.5 } }
+  { id: 'castle', tx: 9, ty: 2.2, scale: 0.31, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 7.4, y: 0.8, w: 3.2, h: 2.1 } },
+  { id: 'cathedral', tx: 4.2, ty: 5.2, scale: 0.3, label: '大圣堂', focus: '西区圣堂', footprint: { x: 3.2, y: 4.1, w: 2.2, h: 1.8 } },
+  { id: 'guildInn', tx: 13.7, ty: 5.3, scale: 0.33, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 12.7, y: 4.2, w: 2.6, h: 1.9 } },
+  { id: 'workshop', tx: 3.6, ty: 9.2, scale: 0.28, label: '工房', focus: '西区工匠街', footprint: { x: 2.8, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'hospital', tx: 14.3, ty: 9.1, scale: 0.34, label: '医院', focus: '东区医院', footprint: { x: 13.6, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'arena', tx: 5.1, ty: 12.3, scale: 0.31, label: '竞技场', focus: '竞技场看台', footprint: { x: 4.2, y: 11.3, w: 2.4, h: 1.5 } },
+  { id: 'reversiHall', tx: 13.7, ty: 12.2, scale: 0.35, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 12.9, y: 11.6, w: 1.8, h: 1.5 } }
 ];
 
 const decorativeTrees = [
