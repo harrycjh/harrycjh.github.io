@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v2.0 -->
+<!-- 法兰城入口 v2.1 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v2.0</title>
+<title>法兰城 v2.1</title>
 <style>
 :root {
   --ink: #102016;
@@ -507,7 +507,7 @@ canvas {
         <div class="eyebrow">Falan City Gate</div>
         <div class="title-row">
           <h1>法兰城</h1>
-          <span class="title-version">v2.0</span>
+          <span class="title-version">v2.1</span>
         </div>
         <div class="subtitle">法兰城已经扩成主城框架了。现在可以从南门一路走到里谢里雅城，再顺路去东南角的黑白棋会馆。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
       </div>
@@ -648,29 +648,29 @@ let townReady = false;
 
 const city = {
   southGate: { x: 286, y: 372, w: 68, h: 16 },
-  castle: { x: 244, y: 32, w: 152, h: 74 },
-  cathedral: { x: 74, y: 118, w: 120, h: 68 },
-  guildInn: { x: 446, y: 118, w: 120, h: 66 },
-  workshop: { x: 58, y: 212, w: 96, h: 40 },
-  hospital: { x: 478, y: 210, w: 90, h: 42 },
-  arena: { x: 84, y: 284, w: 124, h: 58 },
-  reversiCabin: { x: 498, y: 284, w: 76, h: 48 },
-  fountain: { x: 292, y: 244, w: 56, h: 36 }
+  castle: { x: 258, y: 42, w: 124, h: 60 },
+  cathedral: { x: 86, y: 126, w: 96, h: 56 },
+  guildInn: { x: 458, y: 126, w: 104, h: 54 },
+  workshop: { x: 70, y: 216, w: 82, h: 34 },
+  hospital: { x: 488, y: 216, w: 76, h: 36 },
+  arena: { x: 94, y: 288, w: 108, h: 48 },
+  reversiCabin: { x: 506, y: 288, w: 62, h: 40 },
+  fountain: { x: 296, y: 248, w: 48, h: 30 }
 };
 
-const portal = { x: city.reversiCabin.x + 22, y: city.reversiCabin.y + 44, w: 28, h: 20 };
+const portal = { x: city.reversiCabin.x + 18, y: city.reversiCabin.y + 32, w: 24, h: 22 };
 
 const solids = [
-  { x: city.castle.x + 16, y: city.castle.y + 18, w: city.castle.w - 32, h: city.castle.h - 18 },
-  { x: city.castle.x - 22, y: city.castle.y + 18, w: 26, h: 74 },
-  { x: city.castle.x + city.castle.w - 4, y: city.castle.y + 18, w: 26, h: 74 },
+  { x: city.castle.x + 18, y: city.castle.y + 20, w: city.castle.w - 36, h: city.castle.h - 20 },
+  { x: city.castle.x - 18, y: city.castle.y + 20, w: 20, h: 56 },
+  { x: city.castle.x + city.castle.w - 2, y: city.castle.y + 20, w: 20, h: 56 },
   { x: city.cathedral.x, y: city.cathedral.y, w: city.cathedral.w, h: city.cathedral.h },
   { x: city.guildInn.x, y: city.guildInn.y, w: city.guildInn.w, h: city.guildInn.h },
   { x: city.workshop.x, y: city.workshop.y, w: city.workshop.w, h: city.workshop.h },
   { x: city.hospital.x, y: city.hospital.y, w: city.hospital.w, h: city.hospital.h },
   { x: city.arena.x, y: city.arena.y, w: city.arena.w, h: city.arena.h },
   { x: city.reversiCabin.x, y: city.reversiCabin.y, w: city.reversiCabin.w, h: city.reversiCabin.h - 2 },
-  { x: city.fountain.x + 6, y: city.fountain.y + 6, w: city.fountain.w - 12, h: city.fountain.h - 12 },
+  { x: city.fountain.x + 5, y: city.fountain.y + 5, w: city.fountain.w - 10, h: city.fountain.h - 10 },
   { x: 0, y: 0, w: world.width, h: 18 }
 ];
 
@@ -693,15 +693,25 @@ const lamps = [
 ];
 
 const flowers = [
-  { x: 274, y: 286, color: '#ffd8aa' }, { x: 284, y: 294, color: '#ffe991' },
-  { x: 356, y: 286, color: '#ffb6c3' }, { x: 366, y: 294, color: '#c8f3b5' },
-  { x: 258, y: 308, color: '#ffb6c3' }, { x: 382, y: 308, color: '#ffe991' }
+  { x: 276, y: 286, color: '#ffd8aa' }, { x: 286, y: 294, color: '#ffe991' },
+  { x: 354, y: 286, color: '#ffb6c3' }, { x: 364, y: 294, color: '#c8f3b5' },
+  { x: 262, y: 306, color: '#ffb6c3' }, { x: 378, y: 306, color: '#ffe991' }
 ];
 
 const marketStalls = [
-  { x: 424, y: 258, awning: '#d85d5f', wood: '#8a5b39' },
-  { x: 458, y: 256, awning: '#e7b35a', wood: '#8a5b39' },
-  { x: 536, y: 258, awning: '#7fc49f', wood: '#8a5b39' }
+  { x: 432, y: 262, awning: '#d85d5f', wood: '#8a5b39' },
+  { x: 464, y: 260, awning: '#e7b35a', wood: '#8a5b39' },
+  { x: 534, y: 262, awning: '#7fc49f', wood: '#8a5b39' }
+];
+
+const shrubs = [
+  { x: 232, y: 124, w: 12 }, { x: 396, y: 124, w: 12 },
+  { x: 210, y: 228, w: 14 }, { x: 418, y: 228, w: 14 },
+  { x: 228, y: 320, w: 10 }, { x: 404, y: 320, w: 10 }
+];
+
+const benches = [
+  { x: 254, y: 220 }, { x: 370, y: 220 }, { x: 252, y: 318 }, { x: 372, y: 318 }
 ];
 
 function clamp(value, min, max) {
@@ -1037,16 +1047,27 @@ function drawRoads() {
   drawRect(308, 96, 24, world.height - 96, '#d6ae74');
   drawRect(38, 216, world.width - 76, 34, '#c89c63');
   drawRect(54, 228, world.width - 108, 10, '#d6ae74');
-  drawRect(224, 100, 192, 42, '#d9c3a0');
+  drawRect(236, 110, 168, 34, '#d9c3a0');
+  drawRect(246, 120, 148, 14, '#ece1cb');
+  drawRect(292, 220, 56, 6, '#bfa178');
+  drawRect(292, 316, 56, 6, '#bfa178');
 
   for (let y = 102; y < world.height; y += 16) {
     drawRect(318, y, 4, 8, '#b48852');
+    drawRect(312, y + 4, 2, 2, '#e7c487');
+    drawRect(326, y + 4, 2, 2, '#e7c487');
   }
   for (let x = 10; x < world.width; x += 18) {
     drawRect(x, 364, 8, 3, '#b48852');
+    drawRect(x + 2, 356, 4, 2, '#e2c083');
   }
   for (let x = 54; x < world.width - 54; x += 18) {
     drawRect(x, 232, 8, 3, '#b48852');
+    drawRect(x + 2, 224, 4, 2, '#e2c083');
+  }
+  for (let x = 246; x < 394; x += 14) {
+    drawRect(x, 124, 6, 6, '#c9b095');
+    drawRect(x + 1, 125, 4, 4, '#e8dcc7');
   }
 }
 
@@ -1057,114 +1078,146 @@ function drawSouthGate() {
   drawRect(290, 334, 58, 10, '#9a6f4d');
   drawRect(city.southGate.x, city.southGate.y, city.southGate.w, city.southGate.h, '#e5c188');
   drawRect(city.southGate.x + 6, city.southGate.y + 5, city.southGate.w - 12, 4, '#b48852');
+  drawRect(280, 326, 4, 18, '#8d6644');
+  drawRect(356, 326, 4, 18, '#8d6644');
+  drawRect(284, 328, 8, 5, '#b85155');
+  drawRect(348, 328, 8, 5, '#4d65bf');
 }
 
 function drawCastle(tick) {
   const flag = Math.round(Math.sin(tick / 11) * 2);
-  drawRect(city.castle.x - 22, city.castle.y + 18, 26, 74, '#c9baa0');
-  drawRect(city.castle.x + city.castle.w - 4, city.castle.y + 18, 26, 74, '#c9baa0');
-  drawRect(city.castle.x, city.castle.y + 16, city.castle.w, city.castle.h, '#d8ccb3');
-  drawRect(city.castle.x + 14, city.castle.y + 10, city.castle.w - 28, 12, '#b6a488');
-  for (let x = city.castle.x - 22; x <= city.castle.x + city.castle.w + 10; x += 10) {
-    drawRect(x, city.castle.y + 8, 6, 10, '#e5d7bd');
+  drawRect(city.castle.x - 18, city.castle.y + 18, 20, 56, '#cdc0a6');
+  drawRect(city.castle.x + city.castle.w - 2, city.castle.y + 18, 20, 56, '#cdc0a6');
+  drawRect(city.castle.x + 18, city.castle.y + 24, city.castle.w - 36, city.castle.h - 6, '#d9ceb8');
+  drawRect(city.castle.x, city.castle.y + 18, city.castle.w, city.castle.h - 10, '#d1c3aa');
+  drawRect(city.castle.x + 14, city.castle.y + 10, city.castle.w - 28, 10, '#b6a488');
+  for (let x = city.castle.x - 18; x <= city.castle.x + city.castle.w + 10; x += 9) {
+    drawRect(x, city.castle.y + 8, 5, 10, '#e8dbc1');
   }
-  drawRect(city.castle.x + 62, city.castle.y + 48, 28, 42, '#5c4533');
-  drawRect(city.castle.x + 70, city.castle.y + 24, 12, 20, '#f1efdf');
-  drawRect(city.castle.x + 24, city.castle.y + 34, 12, 18, '#f1efdf');
-  drawRect(city.castle.x + 116, city.castle.y + 34, 12, 18, '#f1efdf');
+  drawRect(city.castle.x + 45, city.castle.y + 24, 34, 30, '#e4d9c5');
+  drawRect(city.castle.x + 52, city.castle.y + 46, 20, 26, '#5c4533');
+  drawRect(city.castle.x + 57, city.castle.y + 32, 10, 12, '#f1efdf');
+  drawRect(city.castle.x + 17, city.castle.y + 30, 10, 14, '#f1efdf');
+  drawRect(city.castle.x + 95, city.castle.y + 30, 10, 14, '#f1efdf');
+  drawRect(city.castle.x + 8, city.castle.y + 42, 8, 12, '#f1efdf');
+  drawRect(city.castle.x + 108, city.castle.y + 42, 8, 12, '#f1efdf');
+  drawRect(city.castle.x + 44, city.castle.y + 72, 36, 6, '#be9d74');
   drawRect(city.castle.x + 10, city.castle.y - 6, 2, 22, '#7c5a40');
   drawRect(city.castle.x + city.castle.w - 12, city.castle.y - 6, 2, 22, '#7c5a40');
-  drawRect(city.castle.x + 12, city.castle.y - 4, 10 + flag, 6, '#b85155');
-  drawRect(city.castle.x + city.castle.w - 22 - flag, city.castle.y - 4, 10 + flag, 6, '#4d65bf');
-  drawText('里谢里雅城', city.castle.x + 42, city.castle.y + 66, '#6c4d34');
+  drawRect(city.castle.x + 12, city.castle.y - 4, 8 + flag, 6, '#b85155');
+  drawRect(city.castle.x + city.castle.w - 20 - flag, city.castle.y - 4, 8 + flag, 6, '#4d65bf');
+  drawText('里谢里雅城', city.castle.x + 30, city.castle.y + 66, '#6c4d34');
 }
 
 function drawCathedral() {
-  drawRect(city.cathedral.x, city.cathedral.y, city.cathedral.w, city.cathedral.h, '#ccb691');
-  drawRect(city.cathedral.x + 10, city.cathedral.y - 12, city.cathedral.w - 20, 18, '#73503f');
-  drawRect(city.cathedral.x + 22, city.cathedral.y + 16, 18, 18, '#efe5c6');
-  drawRect(city.cathedral.x + 80, city.cathedral.y + 16, 18, 18, '#efe5c6');
-  drawRect(city.cathedral.x + 48, city.cathedral.y + 28, 20, 40, '#604431');
-  drawRect(city.cathedral.x + 56, city.cathedral.y + 8, 4, 18, '#f0d98f');
-  drawRect(city.cathedral.x + 49, city.cathedral.y + 15, 18, 4, '#f0d98f');
+  drawRect(city.cathedral.x, city.cathedral.y, city.cathedral.w, city.cathedral.h, '#d3bf99');
+  drawRect(city.cathedral.x + 8, city.cathedral.y - 10, city.cathedral.w - 16, 14, '#7a5544');
+  drawRect(city.cathedral.x + 18, city.cathedral.y + 14, 12, 16, '#efe5c6');
+  drawRect(city.cathedral.x + 66, city.cathedral.y + 14, 12, 16, '#efe5c6');
+  drawRect(city.cathedral.x + 39, city.cathedral.y + 24, 18, 32, '#604431');
+  drawRect(city.cathedral.x + 47, city.cathedral.y + 6, 3, 16, '#f0d98f');
+  drawRect(city.cathedral.x + 41, city.cathedral.y + 12, 15, 4, '#f0d98f');
+  drawRect(city.cathedral.x + 8, city.cathedral.y + 44, city.cathedral.w - 16, 3, '#b29569');
 }
 
 function drawGuildInn() {
-  drawRect(city.guildInn.x, city.guildInn.y, city.guildInn.w, city.guildInn.h, '#b99667');
-  drawRect(city.guildInn.x - 8, city.guildInn.y - 12, city.guildInn.w + 16, 18, '#6b4a33');
-  drawRect(city.guildInn.x + 12, city.guildInn.y + 18, 18, 16, '#f7eac8');
-  drawRect(city.guildInn.x + 86, city.guildInn.y + 18, 18, 16, '#f7eac8');
-  drawRect(city.guildInn.x + 48, city.guildInn.y + 32, 22, 34, '#5b3422');
-  drawText('旅馆', city.guildInn.x + 48, city.guildInn.y + 14, '#ffe89d');
+  drawRect(city.guildInn.x, city.guildInn.y, city.guildInn.w, city.guildInn.h, '#bf9f72');
+  drawRect(city.guildInn.x - 8, city.guildInn.y - 10, city.guildInn.w + 16, 16, '#6b4a33');
+  drawRect(city.guildInn.x + 12, city.guildInn.y + 16, 14, 14, '#f7eac8');
+  drawRect(city.guildInn.x + 74, city.guildInn.y + 16, 14, 14, '#f7eac8');
+  drawRect(city.guildInn.x + 42, city.guildInn.y + 26, 20, 28, '#5b3422');
+  drawRect(city.guildInn.x + 34, city.guildInn.y + 6, 36, 8, '#3e5d73');
+  drawText('旅馆', city.guildInn.x + 43, city.guildInn.y + 12, '#ffe89d');
 }
 
 function drawWorkshop() {
   drawRect(city.workshop.x, city.workshop.y, city.workshop.w, city.workshop.h, '#c4874a');
-  drawRect(city.workshop.x - 6, city.workshop.y - 10, city.workshop.w + 12, 14, '#7f4e35');
-  drawRect(city.workshop.x + 14, city.workshop.y + 12, 14, 12, '#f7e4b1');
-  drawRect(city.workshop.x + 58, city.workshop.y + 10, 20, 18, '#4c3424');
-  drawText('工房', city.workshop.x + 34, city.workshop.y + 36, '#2e1b11');
+  drawRect(city.workshop.x - 4, city.workshop.y - 8, city.workshop.w + 8, 12, '#7f4e35');
+  drawRect(city.workshop.x + 10, city.workshop.y + 10, 12, 10, '#f7e4b1');
+  drawRect(city.workshop.x + 48, city.workshop.y + 8, 18, 16, '#4c3424');
+  drawRect(city.workshop.x + 64, city.workshop.y - 12, 6, 12, '#6d4b35');
+  drawRect(city.workshop.x + 65, city.workshop.y - 16, 4, 4, 'rgba(229,229,229,0.8)');
+  drawText('工房', city.workshop.x + 26, city.workshop.y + 30, '#2e1b11');
 }
 
 function drawHospital() {
   drawRect(city.hospital.x, city.hospital.y, city.hospital.w, city.hospital.h, '#d9d7d8');
-  drawRect(city.hospital.x + 10, city.hospital.y + 8, city.hospital.w - 20, 10, '#b7c8d9');
-  drawRect(city.hospital.x + 16, city.hospital.y + 16, 16, 12, '#f1fbff');
-  drawRect(city.hospital.x + 58, city.hospital.y + 16, 16, 12, '#f1fbff');
-  drawRect(city.hospital.x + 36, city.hospital.y + 20, 18, 18, '#f7f0da');
-  drawRect(city.hospital.x + 43, city.hospital.y + 22, 4, 14, '#df7777');
-  drawRect(city.hospital.x + 38, city.hospital.y + 27, 14, 4, '#df7777');
+  drawRect(city.hospital.x + 8, city.hospital.y + 6, city.hospital.w - 16, 8, '#b7c8d9');
+  drawRect(city.hospital.x + 12, city.hospital.y + 14, 12, 10, '#f1fbff');
+  drawRect(city.hospital.x + 52, city.hospital.y + 14, 12, 10, '#f1fbff');
+  drawRect(city.hospital.x + 30, city.hospital.y + 16, 16, 16, '#f7f0da');
+  drawRect(city.hospital.x + 36, city.hospital.y + 18, 4, 12, '#df7777');
+  drawRect(city.hospital.x + 32, city.hospital.y + 22, 12, 4, '#df7777');
 }
 
 function drawArena() {
   drawRect(city.arena.x, city.arena.y, city.arena.w, city.arena.h, '#b8824f');
-  drawRect(city.arena.x - 8, city.arena.y + 8, city.arena.w + 16, 10, '#8d5c38');
-  drawRect(city.arena.x + 16, city.arena.y + 18, city.arena.w - 32, 26, '#d8b16c');
-  for (let x = city.arena.x + 12; x < city.arena.x + city.arena.w - 8; x += 14) {
-    drawRect(x, city.arena.y + 44, 8, 6, '#7c5738');
+  drawRect(city.arena.x - 6, city.arena.y + 6, city.arena.w + 12, 8, '#8d5c38');
+  drawRect(city.arena.x + 14, city.arena.y + 16, city.arena.w - 28, 18, '#d8b16c');
+  for (let x = city.arena.x + 10; x < city.arena.x + city.arena.w - 6; x += 12) {
+    drawRect(x, city.arena.y + 36, 6, 5, '#7c5738');
   }
-  drawText('竞技场', city.arena.x + 36, city.arena.y + 35, '#5a351c');
+  drawText('竞技场', city.arena.x + 28, city.arena.y + 30, '#5a351c');
 }
 
 function drawMarket() {
   marketStalls.forEach((stall) => {
-    drawRect(stall.x, stall.x < 500 ? 264 : 262, 26, 20, stall.wood);
-    drawRect(stall.x - 2, stall.x < 500 ? 258 : 256, 30, 8, stall.awning);
-    drawRect(stall.x + 4, stall.x < 500 ? 284 : 282, 3, 12, '#6b4a33');
-    drawRect(stall.x + 18, stall.x < 500 ? 284 : 282, 3, 12, '#6b4a33');
+    const topY = stall.x < 500 ? 262 : 260;
+    drawRect(stall.x, topY, 22, 16, stall.wood);
+    drawRect(stall.x - 2, topY - 6, 26, 7, stall.awning);
+    drawRect(stall.x + 3, topY + 16, 2, 10, '#6b4a33');
+    drawRect(stall.x + 17, topY + 16, 2, 10, '#6b4a33');
+    drawRect(stall.x + 5, topY + 4, 4, 3, '#f2dfba');
+    drawRect(stall.x + 12, topY + 4, 4, 3, '#f2dfba');
   });
 }
 
 function drawReversiCabin(tick) {
   drawRect(city.reversiCabin.x, city.reversiCabin.y, city.reversiCabin.w, city.reversiCabin.h, '#765133');
-  drawRect(city.reversiCabin.x - 8, city.reversiCabin.y - 12, city.reversiCabin.w + 16, 16, '#56402d');
-  drawRect(city.reversiCabin.x + 10, city.reversiCabin.y + 10, city.reversiCabin.w - 20, 12, '#2d4b3f');
-  drawRect(city.reversiCabin.x + 14, city.reversiCabin.y + 12, city.reversiCabin.w - 28, 8, '#355948');
-  drawText('REVERSI', city.reversiCabin.x + 12, city.reversiCabin.y + 20, '#ffe899');
-  drawRect(city.reversiCabin.x + 26, city.reversiCabin.y + 24, 24, 24, '#332014');
-  drawRect(city.reversiCabin.x + 32, city.reversiCabin.y + 30, 4, 4, '#ffd96d');
-  drawRect(city.reversiCabin.x + 40, city.reversiCabin.y + 30, 4, 4, '#f3b2bc');
+  drawRect(city.reversiCabin.x - 6, city.reversiCabin.y - 10, city.reversiCabin.w + 12, 14, '#56402d');
+  drawRect(city.reversiCabin.x + 8, city.reversiCabin.y + 8, city.reversiCabin.w - 16, 10, '#2d4b3f');
+  drawRect(city.reversiCabin.x + 10, city.reversiCabin.y + 10, city.reversiCabin.w - 20, 6, '#355948');
+  drawText('REVERSI', city.reversiCabin.x + 9, city.reversiCabin.y + 18, '#ffe899');
+  drawRect(city.reversiCabin.x + 18, city.reversiCabin.y + 20, 18, 20, '#332014');
+  drawRect(city.reversiCabin.x + 22, city.reversiCabin.y + 26, 4, 4, '#ffd96d');
+  drawRect(city.reversiCabin.x + 28, city.reversiCabin.y + 26, 4, 4, '#f3b2bc');
   const pulse = Math.floor((Math.sin(tick / 10) + 1) * 2);
-  drawRect(city.reversiCabin.x + 54, city.reversiCabin.y + 30, 8, 6, pulse > 1 ? '#8df08b' : '#f5efbe');
+  drawRect(city.reversiCabin.x + 44, city.reversiCabin.y + 24, 7, 6, pulse > 1 ? '#8df08b' : '#f5efbe');
+  drawRect(city.reversiCabin.x + 52, city.reversiCabin.y + 20, 4, 12, '#f0d98f');
 }
 
 function drawFountain(tick) {
   drawRect(city.fountain.x, city.fountain.y, city.fountain.w, city.fountain.h, '#466875');
   drawRect(city.fountain.x + 4, city.fountain.y + 4, city.fountain.w - 8, city.fountain.h - 8, '#6cb9c6');
-  drawRect(city.fountain.x + 24, city.fountain.y + 8, 8, 20, '#d9ddd7');
-  drawRect(city.fountain.x + 18, city.fountain.y + 12, 20, 4, '#f7f2d8');
+  drawRect(city.fountain.x + 20, city.fountain.y + 8, 8, 16, '#d9ddd7');
+  drawRect(city.fountain.x + 14, city.fountain.y + 12, 20, 4, '#f7f2d8');
   const ripple = Math.sin(tick / 14) * 2;
-  drawRect(city.fountain.x + 10 + ripple, city.fountain.y + 18, 18, 2, '#bdebf0');
-  drawRect(city.fountain.x + 22 - ripple, city.fountain.y + 26, 16, 2, '#bdebf0');
+  drawRect(city.fountain.x + 8 + ripple, city.fountain.y + 16, 16, 2, '#bdebf0');
+  drawRect(city.fountain.x + 20 - ripple, city.fountain.y + 22, 14, 2, '#bdebf0');
 }
 
 function drawFlowerBeds(tick) {
-  drawRect(250, 276, 140, 44, '#5b482c');
-  drawRect(270, 236, 98, 10, '#7a6440');
+  drawRect(256, 278, 128, 40, '#5b482c');
+  drawRect(272, 236, 96, 10, '#7a6440');
   flowers.forEach((flower, index) => {
     const sway = Math.round(Math.sin(tick / 10 + index) * 1.5);
     drawRect(flower.x, flower.y - 5, 2, 7, '#79b35f');
     drawRect(flower.x - 1 + sway, flower.y - 8, 4, 4, flower.color);
+  });
+}
+
+function drawShrubs() {
+  shrubs.forEach((shrub) => {
+    drawRect(shrub.x, shrub.y, shrub.w, 8, '#588645');
+    drawRect(shrub.x + 2, shrub.y - 4, shrub.w - 4, 5, '#7db35f');
+  });
+}
+
+function drawBenches() {
+  benches.forEach((bench) => {
+    drawRect(bench.x, bench.y, 14, 3, '#7a5738');
+    drawRect(bench.x + 1, bench.y + 3, 2, 5, '#61462f');
+    drawRect(bench.x + 11, bench.y + 3, 2, 5, '#61462f');
   });
 }
 
@@ -1239,6 +1292,8 @@ function drawScene(tick) {
   drawArena();
   drawMarket();
   drawReversiCabin(tick);
+  drawShrubs();
+  drawBenches();
   drawFountain(tick);
   drawFlowerBeds(tick);
   trees.forEach((tree) => drawTree(tree, tick));
