@@ -1,32 +1,54 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v1.2 -->
+<!-- 法兰城入口 v1.3 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v1.2</title>
+<title>法兰城 v1.3</title>
 <style>
 :root {
-  --ink: #102016;
-  --panel: rgba(13, 29, 21, 0.88);
-  --panel-border: rgba(201, 240, 175, 0.18);
-  --accent: #cbe992;
-  --accent-strong: #f8d86c;
-  --mist: rgba(214, 238, 194, 0.08);
+  --bg-top: #264656;
+  --bg-mid: #1a2634;
+  --bg-bottom: #10171f;
+  --ink: #16211c;
+  --panel: rgba(14, 21, 19, 0.82);
+  --panel-strong: rgba(18, 25, 23, 0.94);
+  --panel-soft: rgba(28, 39, 36, 0.78);
+  --gold: #f8de8f;
+  --gold-deep: #b7863d;
+  --jade: #9edba0;
+  --jade-deep: #3f7e58;
+  --skyline: #9bc7d4;
+  --paper: #efe2bf;
+  --paper-ink: #433118;
+  --mist: rgba(240, 249, 226, 0.08);
 }
-* { box-sizing: border-box; }
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
-  font-family: "Courier New", "PingFang SC", monospace;
-  color: #f7f8df;
+  color: #f6f2dc;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   background:
-    radial-gradient(circle at top, rgba(255, 240, 184, 0.18), transparent 24%),
-    linear-gradient(180deg, #3a5d55 0%, #20392f 30%, #102117 100%);
+    radial-gradient(circle at 18% 12%, rgba(255, 223, 154, 0.18), transparent 22%),
+    radial-gradient(circle at 82% 18%, rgba(170, 231, 196, 0.14), transparent 18%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 34%, var(--bg-bottom) 100%);
   overflow-x: hidden;
-  transition: opacity 0.18s ease;
+  transition: opacity 0.22s ease;
 }
-body.leaving { opacity: 0; }
+
+body.leaving {
+  opacity: 0;
+}
+
 body::before,
 body::after {
   content: "";
@@ -34,103 +56,283 @@ body::after {
   inset: 0;
   pointer-events: none;
 }
+
 body::before {
   background:
-    linear-gradient(transparent 96%, rgba(0, 0, 0, 0.06) 96%),
-    linear-gradient(90deg, transparent 96%, rgba(0, 0, 0, 0.05) 96%);
-  background-size: 8px 8px;
+    linear-gradient(transparent 95%, rgba(255, 255, 255, 0.04) 95%),
+    linear-gradient(90deg, transparent 95%, rgba(0, 0, 0, 0.1) 95%);
+  background-size: 9px 9px;
   opacity: 0.16;
 }
+
 body::after {
   background:
-    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.12), transparent 18%),
-    radial-gradient(circle at 78% 10%, rgba(255, 235, 170, 0.18), transparent 14%);
+    radial-gradient(circle at center, transparent 54%, rgba(7, 10, 12, 0.28) 100%),
+    linear-gradient(180deg, rgba(255, 245, 211, 0.06), transparent 26%);
 }
+
 .page {
-  width: min(1180px, calc(100vw - 24px));
+  position: relative;
+  width: min(1260px, calc(100vw - 24px));
   margin: 0 auto;
-  padding: 20px 0 26px;
+  padding: 24px 0 30px;
 }
+
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 10px 0 auto;
+  height: 220px;
+  background:
+    linear-gradient(90deg, transparent 0, rgba(255, 230, 157, 0.12) 16%, transparent 36%),
+    linear-gradient(90deg, transparent 52%, rgba(182, 241, 210, 0.08) 70%, transparent 100%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
 .hero {
-  display: flex;
-  justify-content: space-between;
-  gap: 18px;
-  align-items: end;
-  margin-bottom: 18px;
-}
-.title-block {
-  padding: 14px 18px;
-  border: 2px solid rgba(242, 255, 197, 0.14);
-  background: linear-gradient(180deg, rgba(53, 78, 55, 0.72), rgba(18, 28, 21, 0.82));
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-}
-.eyebrow {
-  color: #ffe99a;
-  font-size: 0.82rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-h1 {
-  margin: 0;
-  font-size: clamp(1.8rem, 4vw, 3rem);
-  line-height: 1;
-  letter-spacing: 3px;
-  color: #fbffd8;
-  text-shadow: 4px 4px 0 rgba(12, 18, 13, 0.28);
-}
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 8px 0;
-}
-.title-version {
-  padding: 6px 10px 5px;
-  border: 2px solid rgba(255, 232, 150, 0.18);
-  background: rgba(23, 36, 25, 0.86);
-  color: #ffe79c;
-  font-size: 0.86rem;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.16);
-}
-.subtitle {
-  max-width: 540px;
-  line-height: 1.7;
-  color: rgba(245, 247, 220, 0.86);
-}
-.hero-chip {
-  padding: 12px 14px;
-  align-self: center;
-  background: rgba(14, 28, 20, 0.75);
-  border: 2px solid rgba(255, 224, 135, 0.18);
-  color: #ffe8a2;
-  font-size: 0.86rem;
-  letter-spacing: 1px;
-  min-width: 220px;
-}
-.layout {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(280px, 360px);
   gap: 18px;
+  margin-bottom: 18px;
 }
+
+.hero-card,
+.ledger-card,
 .scene-card,
 .panel {
-  background: var(--panel);
-  border: 2px solid var(--panel-border);
-  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.22);
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(246, 227, 161, 0.24);
+  background: linear-gradient(180deg, rgba(33, 45, 41, 0.72), rgba(14, 18, 17, 0.92));
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 244, 213, 0.06);
 }
+
+.hero-card::before,
+.ledger-card::before,
+.scene-card::before,
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(255, 243, 210, 0.08);
+  pointer-events: none;
+}
+
+.hero-card {
+  padding: 22px 24px 18px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 220, 142, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(57, 83, 74, 0.92), rgba(18, 25, 23, 0.98) 58%);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffe8a0;
+  font-size: 0.82rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(255, 232, 153, 0.15), rgba(255, 232, 153, 0.95));
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 10px 0 12px;
+}
+
+h1,
+.panel h2,
+.ledger-card h2,
+.scene-ribbon {
+  font-family: "STKaiti", "KaiTi", "Songti SC", serif;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4.6vw, 3.7rem);
+  line-height: 0.98;
+  letter-spacing: 0.16em;
+  color: #fff8dc;
+  text-shadow:
+    0 0 16px rgba(255, 237, 188, 0.1),
+    5px 5px 0 rgba(11, 16, 14, 0.34);
+}
+
+.title-version {
+  padding: 6px 12px 5px;
+  border: 1px solid rgba(255, 233, 151, 0.34);
+  background: rgba(18, 26, 23, 0.88);
+  color: #ffe499;
+  font-size: 0.84rem;
+  letter-spacing: 0.12em;
+  box-shadow: 0 5px 0 rgba(108, 77, 34, 0.34);
+}
+
+.subtitle {
+  max-width: 720px;
+  margin: 0;
+  color: rgba(246, 244, 224, 0.9);
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.marker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.marker {
+  padding: 9px 12px;
+  border: 1px solid rgba(252, 231, 166, 0.18);
+  background: rgba(10, 17, 15, 0.46);
+  color: rgba(248, 245, 221, 0.92);
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+}
+
+.ledger-card {
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(64, 45, 20, 0.9), rgba(26, 19, 12, 0.96)),
+    linear-gradient(135deg, rgba(245, 222, 164, 0.08), transparent 40%);
+}
+
+.ledger-kicker {
+  color: #f8dd98;
+  font-size: 0.82rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ledger-title {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  color: #fff1c6;
+}
+
+.ledger-copy {
+  margin: 0 0 14px;
+  color: rgba(255, 245, 222, 0.88);
+  line-height: 1.8;
+}
+
+.ledger-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.ledger-stat {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  background: rgba(17, 11, 8, 0.32);
+  border: 1px solid rgba(255, 224, 158, 0.12);
+}
+
+.ledger-stat strong {
+  color: #ffe29a;
+  font-size: 0.84rem;
+  letter-spacing: 0.08em;
+}
+
+.ledger-stat span {
+  color: rgba(255, 243, 216, 0.88);
+  line-height: 1.65;
+  font-size: 0.92rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 390px);
+  gap: 18px;
+}
+
 .scene-card {
-  padding: 14px;
+  padding: 16px;
 }
+
+.scene-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.scene-ribbon {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  background: linear-gradient(180deg, rgba(111, 55, 33, 0.92), rgba(72, 34, 21, 0.96));
+  color: #fff2ca;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  box-shadow: 0 5px 0 rgba(54, 21, 13, 0.42);
+}
+
+.scene-hud {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hud-pill {
+  padding: 8px 10px;
+  border: 1px solid rgba(204, 239, 196, 0.18);
+  background: rgba(12, 18, 16, 0.74);
+  color: #d9efc1;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+}
+
 .frame {
   position: relative;
   overflow: hidden;
-  border: 4px solid rgba(253, 255, 221, 0.14);
+  border: 4px solid rgba(244, 230, 185, 0.16);
   background:
-    linear-gradient(180deg, rgba(255, 250, 230, 0.05), transparent 10%),
-    rgba(7, 14, 10, 0.6);
+    linear-gradient(180deg, rgba(255, 246, 213, 0.05), transparent 12%),
+    rgba(7, 12, 11, 0.82);
 }
+
+.frame::before,
+.frame::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  pointer-events: none;
+}
+
+.frame::before {
+  border: 1px solid rgba(255, 244, 207, 0.09);
+}
+
+.frame::after {
+  background:
+    linear-gradient(90deg, rgba(255, 237, 182, 0.05), transparent 16%, transparent 84%, rgba(255, 237, 182, 0.05)),
+    linear-gradient(180deg, rgba(255, 237, 182, 0.05), transparent 14%, transparent 86%, rgba(255, 237, 182, 0.05));
+}
+
 canvas {
   display: block;
   width: 100%;
@@ -138,171 +340,277 @@ canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
+
 .canvas-overlay {
   position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 12px;
+  left: 14px;
+  right: 14px;
+  top: 14px;
   display: flex;
   justify-content: space-between;
   gap: 10px;
   pointer-events: none;
 }
+
+.overlay-stack {
+  display: grid;
+  gap: 8px;
+}
+
 .badge {
+  min-width: 132px;
   padding: 8px 10px;
-  background: rgba(14, 25, 18, 0.8);
-  border: 2px solid rgba(238, 255, 211, 0.14);
+  background: rgba(8, 14, 12, 0.78);
+  border: 1px solid rgba(238, 255, 211, 0.16);
   font-size: 0.75rem;
-  letter-spacing: 1px;
+  letter-spacing: 0.1em;
+  line-height: 1.45;
 }
+
 .badge strong {
-  color: var(--accent);
-  font-size: 0.9rem;
+  display: block;
+  margin-top: 3px;
+  color: var(--gold);
+  font-size: 0.94rem;
+  letter-spacing: 0.04em;
 }
+
 .scene-tip {
   margin-top: 12px;
-  padding: 12px 14px;
-  min-height: 60px;
-  border: 2px solid rgba(255, 248, 204, 0.12);
-  background: linear-gradient(180deg, rgba(63, 95, 63, 0.24), rgba(19, 31, 24, 0.86));
-  line-height: 1.6;
-  color: #f2f7d8;
+  padding: 14px 16px;
+  min-height: 66px;
+  border: 1px solid rgba(255, 240, 195, 0.14);
+  background:
+    linear-gradient(180deg, rgba(82, 104, 72, 0.28), rgba(19, 28, 24, 0.9)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 8px, transparent 8px 16px);
+  color: #f8f5df;
+  line-height: 1.8;
 }
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.legend-chip {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 234, 168, 0.14);
+  background: rgba(13, 19, 17, 0.74);
+  color: rgba(245, 244, 224, 0.82);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
 .panel {
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
+
+.panel-section {
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(40, 31, 22, 0.32), rgba(13, 18, 17, 0.52));
+  border: 1px solid rgba(255, 232, 169, 0.1);
+}
+
 .panel h2 {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 1rem;
-  letter-spacing: 2px;
-  color: #fff0ad;
+  letter-spacing: 0.12em;
+  color: #ffefb0;
 }
+
 .panel p,
-.panel li {
-  line-height: 1.7;
-  color: rgba(245, 247, 225, 0.86);
+.panel li,
+.route-item span {
+  margin: 0;
+  color: rgba(245, 246, 225, 0.87);
+  line-height: 1.8;
 }
+
 .panel ul {
   margin: 0;
   padding-left: 18px;
 }
+
 .status-box {
-  padding: 12px 14px;
-  border: 2px solid rgba(203, 233, 146, 0.16);
-  background: rgba(13, 22, 17, 0.72);
+  border-color: rgba(160, 227, 178, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(139, 228, 179, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(18, 28, 24, 0.94), rgba(11, 18, 16, 0.86));
 }
-.status-box strong {
+
+.route-list {
+  display: grid;
+  gap: 10px;
+}
+
+.route-item {
+  padding: 10px 12px;
+  border-left: 3px solid rgba(248, 222, 143, 0.62);
+  background: rgba(8, 14, 13, 0.34);
+}
+
+.route-item strong {
   display: block;
-  color: var(--accent);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  color: #ffefb0;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
 }
+
 .button-row {
   display: grid;
   gap: 10px;
 }
+
 .btn {
   border: 0;
   cursor: pointer;
   text-decoration: none;
   text-align: center;
-  padding: 12px 14px;
-  background: #dff2a8;
-  color: #17311f;
+  padding: 13px 14px;
+  background: linear-gradient(180deg, #f6f0b8, #d6d97b);
+  color: #223221;
   font-weight: 700;
-  letter-spacing: 1px;
-  box-shadow: 0 4px 0 #90ab54;
+  letter-spacing: 0.08em;
+  box-shadow:
+    0 5px 0 #92a250,
+    0 14px 24px rgba(0, 0, 0, 0.14);
   transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
+
 .btn:hover,
 .btn:focus-visible {
   transform: translateY(-2px);
-  box-shadow: 0 6px 0 #90ab54;
+  box-shadow:
+    0 7px 0 #92a250,
+    0 16px 26px rgba(0, 0, 0, 0.18);
   filter: brightness(1.03);
 }
+
 .btn.secondary {
-  background: #ffe7a2;
-  box-shadow: 0 4px 0 #b88d37;
+  background: linear-gradient(180deg, #f8dfb4, #e1ae67);
+  box-shadow:
+    0 5px 0 #ab733d,
+    0 14px 24px rgba(0, 0, 0, 0.14);
 }
+
 .btn.secondary:hover,
 .btn.secondary:focus-visible {
-  box-shadow: 0 6px 0 #b88d37;
+  box-shadow:
+    0 7px 0 #ab733d,
+    0 16px 26px rgba(0, 0, 0, 0.18);
 }
+
+.footer-note {
+  padding: 12px 14px;
+  border: 1px dashed rgba(255, 234, 168, 0.16);
+  background: rgba(12, 17, 15, 0.58);
+  color: rgba(243, 245, 222, 0.68);
+  font-size: 0.84rem;
+  line-height: 1.8;
+}
+
 .controls {
   display: none;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
+
 .dpad {
   display: grid;
-  grid-template-columns: repeat(3, 56px);
-  grid-template-rows: repeat(3, 56px);
+  grid-template-columns: repeat(3, 58px);
+  grid-template-rows: repeat(3, 58px);
   gap: 6px;
 }
+
 .pad,
 .action {
   border: 0;
   font: inherit;
-  color: #f5f7df;
-  background: rgba(22, 36, 27, 0.92);
-  border: 2px solid rgba(240, 252, 198, 0.14);
-  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.22);
+  color: #f7f3e0;
+  background: rgba(22, 31, 28, 0.94);
+  border: 1px solid rgba(245, 233, 185, 0.14);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.24);
 }
+
 .pad:active,
 .pad.active,
 .action:active,
 .action.active {
   transform: translateY(2px);
   box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-  background: rgba(62, 84, 52, 0.98);
+  background: rgba(68, 89, 76, 0.98);
 }
+
 .pad.blank {
   visibility: hidden;
 }
+
 .action-pad {
   display: flex;
   align-items: center;
 }
+
 .action {
-  width: 110px;
-  height: 110px;
-  background: rgba(102, 68, 18, 0.92);
-  border-color: rgba(255, 225, 164, 0.16);
+  width: 116px;
+  height: 116px;
+  background: linear-gradient(180deg, rgba(117, 76, 24, 0.96), rgba(73, 45, 16, 0.96));
+  border-color: rgba(255, 225, 164, 0.2);
 }
-.footer-note {
-  margin-top: 14px;
-  font-size: 0.82rem;
-  color: rgba(244, 247, 223, 0.6);
-}
-@media (max-width: 940px) {
-  .hero {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .hero-chip {
-    min-width: 0;
-  }
+
+@media (max-width: 980px) {
+  .hero,
   .layout {
     grid-template-columns: 1fr;
   }
+
+  .scene-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .scene-hud {
+    justify-content: flex-start;
+  }
 }
+
 @media (max-width: 760px) {
   .page {
     width: min(100vw - 14px, 760px);
-    padding-top: 10px;
+    padding-top: 12px;
   }
+
+  .hero-card,
+  .ledger-card,
   .scene-card,
   .panel {
-    padding: 12px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
+
+  .canvas-overlay {
+    left: 10px;
+    right: 10px;
+    top: 10px;
+    flex-direction: column;
+  }
+
+  .overlay-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .badge {
+    min-width: 0;
+  }
+
   .controls {
     display: flex;
     justify-content: space-between;
-  }
-  .subtitle {
-    max-width: none;
   }
 }
 </style>
@@ -310,27 +618,71 @@ canvas {
 <body>
   <main class="page">
     <section class="hero">
-      <div class="title-block">
-        <div class="eyebrow">Falan City Gate</div>
+      <div class="hero-card">
+        <div class="eyebrow">Cross Gate Town Hub</div>
         <div class="title-row">
           <h1>法兰城</h1>
-          <span class="title-version">v1.2</span>
+          <span class="title-version">v1.3</span>
         </div>
-        <div class="subtitle">在法兰城里慢慢逛，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
+        <p class="subtitle">晨光刚落进法兰城南门，石砖还带着夜里的潮气。顺着旗帜、喷泉和会馆灯牌往北走，靠近右上角的黑白棋会馆，就能推门进入对战。</p>
+        <div class="marker-row">
+          <span class="marker">主线目标：找到黑白棋会馆</span>
+          <span class="marker">操作：方向键 / WASD / Enter</span>
+          <span class="marker">氛围：像素小镇 · 旅人入口 · 晨间巡礼</span>
+        </div>
       </div>
-      <div class="hero-chip">今日城况：晴<br>今日安排：逛法兰城，打黑白棋</div>
+
+      <aside class="ledger-card">
+        <div class="ledger-kicker">冒险者手札</div>
+        <h2 class="ledger-title">今日法兰城</h2>
+        <p class="ledger-copy">这里不再只是一个跳转页，而是进入黑白棋之前的城镇大厅。你可以先在南街散步，看看喷泉、会馆和公告板，再决定什么时候开始对局。</p>
+        <div class="ledger-grid">
+          <div class="ledger-stat">
+            <strong>推荐路线</strong>
+            <span>南门石道 → 中央喷泉 → 黑白棋会馆</span>
+          </div>
+          <div class="ledger-stat">
+            <strong>移动节奏</strong>
+            <span>桌面适合方向键慢走，手机则用下方虚拟方向键。</span>
+          </div>
+          <div class="ledger-stat">
+            <strong>当前目标</strong>
+            <span>把首页做成真正的小城镇入口，后面还能继续扩成旅馆、武器店和宠物店。</span>
+          </div>
+        </div>
+      </aside>
     </section>
 
     <section class="layout">
       <div class="scene-card">
+        <div class="scene-head">
+          <div class="scene-ribbon">法兰城晨光地图</div>
+          <div class="scene-hud">
+            <span class="hud-pill">可移动场景</span>
+            <span class="hud-pill">靠近会馆即可进入</span>
+            <span class="hud-pill">手机支持触控方向键</span>
+          </div>
+        </div>
+
         <div class="frame">
           <canvas id="world" width="320" height="180" aria-label="法兰城"></canvas>
           <div class="canvas-overlay">
-            <div class="badge">位置<br><strong id="coordLabel">法兰城南门</strong></div>
-            <div class="badge">互动<br><strong id="promptLabel">散步中</strong></div>
+            <div class="overlay-stack">
+              <div class="badge">地区<strong id="coordLabel">法兰城南门</strong></div>
+              <div class="badge">状态<strong id="promptLabel">散步中</strong></div>
+            </div>
+            <div class="overlay-stack">
+              <div class="badge">指引<strong id="focusLabel">先去中央喷泉</strong></div>
+            </div>
           </div>
         </div>
-        <div class="scene-tip" id="sceneTip">用方向键或 WASD 在法兰城里散步。靠近右上角的小屋门口，再按 Enter / 空格 / 右侧按钮进入黑白棋。</div>
+
+        <div class="scene-tip" id="sceneTip">用方向键或 WASD 在法兰城里散步。顺着石砖往右上方走，来到黑白棋会馆门口后，按 Enter / 空格，或者点“进入会馆”。</div>
+        <div class="legend-row">
+          <div class="legend-chip">南门石道是起点</div>
+          <div class="legend-chip">中央喷泉会给你方向感</div>
+          <div class="legend-chip">黑白棋会馆在右上角</div>
+        </div>
 
         <div class="controls" aria-label="触屏控制">
           <div class="dpad">
@@ -345,32 +697,50 @@ canvas {
             <button class="pad blank" tabindex="-1" aria-hidden="true"></button>
           </div>
           <div class="action-pad">
-            <button class="action" id="enterBtn" aria-label="进入黑白棋">进入<br>小屋</button>
+            <button class="action" id="enterBtn" aria-label="进入黑白棋会馆">进入<br>会馆</button>
           </div>
         </div>
       </div>
 
       <aside class="panel">
-        <section>
-          <h2>玩法</h2>
-          <ul>
-            <li>电脑：方向键 / <code>WASD</code> 移动，<code>Enter</code> 或空格互动。</li>
-            <li>手机：直接按方向键，靠近小屋后点“进入小屋”。</li>
-            <li>不想散步也可以直接跳转进黑白棋。</li>
-          </ul>
+        <section class="panel-section status-box">
+          <h2 id="statusTitle">法兰城公告板</h2>
+          <p id="statusText">今天的法兰城很适合闲逛。顺着南街慢慢往北，会先看到中央喷泉，再看到右上角的黑白棋会馆灯牌。</p>
         </section>
 
-        <section class="status-box">
-          <strong id="statusTitle">法兰城公告</strong>
-          <div id="statusText">今天城里很热闹。黑白棋小屋已经开门，欢迎来挑战。</div>
+        <section class="panel-section">
+          <h2>今日路线</h2>
+          <div class="route-list">
+            <div class="route-item">
+              <strong>南门石道</strong>
+              <span>你会从法兰城南门开始，地面是宽一点的石砖大道。</span>
+            </div>
+            <div class="route-item">
+              <strong>中央喷泉</strong>
+              <span>喷泉是视觉中心，既能辨位，也让小镇更像真正的主城。</span>
+            </div>
+            <div class="route-item">
+              <strong>黑白棋会馆</strong>
+              <span>右上角有亮灯招牌，靠近门口后就能进入对战页面。</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h2>旅人指令</h2>
+          <ul>
+            <li>电脑：方向键 / <code>WASD</code> 移动，<code>Enter</code> 或空格互动。</li>
+            <li>手机：下方虚拟方向键移动，靠近会馆后点“进入会馆”。</li>
+            <li>如果只想开局，也可以直接跳到黑白棋页面。</li>
+          </ul>
         </section>
 
         <div class="button-row">
           <button class="btn" id="directPlayBtn" type="button">直接进入黑白棋</button>
-          <button class="btn secondary" id="focusCabinBtn" type="button">传送到小屋门口</button>
+          <button class="btn secondary" id="focusCabinBtn" type="button">传送到会馆门口</button>
         </div>
 
-        <div class="footer-note">现在这里已经是法兰城雏形了，后续我们还可以继续往里加传送石、旅馆、武器店、宠物店和 NPC。</div>
+        <div class="footer-note">法兰城现在已经从“跳转页”升级成了“可逛的小镇入口”。后续可以继续加旅馆、武器店、宠物店、传送石，甚至把不同小游戏挂到不同建筑里。</div>
       </aside>
     </section>
   </main>
@@ -383,6 +753,7 @@ ctx.imageSmoothingEnabled = false;
 const sceneTip = document.getElementById('sceneTip');
 const coordLabel = document.getElementById('coordLabel');
 const promptLabel = document.getElementById('promptLabel');
+const focusLabel = document.getElementById('focusLabel');
 const statusTitle = document.getElementById('statusTitle');
 const statusText = document.getElementById('statusText');
 const enterBtn = document.getElementById('enterBtn');
@@ -390,43 +761,40 @@ const directPlayBtn = document.getElementById('directPlayBtn');
 const focusCabinBtn = document.getElementById('focusCabinBtn');
 
 const world = { width: 320, height: 180 };
-const player = { x: 46, y: 138, w: 10, h: 14, speed: 1.35, dir: 'down', step: 0, moving: false };
+const player = { x: 48, y: 138, w: 10, h: 14, speed: 1.35, dir: 'down', step: 0, moving: false };
 const keyState = { up: false, down: false, left: false, right: false };
 const actionKeys = new Set(['Enter', ' ', 'Spacebar']);
 
 const solids = [
-  { x: 22, y: 56, w: 84, h: 44 },
-  { x: 224, y: 48, w: 70, h: 54 },
-  { x: 118, y: 102, w: 60, h: 38 },
-  { x: 92, y: 58, w: 8, h: 48 },
-  { x: 188, y: 68, w: 8, h: 52 },
-  { x: 0, y: 0, w: world.width, h: 18 }
+  { x: 0, y: 0, w: world.width, h: 18 },
+  { x: 24, y: 58, w: 88, h: 40 },
+  { x: 224, y: 54, w: 72, h: 42 },
+  { x: 124, y: 102, w: 58, h: 34 },
+  { x: 96, y: 58, w: 8, h: 44 },
+  { x: 192, y: 64, w: 8, h: 40 }
 ];
 
-const portal = { x: 247, y: 94, w: 26, h: 22 };
+const portal = { x: 247, y: 95, w: 28, h: 24 };
 
 const clouds = [
-  { x: 26, y: 22, speed: 0.14, scale: 1 },
-  { x: 118, y: 13, speed: 0.08, scale: 0.85 },
-  { x: 248, y: 28, speed: 0.1, scale: 1.15 }
+  { x: 16, y: 24, speed: 0.08, scale: 0.95 },
+  { x: 104, y: 16, speed: 0.06, scale: 0.8 },
+  { x: 226, y: 28, speed: 0.1, scale: 1.12 }
 ];
 
 const flowers = [
-  { x: 122, y: 150, color: '#ffd8aa' },
-  { x: 131, y: 148, color: '#ffe991' },
-  { x: 144, y: 147, color: '#ffb6c3' },
-  { x: 157, y: 149, color: '#ffd8aa' },
-  { x: 168, y: 146, color: '#c8f3b5' },
-  { x: 206, y: 140, color: '#ffb6c3' },
-  { x: 214, y: 146, color: '#ffe991' }
+  { x: 122, y: 152, color: '#ffd7a8' },
+  { x: 130, y: 148, color: '#ffe88d' },
+  { x: 140, y: 150, color: '#ffb9cc' },
+  { x: 149, y: 147, color: '#baf0ba' },
+  { x: 159, y: 149, color: '#ffd7a8' },
+  { x: 167, y: 150, color: '#ffe88d' },
+  { x: 207, y: 145, color: '#ffb9cc' },
+  { x: 214, y: 149, color: '#baf0ba' }
 ];
 
 function rectsOverlap(ax, ay, aw, ah, b) {
   return ax < b.x + b.w && ax + aw > b.x && ay < b.y + b.h && ay + ah > b.y;
-}
-
-function playerRectAt(x, y) {
-  return { x, y, w: player.w, h: player.h };
 }
 
 function collides(x, y) {
@@ -443,29 +811,61 @@ function zoneDistance(zone) {
 }
 
 function isNearPortal() {
-  return zoneDistance(portal) < 28;
+  return zoneDistance(portal) < 30;
 }
 
 function areaName() {
-  if (isNearPortal()) return '黑白棋小屋';
-  if (player.x < 88 && player.y < 118) return '冒险者公会前';
-  if (player.x > 204 && player.y < 118) return '竞技小屋';
-  if (player.x > 112 && player.x < 190 && player.y > 100) return '中央花圃';
-  return '法兰城南街';
+  if (isNearPortal()) return '黑白棋会馆';
+  if (player.x < 96 && player.y < 118) return '冒险者公会前';
+  if (player.x > 214 && player.y < 120) return '会馆外廊';
+  if (player.x > 112 && player.x < 190 && player.y > 98) return '中央喷泉';
+  if (player.x < 146) return '法兰城南街';
+  return '法兰城东街';
+}
+
+function focusHint(area) {
+  if (area === '黑白棋会馆') return '按 Enter 推门进去';
+  if (area === '冒险者公会前') return '从这里折向东边';
+  if (area === '中央喷泉') return '沿右上石道去会馆';
+  if (area === '会馆外廊') return '灯牌就在前方';
+  return '先去中央喷泉';
 }
 
 function syncUi() {
+  const area = areaName();
   const nearPortal = isNearPortal();
-  coordLabel.textContent = areaName();
-  promptLabel.textContent = nearPortal ? '可进入' : '散步中';
-  sceneTip.textContent = nearPortal
-    ? '你已经走到黑白棋小屋门口了。按 Enter / 空格，或者点“进入小屋”，就能去黑白棋页面。'
-    : '用方向键或 WASD 在法兰城里散步。右上角的小屋是黑白棋机房，走近后就能进去。';
-  statusTitle.textContent = nearPortal ? '小屋已开门' : '法兰城公告';
-  statusText.textContent = nearPortal
-    ? '今天的对局已经准备好了。推门进去，就能开始黑白棋挑战。'
-    : '南边是法兰城南门，北边是冒险者公会，右上角是黑白棋小屋。先逛一圈，再决定要不要开战。';
-  enterBtn.textContent = nearPortal ? '进入\n黑白棋' : '靠近\n小屋';
+
+  coordLabel.textContent = area;
+  promptLabel.textContent = nearPortal ? '可进入' : '探索中';
+  focusLabel.textContent = focusHint(area);
+
+  if (nearPortal) {
+    sceneTip.textContent = '会馆的招牌已经亮着了。现在按 Enter / 空格，或者直接点“进入会馆”，就能去黑白棋页面。';
+    statusTitle.textContent = '黑白棋会馆';
+    statusText.textContent = '会馆门口已经开放，里面就是黑白棋。你现在站位已经足够近，可以直接开始对局。';
+    enterBtn.textContent = '进入\n会馆';
+    return;
+  }
+
+  if (area === '中央喷泉') {
+    sceneTip.textContent = '你已经走到法兰城中央喷泉了。沿着右上方的石砖小路继续走，就能看到黑白棋会馆。';
+    statusTitle.textContent = '中央喷泉';
+    statusText.textContent = '喷泉是整座小城的视觉中心。站在这里，左边是公会，右上角则是黑白棋会馆。';
+  } else if (area === '冒险者公会前') {
+    sceneTip.textContent = '冒险者公会前人来人往。想去黑白棋会馆的话，先回到主石道，再往右上角前进。';
+    statusTitle.textContent = '冒险者公会';
+    statusText.textContent = '左侧建筑更像城镇事务中心。现在先不进去，沿主路向东走会更快到会馆。';
+  } else if (area === '会馆外廊') {
+    sceneTip.textContent = '你已经来到会馆附近，继续靠近门口就能触发进入提示。';
+    statusTitle.textContent = '会馆外廊';
+    statusText.textContent = '灯牌和木门都在前面，再往上一点就是正式入口。';
+  } else {
+    sceneTip.textContent = '用方向键或 WASD 在法兰城里散步。顺着石砖大道向上，再转向右边，会逐步接近黑白棋会馆。';
+    statusTitle.textContent = '法兰城公告板';
+    statusText.textContent = '今天的法兰城很适合闲逛。顺着南街慢慢往北，会先看到中央喷泉，再看到右上角的黑白棋会馆灯牌。';
+  }
+
+  enterBtn.textContent = '靠近\n会馆';
 }
 
 function goToReversi() {
@@ -487,16 +887,19 @@ function setVirtualKey(key, value) {
 function bindPadButton(button) {
   const key = button.dataset.key;
   if (!key) return;
+
   const press = (event) => {
     event.preventDefault();
     setVirtualKey(key, true);
     button.classList.add('active');
   };
+
   const release = (event) => {
     event.preventDefault();
     setVirtualKey(key, false);
     button.classList.remove('active');
   };
+
   button.addEventListener('pointerdown', press);
   button.addEventListener('pointerup', release);
   button.addEventListener('pointerleave', release);
@@ -534,6 +937,7 @@ window.addEventListener('keyup', (event) => {
 function updatePlayer() {
   let dx = 0;
   let dy = 0;
+
   if (keyState.left) dx -= 1;
   if (keyState.right) dx += 1;
   if (keyState.up) dy -= 1;
@@ -546,6 +950,7 @@ function updatePlayer() {
   }
 
   player.moving = dx !== 0 || dy !== 0;
+
   if (dx > 0) player.dir = 'right';
   else if (dx < 0) player.dir = 'left';
   else if (dy < 0) player.dir = 'up';
@@ -566,152 +971,194 @@ function drawRect(x, y, w, h, color) {
 }
 
 function drawCloud(cloud, tick) {
-  const drift = (tick * cloud.speed) % (world.width + 40);
-  const x = (cloud.x + drift) % (world.width + 40) - 20;
+  const drift = (tick * cloud.speed) % (world.width + 48);
+  const x = (cloud.x + drift) % (world.width + 48) - 24;
   const y = cloud.y;
   const s = cloud.scale;
-  drawRect(x, y + 4, 20 * s, 6 * s, '#e5f1de');
-  drawRect(x + 4 * s, y, 14 * s, 6 * s, '#f7f9e7');
-  drawRect(x + 10 * s, y + 2 * s, 16 * s, 6 * s, '#e9f5e3');
+  drawRect(x, y + 4 * s, 24 * s, 6 * s, '#dceee3');
+  drawRect(x + 5 * s, y, 16 * s, 6 * s, '#f5f9eb');
+  drawRect(x + 12 * s, y + 2 * s, 18 * s, 6 * s, '#e8f3e0');
 }
 
-function drawTree(x, y, sway) {
-  drawRect(x + 6, y + 18, 6, 14, '#6f4c2f');
-  drawRect(x + 2 + sway, y + 8, 14, 12, '#5c8b45');
-  drawRect(x, y + 12, 18, 8, '#76aa58');
-  drawRect(x + 4 + sway, y + 2, 10, 10, '#8fc76a');
+function drawMountains() {
+  drawRect(0, 18, 320, 42, '#7690a0');
+  drawRect(0, 41, 42, 19, '#687e87');
+  drawRect(24, 30, 56, 30, '#5e7580');
+  drawRect(68, 24, 72, 36, '#6e8691');
+  drawRect(126, 36, 48, 24, '#64807f');
+  drawRect(156, 24, 88, 36, '#5c7277');
+  drawRect(230, 38, 54, 22, '#68868a');
+  drawRect(262, 29, 58, 31, '#607777');
 }
 
-function drawFarmHouse() {
-  drawRect(24, 60, 80, 36, '#d6a45f');
-  drawRect(18, 52, 92, 12, '#7f4e3d');
-  drawRect(28, 48, 72, 8, '#9e6750');
-  drawRect(36, 70, 14, 14, '#f5f0c7');
-  drawRect(80, 70, 14, 14, '#f5f0c7');
-  drawRect(56, 78, 14, 18, '#5b3422');
-  drawRect(60, 84, 4, 6, '#fce088');
-  drawRect(32, 94, 64, 3, '#493420');
+function drawCityWall(tick) {
+  drawRect(0, 52, 320, 12, '#92a89e');
+  drawRect(0, 56, 320, 10, '#66756e');
+  drawRect(140, 48, 40, 22, '#9eb3a7');
+  drawRect(148, 42, 8, 8, '#d8e3ce');
+  drawRect(164, 42, 8, 8, '#d8e3ce');
+  const flag = Math.round(Math.sin(tick / 12));
+  drawRect(152, 32, 2, 10, '#3e4338');
+  drawRect(168, 32, 2, 10, '#3e4338');
+  drawRect(154, 34, 7 + flag, 4, '#da8b66');
+  drawRect(170, 34, 7 - flag, 4, '#7fc3e4');
 }
 
-function drawArcadeCabin(tick) {
-  drawRect(226, 52, 66, 40, '#7d5331');
-  drawRect(220, 44, 78, 12, '#56402d');
-  drawRect(228, 38, 62, 8, '#a06d42');
-  drawRect(236, 62, 46, 10, '#2d4b3f');
-  drawRect(240, 64, 38, 6, '#355948');
-  ctx.fillStyle = '#ffe899';
+function drawGuildHall() {
+  drawRect(26, 60, 84, 36, '#c99662');
+  drawRect(20, 52, 96, 12, '#6f493e');
+  drawRect(28, 46, 80, 8, '#8c5c4f');
+  drawRect(34, 70, 14, 14, '#f6efce');
+  drawRect(86, 70, 14, 14, '#f6efce');
+  drawRect(58, 76, 18, 20, '#4d2b1e');
+  drawRect(61, 82, 4, 6, '#ffde7d');
+  ctx.fillStyle = '#fff1c9';
   ctx.font = '7px monospace';
-  ctx.fillText('REVERSI', 237, 70);
-  drawRect(248, 74, 18, 18, '#332014');
-  drawRect(252, 80, 4, 4, '#ffd96d');
-  drawRect(258, 80, 4, 4, '#f3b2bc');
-  const pulse = Math.floor((Math.sin(tick / 10) + 1) * 2);
-  drawRect(270, 78, 6, 6, pulse > 1 ? '#8df08b' : '#f5efbe');
+  ctx.fillText('GUILD', 44, 58);
 }
 
-function drawPond(tick) {
-  drawRect(120, 104, 56, 34, '#40626a');
-  drawRect(124, 108, 48, 26, '#6cb9c6');
-  const ripple = Math.sin(tick / 14) * 2;
-  drawRect(132 + ripple, 116, 18, 2, '#bdebf0');
-  drawRect(148 - ripple, 124, 14, 2, '#bdebf0');
-  drawRect(136, 132, 20, 2, '#8fd6e2');
+function drawReversiHall(tick) {
+  drawRect(226, 56, 68, 38, '#946744');
+  drawRect(220, 48, 80, 12, '#5d4333');
+  drawRect(228, 42, 64, 8, '#9f7049');
+  drawRect(240, 66, 40, 10, '#294d40');
+  drawRect(245, 69, 30, 5, '#3c6b5a');
+  drawRect(250, 76, 18, 18, '#3d2519');
+  drawRect(254, 81, 4, 4, '#f3f0dc');
+  drawRect(260, 81, 4, 4, '#151515');
+  const pulse = Math.floor((Math.sin(tick / 8) + 1) * 2);
+  drawRect(270, 79, 7, 7, pulse > 1 ? '#8ef7a8' : '#fff1ae');
+  ctx.fillStyle = '#ffe6a1';
+  ctx.font = '7px monospace';
+  ctx.fillText('REVERSI', 236, 60);
 }
 
-function drawFlowerPatch(tick) {
-  drawRect(114, 138, 62, 22, '#5b482c');
+function drawLamp(x, y, tick, color) {
+  const glow = Math.round((Math.sin(tick / 9 + x) + 1) * 0.5);
+  drawRect(x + 3, y + 6, 2, 12, '#4b402d');
+  drawRect(x + 1, y + 4, 6, 4, color);
+  drawRect(x, y + 3, 8, 2, glow ? '#fff0b1' : '#e0c66a');
+}
+
+function drawFountain(tick) {
+  drawRect(124, 103, 58, 34, '#7b8f99');
+  drawRect(128, 107, 50, 26, '#5f6f77');
+  drawRect(134, 112, 38, 16, '#79d0dc');
+  drawRect(149, 106, 8, 8, '#d3dfdc');
+  drawRect(151, 98, 4, 10, '#d3dfdc');
+  const splash = Math.round(Math.sin(tick / 6) * 2);
+  drawRect(152, 95 - splash, 2, 4 + splash, '#dcf7ff');
+  drawRect(144, 121, 18, 2, '#c6f0f5');
+  drawRect(140 + splash, 127, 26, 2, '#9de3eb');
+}
+
+function drawFlowerBed(tick) {
+  drawRect(114, 140, 64, 22, '#674f31');
   for (let row = 0; row < 3; row++) {
-    drawRect(116, 142 + row * 6, 58, 2, '#7c6138');
+    drawRect(116, 143 + row * 6, 60, 2, '#82633c');
   }
   flowers.forEach((flower, index) => {
-    const sway = Math.round(Math.sin(tick / 12 + index) * 1.4);
-    drawRect(flower.x, flower.y - 4, 2, 6, '#79b35f');
+    const sway = Math.round(Math.sin(tick / 10 + index) * 1.3);
+    drawRect(flower.x, flower.y - 4, 2, 6, '#7bb25b');
     drawRect(flower.x - 1 + sway, flower.y - 6, 4, 4, flower.color);
   });
 }
 
-function drawFences() {
-  for (let x = 90; x <= 196; x += 12) {
-    drawRect(x, 108, 2, 14, '#c69d62');
-  }
-  drawRect(90, 114, 108, 2, '#d8b16c');
+function drawMarketStall(x, y, awning, goods) {
+  drawRect(x + 2, y + 10, 2, 12, '#68472b');
+  drawRect(x + 18, y + 10, 2, 12, '#68472b');
+  drawRect(x, y + 6, 22, 6, awning);
+  drawRect(x + 2, y + 12, 18, 8, '#9a7045');
+  drawRect(x + 4, y + 14, 4, 3, goods[0]);
+  drawRect(x + 9, y + 14, 4, 3, goods[1]);
+  drawRect(x + 14, y + 14, 4, 3, goods[2]);
 }
 
 function drawPaths() {
-  drawRect(0, 146, 320, 22, '#c89c63');
-  drawRect(250, 92, 20, 56, '#c89c63');
-  drawRect(58, 92, 14, 56, '#c89c63');
-  drawRect(62, 112, 192, 14, '#d7af74');
+  drawRect(0, 145, 320, 24, '#c7a06a');
+  drawRect(58, 96, 16, 50, '#c9a46b');
+  drawRect(62, 114, 190, 16, '#d8b47b');
+  drawRect(250, 93, 20, 53, '#c9a46b');
   for (let x = 0; x < 320; x += 12) {
-    drawRect(x, 164, 6, 2, '#b48852');
+    drawRect(x, 160, 6, 2, '#ab7f49');
+  }
+  for (let x = 70; x < 250; x += 14) {
+    drawRect(x, 121, 6, 2, '#b28755');
   }
 }
 
-function drawMountains() {
-  drawRect(0, 18, 320, 38, '#7ea1a6');
-  drawRect(0, 42, 48, 14, '#6c8f8f');
-  drawRect(24, 34, 52, 22, '#65807f');
-  drawRect(62, 26, 70, 30, '#6f8d8b');
-  drawRect(118, 38, 54, 18, '#62817b');
-  drawRect(152, 24, 84, 32, '#5d7976');
-  drawRect(222, 36, 50, 20, '#6f8c88');
-  drawRect(252, 28, 68, 28, '#627d7c');
+function drawTrees(tick) {
+  const swayA = Math.round(Math.sin(tick / 20));
+  const swayB = Math.round(Math.cos(tick / 18));
+  drawTree(8, 74, swayA);
+  drawTree(96, 36, swayB);
+  drawTree(186, 38, swayA);
+  drawTree(294, 76, swayB);
+}
+
+function drawTree(x, y, sway) {
+  drawRect(x + 6, y + 18, 6, 14, '#6f4c2f');
+  drawRect(x + 2 + sway, y + 8, 14, 12, '#5f8f48');
+  drawRect(x, y + 12, 18, 8, '#79b65b');
+  drawRect(x + 4 + sway, y + 2, 10, 10, '#9ad07a');
 }
 
 function drawSparkle(tick) {
   if (!isNearPortal()) return;
   const phase = Math.floor((tick / 8) % 4);
-  const x = 258;
-  const y = 100;
-  drawRect(x + phase, y, 2, 6, '#fff4b7');
-  drawRect(x - 2, y + 2 + phase, 6, 2, '#ffe18e');
+  const x = 260;
+  const y = 103;
+  drawRect(x + phase, y, 2, 6, '#fff4b6');
+  drawRect(x - 2, y + 2 + phase, 6, 2, '#ffd77a');
 }
 
-function drawPlayer(tick) {
+function drawPlayer() {
   const bob = player.moving ? Math.round(Math.sin(player.step * 6) * 1.2) : 0;
   const leg = player.moving && Math.sin(player.step * 8) > 0 ? 1 : 0;
-  drawRect(player.x + 1, player.y + 13, 8, 2, 'rgba(14, 18, 14, 0.25)');
-  drawRect(player.x + 3, player.y + 1 + bob, 4, 3, '#f5d2ae');
-  drawRect(player.x + 2, player.y + 3 + bob, 6, 2, '#8a5f39');
-  drawRect(player.x + 2, player.y + 5 + bob, 6, 5, '#9d7bdb');
-  drawRect(player.x + 1, player.y + 8 + bob, 8, 3, '#6e4da9');
-  drawRect(player.x + 2, player.y + 11 + bob, 2, 3 + leg, '#48392b');
-  drawRect(player.x + 6, player.y + 11 + bob, 2, 3 + (1 - leg), '#48392b');
+
+  drawRect(player.x + 1, player.y + 13, 8, 2, 'rgba(14, 18, 14, 0.28)');
+  drawRect(player.x + 3, player.y + 1 + bob, 4, 3, '#f3d0a7');
+  drawRect(player.x + 2, player.y + 3 + bob, 6, 2, '#8b5c36');
+  drawRect(player.x + 2, player.y + 5 + bob, 6, 5, '#4f7dcb');
+  drawRect(player.x + 1, player.y + 8 + bob, 8, 3, '#3259a6');
+  drawRect(player.x + 2, player.y + 11 + bob, 2, 3 + leg, '#453527');
+  drawRect(player.x + 6, player.y + 11 + bob, 2, 3 + (1 - leg), '#453527');
 
   if (player.dir === 'left') {
-    drawRect(player.x + 1, player.y + 6 + bob, 2, 3, '#f5d2ae');
+    drawRect(player.x + 1, player.y + 6 + bob, 2, 3, '#f3d0a7');
   } else if (player.dir === 'right') {
-    drawRect(player.x + 7, player.y + 6 + bob, 2, 3, '#f5d2ae');
+    drawRect(player.x + 7, player.y + 6 + bob, 2, 3, '#f3d0a7');
   } else {
-    drawRect(player.x + 2, player.y + 6 + bob, 6, 2, '#b293f3');
+    drawRect(player.x + 2, player.y + 6 + bob, 6, 2, '#7ca6f1');
   }
 }
 
 function drawScene(tick) {
-  drawRect(0, 0, world.width, world.height, '#a6d7d5');
+  drawRect(0, 0, world.width, world.height, '#a7d8e0');
   drawMountains();
   clouds.forEach((cloud) => drawCloud(cloud, tick));
-  drawRect(0, 56, world.width, world.height - 56, '#74ad59');
-  drawRect(0, 146, world.width, 34, '#8dc96b');
+  drawCityWall(tick);
+  drawRect(0, 64, world.width, world.height - 64, '#74ad59');
+  drawRect(0, 145, world.width, 35, '#8fcf6e');
 
-  for (let y = 60; y < world.height; y += 10) {
+  for (let y = 68; y < world.height; y += 10) {
     for (let x = (y % 20 === 0 ? 2 : 8); x < world.width; x += 18) {
-      drawRect(x, y, 2, 2, '#87be66');
+      drawRect(x, y, 2, 2, '#88c467');
     }
   }
 
-  drawTree(8, 62, Math.round(Math.sin(tick / 18)));
-  drawTree(96, 34, Math.round(Math.cos(tick / 20)));
-  drawTree(182, 34, Math.round(Math.sin(tick / 15)));
-  drawTree(292, 56, Math.round(Math.cos(tick / 17)));
-  drawFarmHouse();
-  drawArcadeCabin(tick);
+  drawGuildHall();
+  drawReversiHall(tick);
   drawPaths();
-  drawPond(tick);
-  drawFences();
-  drawFlowerPatch(tick);
+  drawFountain(tick);
+  drawFlowerBed(tick);
+  drawMarketStall(24, 132, '#c66b63', ['#f6ce84', '#c3ec9c', '#ffb5c7']);
+  drawMarketStall(274, 132, '#5ea9cc', ['#f4e9bb', '#ffc8a8', '#bfe7ff']);
+  drawLamp(116, 98, tick, '#b4efc3');
+  drawLamp(195, 100, tick, '#ffe18e');
+  drawTrees(tick);
   drawSparkle(tick);
-  drawPlayer(tick);
+  drawPlayer();
 }
 
 function loop(tick) {
