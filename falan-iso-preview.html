@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<!-- 法兰城等角预览 v0.1 -->
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>法兰城等角预览 v0.1</title>
+<style>
+:root {
+  --bg: #0f1711;
+  --panel: rgba(26, 40, 30, 0.92);
+  --panel-2: rgba(20, 30, 22, 0.94);
+  --line: rgba(219, 231, 189, 0.18);
+  --ink: #f2edc9;
+  --muted: rgba(237, 241, 214, 0.75);
+  --gold: #e8cc86;
+  --jade: #8db57a;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+  background:
+    radial-gradient(circle at top, rgba(134, 170, 120, 0.18), transparent 24%),
+    linear-gradient(180deg, #18251b 0%, #0f1711 58%, #0b120d 100%);
+}
+.page {
+  width: min(1380px, calc(100vw - 28px));
+  margin: 0 auto;
+  padding: 22px 0 28px;
+}
+.hero,
+.side-card,
+.map-shell {
+  border: 2px solid var(--line);
+  background: linear-gradient(180deg, rgba(35, 55, 42, 0.95), rgba(16, 24, 19, 0.96));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+.hero {
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.eyebrow {
+  color: var(--gold);
+  font-size: 0.82rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 6px 0 10px;
+}
+h1 {
+  margin: 0;
+  line-height: 1;
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+}
+.version {
+  padding: 4px 10px;
+  border: 2px solid rgba(232, 204, 134, 0.24);
+  color: var(--gold);
+  font-size: 0.9rem;
+}
+.hero p {
+  margin: 0;
+  max-width: 920px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.38fr) minmax(280px, 0.62fr);
+  gap: 16px;
+}
+.map-shell {
+  position: relative;
+  padding: 16px;
+  overflow: hidden;
+}
+.map-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.map-head h2,
+.side-card h2 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 1.18rem;
+}
+.map-head p,
+.side-card p {
+  margin: 6px 0 0;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.map-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.badge {
+  padding: 6px 10px;
+  border: 1px solid rgba(232, 204, 134, 0.18);
+  background: rgba(13, 21, 16, 0.46);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+.canvas-wrap {
+  position: relative;
+  border: 2px solid rgba(221, 230, 196, 0.1);
+  background:
+    linear-gradient(180deg, rgba(167, 202, 188, 0.1), rgba(11, 18, 13, 0.3)),
+    radial-gradient(circle at 50% 0%, rgba(255, 241, 184, 0.08), transparent 38%),
+    #142017;
+  overflow: hidden;
+}
+.canvas-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.02) 0 1px, transparent 1px 100%);
+  background-size: 12px 12px;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.12;
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.note {
+  margin-top: 12px;
+  color: rgba(237, 241, 214, 0.66);
+  line-height: 1.65;
+  font-size: 0.92rem;
+}
+.side {
+  display: grid;
+  gap: 14px;
+}
+.side-card {
+  padding: 16px;
+}
+.info-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(219, 231, 189, 0.08);
+  color: var(--muted);
+}
+.info-line strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.traveler {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.portrait {
+  width: 84px;
+  height: 84px;
+  border: 2px solid rgba(232, 204, 134, 0.22);
+  background: linear-gradient(180deg, rgba(57, 78, 61, 0.96), rgba(18, 27, 20, 0.98));
+  display: grid;
+  place-items: center;
+}
+.portrait img {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.controls {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+button {
+  appearance: none;
+  border: 1px solid rgba(232, 204, 134, 0.18);
+  background: linear-gradient(180deg, rgba(59, 78, 62, 0.94), rgba(26, 39, 28, 0.96));
+  color: var(--ink);
+  padding: 10px 12px;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(232, 204, 134, 0.32);
+  background: linear-gradient(180deg, rgba(77, 99, 80, 0.96), rgba(31, 45, 33, 0.98));
+}
+.legend {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+}
+.swatch {
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.foot {
+  margin-top: 12px;
+  color: rgba(237, 241, 214, 0.56);
+  font-size: 0.88rem;
+}
+@media (max-width: 1080px) {
+  .layout { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Falan Isometric Prototype</div>
+      <div class="title-row">
+        <h1>法兰城等角预览</h1>
+        <div class="version">v0.1</div>
+      </div>
+      <p>这是把法兰城切到 45 度俯视角后的原型页，不替换现有首页。重点是先看“主城中轴 + 王城 + 各区建筑”在等角视角里成立不成立，再决定是否正式改造整张地图。</p>
+    </section>
+
+    <section class="layout">
+      <div class="map-shell">
+        <div class="map-head">
+          <div>
+            <h2>晨光法兰城</h2>
+            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人，只做原型验证，不影响当前线上法兰城。</p>
+          </div>
+          <div class="map-badges">
+            <div class="badge">45° 等角投影</div>
+            <div class="badge">建筑草图已投放</div>
+            <div class="badge">先预览后接入</div>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="isoCanvas" width="720" height="480"></canvas>
+        </div>
+        <div class="note">当前地图里已经摆进里谢里雅城、圣堂、旅馆工会、工房、医院、竞技场和黑白棋会馆。你主要看两件事：一是 45 度观感顺不顺，二是建筑和道路的比例是不是更像一座真正的主城。</div>
+      </div>
+
+      <aside class="side">
+        <section class="side-card">
+          <h2>原型状态</h2>
+          <div class="info-line"><span>当前区域</span><strong id="zoneName">中央广场</strong></div>
+          <div class="info-line"><span>旅人位置</span><strong id="coordLabel">09, 10</strong></div>
+          <div class="info-line"><span>当前目标</span><strong id="focusLabel">黑白棋会馆</strong></div>
+          <div class="info-line"><span>可行性判断</span><strong>适合先平滑迁移</strong></div>
+          <div class="traveler">
+            <div class="portrait"><img id="portraitImg" src="./assets/falan/avatars/dog.png" alt="旅人头像"></div>
+            <div>
+              <div id="travelerName" style="color:var(--gold);font-size:1.08rem;">小狗子</div>
+              <p id="travelerDesc">人型狗狗旅人，适合作为法兰城等角版的默认看板角色。</p>
+            </div>
+          </div>
+          <div class="controls">
+            <button type="button" id="prevTravelerBtn">上一个旅人</button>
+            <button type="button" id="nextTravelerBtn">下一个旅人</button>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <h2>地块图例</h2>
+          <div class="legend">
+            <div class="legend-item"><span class="swatch" style="background:#7eb463;"></span>城内草地</div>
+            <div class="legend-item"><span class="swatch" style="background:#c89d68;"></span>主路与城门大道</div>
+            <div class="legend-item"><span class="swatch" style="background:#d7c6aa;"></span>王城前石砖区</div>
+            <div class="legend-item"><span class="swatch" style="background:#6db4c0;"></span>中央喷泉水面</div>
+          </div>
+          <p class="foot">如果这版方向没问题，下一步我会把现有法兰城首页逐步迁到等角地块和建筑 sprite，而不是一次性全推翻。</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+<script>
+const canvas = document.getElementById('isoCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+const zoneNameEl = document.getElementById('zoneName');
+const coordLabelEl = document.getElementById('coordLabel');
+const focusLabelEl = document.getElementById('focusLabel');
+const travelerNameEl = document.getElementById('travelerName');
+const travelerDescEl = document.getElementById('travelerDesc');
+const portraitImg = document.getElementById('portraitImg');
+const prevTravelerBtn = document.getElementById('prevTravelerBtn');
+const nextTravelerBtn = document.getElementById('nextTravelerBtn');
+
+const travelerStorageKey = 'falan-selected-traveler';
+const spriteFrameWidth = 16;
+const spriteFrameHeight = 20;
+const travelers = [
+  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '进城第一件事不是赶路，而是先看看城堡和大道在 45 度里够不够有味道。', avatar: './assets/falan/avatars/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
+  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '人型狗狗旅人，适合作为法兰城等角版的默认看板角色。', avatar: './assets/falan/avatars/dog.png', sprite: './assets/falan/sprites/dog.png' },
+  { id: 'fat', name: '臭胖子', level: 'LV3', title: '喷泉边的狠角色', desc: '适合拿来测试会馆门口和中央广场的视觉压迫感。', avatar: './assets/falan/avatars/fat.png', sprite: './assets/falan/sprites/fat.png' },
+  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '轻快的等角冒险家', desc: '脚步最适合验证 45 度视角下的移动节奏和清爽感。', avatar: './assets/falan/avatars/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
+  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '带双钳的压轴旅人', desc: '更适合测试建筑前景和角色 silhouette 是否够强。', avatar: './assets/falan/avatars/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
+];
+
+let travelerIndex = Math.max(0, travelers.findIndex((traveler) => traveler.id === localStorage.getItem(travelerStorageKey)));
+if (travelerIndex < 0) travelerIndex = 1;
+
+const images = {
+  castle: loadImage('./assets/falan/building-drafts/castle-v1.png'),
+  cathedral: loadImage('./assets/falan/building-drafts/cathedral-v1.png'),
+  guildInn: loadImage('./assets/falan/building-drafts/guild-inn-v1.png'),
+  workshop: loadImage('./assets/falan/building-drafts/workshop-v1.png'),
+  hospital: loadImage('./assets/falan/building-drafts/hospital-v1.png'),
+  arena: loadImage('./assets/falan/building-drafts/arena-v1.png'),
+  reversiHall: loadImage('./assets/falan/building-drafts/reversi-hall-v1.png')
+};
+const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
+
+const keyState = { up: false, down: false, left: false, right: false };
+
+const world = {
+  cols: 18,
+  rows: 16,
+  tileW: 34,
+  tileH: 17,
+  originX: canvas.width / 2,
+  originY: 82
+};
+
+const player = {
+  tx: 9,
+  ty: 12.4,
+  dir: 'up',
+  step: 0,
+  moving: false,
+  speed: 0.055
+};
+
+const buildings = [
+  { id: 'castle', tx: 9, ty: 2.2, scale: 0.5, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 7.4, y: 0.8, w: 3.2, h: 2.1 } },
+  { id: 'cathedral', tx: 4.2, ty: 5.2, scale: 0.48, label: '大圣堂', focus: '西区圣堂', footprint: { x: 3.2, y: 4.1, w: 2.2, h: 1.8 } },
+  { id: 'guildInn', tx: 13.7, ty: 5.3, scale: 0.5, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 12.7, y: 4.2, w: 2.6, h: 1.9 } },
+  { id: 'workshop', tx: 3.6, ty: 9.2, scale: 0.56, label: '工房', focus: '西区工匠街', footprint: { x: 2.8, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'hospital', tx: 14.3, ty: 9.1, scale: 0.54, label: '医院', focus: '东区医院', footprint: { x: 13.6, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'arena', tx: 5.1, ty: 12.3, scale: 0.56, label: '竞技场', focus: '竞技场看台', footprint: { x: 4.2, y: 11.3, w: 2.4, h: 1.5 } },
+  { id: 'reversiHall', tx: 13.7, ty: 12.2, scale: 0.58, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 12.9, y: 11.6, w: 1.8, h: 1.5 } }
+];
+
+const decorativeTrees = [
+  { tx: 1.1, ty: 4.6, size: 1.05 }, { tx: 1.2, ty: 7.6, size: 1.2 }, { tx: 2.2, ty: 13.4, size: 1.1 },
+  { tx: 5.8, ty: 2.8, size: 1.05 }, { tx: 11.9, ty: 2.8, size: 1.05 }, { tx: 16.2, ty: 6.8, size: 1.15 },
+  { tx: 16.5, ty: 12.8, size: 1.18 }, { tx: 8.6, ty: 14.8, size: 1.05 }, { tx: 10.8, ty: 14.9, size: 1.05 }
+];
+
+function loadImage(src) {
+  const image = new Image();
+  image.src = src;
+  return image;
+}
+
+function isoToScreen(tx, ty) {
+  return {
+    x: (tx - ty) * world.tileW / 2 + world.originX,
+    y: (tx + ty) * world.tileH / 2 + world.originY
+  };
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function inRect(tx, ty, rect) {
+  return tx > rect.x && tx < rect.x + rect.w && ty > rect.y && ty < rect.y + rect.h;
+}
+
+function collides(tx, ty) {
+  if (tx < 0.8 || ty < 0.8 || tx > world.cols - 0.8 || ty > world.rows - 0.8) return true;
+  return buildings.some((building) => inRect(tx, ty, building.footprint));
+}
+
+function tileType(tx, ty) {
+  const dx = Math.abs(tx - 9);
+  const dy = Math.abs(ty - 8);
+  if (tx >= 7 && tx <= 10 && ty <= 4) return 'stone';
+  if (dx <= 1 || dy <= 1) return 'road';
+  if (dx <= 2 && dy <= 2) return 'plaza';
+  if (tx >= 8 && tx <= 10 && ty >= 7 && ty <= 9) return 'fountain';
+  return 'grass';
+}
+
+function tilePalette(type, tx, ty) {
+  if (type === 'road') {
+    return { top: (tx + ty) % 2 ? '#c3915c' : '#ca9d68', left: '#946b43', right: '#b88455', stroke: '#f1cd8f' };
+  }
+  if (type === 'plaza') {
+    return { top: (tx + ty) % 2 ? '#d8c6ac' : '#d0bea2', left: '#b69d7e', right: '#cab292', stroke: '#eee1cb' };
+  }
+  if (type === 'stone') {
+    return { top: (tx + ty) % 2 ? '#d9cbaf' : '#e4d7bf', left: '#baa181', right: '#cfb595', stroke: '#f3ead4' };
+  }
+  if (type === 'fountain') {
+    return { top: '#6cb1bf', left: '#4e8794', right: '#5c9ca7', stroke: '#bfeef1' };
+  }
+  return { top: (tx + ty) % 2 ? '#7bb161' : '#72a858', left: '#537f3d', right: '#679a4c', stroke: '#a5d188' };
+}
+
+function drawDiamond(tx, ty, colors, elevation = 0) {
+  const point = isoToScreen(tx, ty);
+  const topY = point.y - elevation;
+  const halfW = world.tileW / 2;
+  const halfH = world.tileH / 2;
+
+  ctx.beginPath();
+  ctx.moveTo(point.x, topY - halfH);
+  ctx.lineTo(point.x + halfW, topY);
+  ctx.lineTo(point.x, topY + halfH);
+  ctx.lineTo(point.x - halfW, topY);
+  ctx.closePath();
+  ctx.fillStyle = colors.top;
+  ctx.fill();
+  ctx.strokeStyle = colors.stroke;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(point.x - halfW, topY);
+  ctx.lineTo(point.x, topY + halfH);
+  ctx.lineTo(point.x, topY + halfH + 7);
+  ctx.lineTo(point.x - halfW, topY + 7);
+  ctx.closePath();
+  ctx.fillStyle = colors.left;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(point.x + halfW, topY);
+  ctx.lineTo(point.x, topY + halfH);
+  ctx.lineTo(point.x, topY + halfH + 7);
+  ctx.lineTo(point.x + halfW, topY + 7);
+  ctx.closePath();
+  ctx.fillStyle = colors.right;
+  ctx.fill();
+}
+
+function drawTree(tree, tick) {
+  const point = isoToScreen(tree.tx, tree.ty);
+  const sway = Math.sin(tick / 14 + tree.tx * 0.7) * 2;
+  const size = tree.size;
+  ctx.fillStyle = 'rgba(13, 20, 14, 0.28)';
+  ctx.beginPath();
+  ctx.ellipse(point.x, point.y + 8, 12 * size, 5 * size, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#6d4b31';
+  ctx.fillRect(Math.round(point.x - 3 * size), Math.round(point.y - 18 * size), Math.round(6 * size), Math.round(22 * size));
+  ctx.fillStyle = '#5a8a44';
+  ctx.beginPath();
+  ctx.moveTo(point.x, point.y - 44 * size);
+  ctx.lineTo(point.x + 18 * size + sway, point.y - 14 * size);
+  ctx.lineTo(point.x - 18 * size + sway, point.y - 14 * size);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#86be63';
+  ctx.beginPath();
+  ctx.moveTo(point.x, point.y - 58 * size);
+  ctx.lineTo(point.x + 14 * size + sway, point.y - 24 * size);
+  ctx.lineTo(point.x - 14 * size + sway, point.y - 24 * size);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawFountain(tick) {
+  for (let ty = 7; ty <= 9; ty++) {
+    for (let tx = 8; tx <= 10; tx++) {
+      drawDiamond(tx, ty, tilePalette('fountain', tx, ty), 1);
+    }
+  }
+  const point = isoToScreen(9, 8);
+  ctx.fillStyle = '#e9e5d7';
+  ctx.fillRect(Math.round(point.x - 6), Math.round(point.y - 27), 12, 22);
+  ctx.fillRect(Math.round(point.x - 16), Math.round(point.y - 16), 32, 5);
+  const ripple = Math.sin(tick / 11) * 2;
+  ctx.fillStyle = '#d9fbff';
+  ctx.fillRect(Math.round(point.x - 2), Math.round(point.y - 34), 4, 12);
+  ctx.fillRect(Math.round(point.x - 8 + ripple), Math.round(point.y - 10), 16, 3);
+}
+
+function drawBuilding(building, focusId) {
+  const image = images[building.id];
+  if (!image.complete || !image.naturalWidth) return;
+  const anchor = isoToScreen(building.tx, building.ty);
+  const width = Math.round(image.naturalWidth * building.scale);
+  const height = Math.round(image.naturalHeight * building.scale);
+  const x = Math.round(anchor.x - width / 2);
+  const y = Math.round(anchor.y - height + 2);
+
+  if (focusId === building.id) {
+    ctx.fillStyle = 'rgba(248, 223, 136, 0.12)';
+    ctx.beginPath();
+    ctx.ellipse(anchor.x, anchor.y + 6, 22, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.drawImage(image, x, y, width, height);
+
+  if (focusId === building.id) {
+    ctx.strokeStyle = 'rgba(248, 223, 136, 0.72)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x - 4, y - 4, width + 8, height + 8);
+  }
+}
+
+function drawPlayer() {
+  const traveler = travelers[travelerIndex];
+  const sprite = travelerSprites[traveler.id];
+  const point = isoToScreen(player.tx, player.ty);
+  const shadowY = point.y + 6;
+  ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
+  ctx.beginPath();
+  ctx.ellipse(point.x, shadowY, 9, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!sprite.complete || !sprite.naturalWidth) return;
+  const walk = player.moving ? (Math.sin(player.step) > 0 ? 1 : 0) : 0;
+  const base = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
+  const frame = base + walk;
+  const drawX = Math.round(point.x - spriteFrameWidth / 2);
+  const drawY = Math.round(point.y - 26);
+
+  if (player.dir === 'left') {
+    ctx.save();
+    ctx.translate(drawX + spriteFrameWidth, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, 0, drawY, spriteFrameWidth, spriteFrameHeight);
+    ctx.restore();
+  } else {
+    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, spriteFrameWidth, spriteFrameHeight);
+  }
+}
+
+function areaName() {
+  const { tx, ty } = player;
+  if (tx > 12 && ty > 10.5) return '黑白棋会馆';
+  if (ty < 4.3) return '里谢里雅城前';
+  if (tx < 6 && ty < 8.5) return '西区圣堂与工房';
+  if (tx > 12 && ty < 8.5) return '东区旅馆与医院';
+  if (tx < 7 && ty > 10.2) return '西区竞技场';
+  if (tx > 11.3 && ty > 8.8) return '东区市集';
+  return '中央广场';
+}
+
+function currentFocus() {
+  let best = buildings[0];
+  let bestDist = Infinity;
+  buildings.forEach((building) => {
+    const dx = player.tx - building.tx;
+    const dy = player.ty - building.ty;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = building;
+    }
+  });
+  return best;
+}
+
+function syncInfo() {
+  const traveler = travelers[travelerIndex];
+  const focus = currentFocus();
+  zoneNameEl.textContent = areaName();
+  coordLabelEl.textContent = `${player.tx.toFixed(1)}, ${player.ty.toFixed(1)}`;
+  focusLabelEl.textContent = focus.label;
+  travelerNameEl.textContent = `${traveler.name} ${traveler.level}`;
+  travelerDescEl.textContent = traveler.desc;
+  portraitImg.src = traveler.avatar;
+  portraitImg.alt = `${traveler.name}头像`;
+}
+
+function cycleTraveler(step) {
+  travelerIndex = (travelerIndex + step + travelers.length) % travelers.length;
+  localStorage.setItem(travelerStorageKey, travelers[travelerIndex].id);
+  syncInfo();
+}
+
+function setKey(event, value) {
+  if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') keyState.up = value;
+  if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') keyState.down = value;
+  if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') keyState.left = value;
+  if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') keyState.right = value;
+}
+
+window.addEventListener('keydown', (event) => {
+  setKey(event, true);
+  if (event.key === 'q' || event.key === 'Q') {
+    event.preventDefault();
+    cycleTraveler(-1);
+  }
+  if (event.key === 'e' || event.key === 'E') {
+    event.preventDefault();
+    cycleTraveler(1);
+  }
+});
+window.addEventListener('keyup', (event) => setKey(event, false));
+prevTravelerBtn.addEventListener('click', () => cycleTraveler(-1));
+nextTravelerBtn.addEventListener('click', () => cycleTraveler(1));
+
+function updatePlayer() {
+  let dtx = 0;
+  let dty = 0;
+  if (keyState.up) {
+    dtx -= player.speed;
+    dty -= player.speed;
+    player.dir = 'up';
+  }
+  if (keyState.down) {
+    dtx += player.speed;
+    dty += player.speed;
+    player.dir = 'down';
+  }
+  if (keyState.left) {
+    dtx -= player.speed;
+    dty += player.speed;
+    player.dir = 'left';
+  }
+  if (keyState.right) {
+    dtx += player.speed;
+    dty -= player.speed;
+    player.dir = 'right';
+  }
+
+  player.moving = dtx !== 0 || dty !== 0;
+  if (player.moving) {
+    const nextTx = clamp(player.tx + dtx, 0.8, world.cols - 0.8);
+    const nextTy = clamp(player.ty + dty, 0.8, world.rows - 0.8);
+    if (!collides(nextTx, nextTy)) {
+      player.tx = nextTx;
+      player.ty = nextTy;
+    }
+    player.step += 0.34;
+  }
+}
+
+function drawGround(tick) {
+  for (let ty = 0; ty < world.rows; ty += 1) {
+    for (let tx = 0; tx < world.cols; tx += 1) {
+      const type = tileType(tx, ty);
+      drawDiamond(tx, ty, tilePalette(type, tx, ty), type === 'stone' ? 1 : 0);
+      if (type === 'grass' && (tx + ty) % 5 === 0) {
+        const p = isoToScreen(tx, ty);
+        ctx.fillStyle = (tx + ty) % 10 === 0 ? '#a6d07c' : '#88bf67';
+        ctx.fillRect(Math.round(p.x - 1), Math.round(p.y - 2), 2, 2);
+      }
+      if (type === 'road' && (tx + ty) % 4 === 0) {
+        const p = isoToScreen(tx, ty);
+        ctx.fillStyle = '#ecc98d';
+        ctx.fillRect(Math.round(p.x - 2), Math.round(p.y - 1), 4, 2);
+      }
+    }
+  }
+
+  const skyGlow = ctx.createRadialGradient(world.originX, 14, 40, world.originX, 14, 250);
+  skyGlow.addColorStop(0, 'rgba(255, 236, 173, 0.24)');
+  skyGlow.addColorStop(1, 'rgba(255, 236, 173, 0)');
+  ctx.fillStyle = skyGlow;
+  ctx.fillRect(0, 0, canvas.width, 140);
+
+  const pulse = 0.3 + (Math.sin(tick / 14) + 1) * 0.08;
+  ctx.fillStyle = `rgba(246, 228, 164, ${pulse})`;
+  const point = isoToScreen(13.7, 12.2);
+  ctx.beginPath();
+  ctx.ellipse(point.x, point.y + 2, 16, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawScene(tick) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#1a261b';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  drawGround(tick);
+  drawFountain(tick);
+
+  const renderables = [
+    ...decorativeTrees.map((tree) => ({ type: 'tree', sort: tree.tx + tree.ty + 0.15, tree })),
+    ...buildings.map((building) => ({ type: 'building', sort: building.tx + building.ty + 0.25, building })),
+    { type: 'player', sort: player.tx + player.ty + 0.22 }
+  ].sort((a, b) => a.sort - b.sort);
+
+  const focus = currentFocus();
+  renderables.forEach((item) => {
+    if (item.type === 'tree') drawTree(item.tree, tick);
+    if (item.type === 'building') drawBuilding(item.building, focus.id);
+    if (item.type === 'player') drawPlayer();
+  });
+
+  ctx.fillStyle = 'rgba(240, 229, 193, 0.85)';
+  ctx.font = '13px "Courier New", monospace';
+  ctx.fillText('FALAN ISO PROTOTYPE', 18, 26);
+}
+
+function loop(tick) {
+  updatePlayer();
+  syncInfo();
+  drawScene(tick / 16.6);
+  requestAnimationFrame(loop);
+}
+
+syncInfo();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
