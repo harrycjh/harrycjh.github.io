@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.41 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.42 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.41 - Reversi</title>
+<title>黑白棋 v1.42 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -301,6 +301,7 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
   <button id="btnImportReplay" onclick="triggerReplayImport()">导入录像</button>
   <button onclick="exportReplay()">保存录像</button>
   <button onclick="pickReplayDirectory()">选择录像目录</button>
+  <button onclick="goToTown()">回到小镇</button>
 </div>
 <input type="file" id="replayFileInput" accept=".json,application/json" style="display:none" onchange="handleReplayImport(event)">
 
@@ -1626,6 +1627,10 @@ function triggerReplayImport() {
   if(!input) return;
   input.value = '';
   input.click();
+}
+
+function goToTown() {
+  window.location.href = './';
 }
 
 function isValidReplayPayload(data) {
