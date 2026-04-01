@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.0 -->
+<!-- 法兰城 v3.1 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.0</title>
+<title>法兰城 v3.1</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -22,14 +22,26 @@ body {
   min-height: 100vh;
   color: var(--ink);
   font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+  overflow: hidden;
   background:
     radial-gradient(circle at top, rgba(134, 170, 120, 0.18), transparent 24%),
     linear-gradient(180deg, #18251b 0%, #0f1711 58%, #0b120d 100%);
 }
+.page-frame {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px;
+}
 .page {
   width: min(1380px, calc(100vw - 28px));
-  margin: 0 auto;
-  padding: 22px 0 28px;
+  margin: 0;
+  padding: 16px 0 18px;
+  transform-origin: top center;
+  will-change: transform;
 }
 .hero,
 .side-card,
@@ -234,12 +246,13 @@ button:hover {
 </style>
 </head>
 <body>
-  <main class="page">
+  <div class="page-frame" id="pageFrame">
+  <main class="page" id="pageRoot">
     <section class="hero">
       <div class="eyebrow">Falan Isometric Trial</div>
       <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.0</div>
+        <div class="version">v3.1</div>
       </div>
       <p>这是法兰城首页的 45 度等角试装版。现在不只是地面转成等角，城堡、圣堂、旅馆、工房、医院、竞技场和会馆本身也都改成了等角建筑 sprite，方便你直接判断值不值得继续往这个方向做。</p>
     </section>
@@ -298,6 +311,7 @@ button:hover {
       </aside>
     </section>
   </main>
+  </div>
 
 <script>
 const canvas = document.getElementById('isoCanvas');
@@ -314,6 +328,8 @@ const prevTravelerBtn = document.getElementById('prevTravelerBtn');
 const nextTravelerBtn = document.getElementById('nextTravelerBtn');
 const enterReversiBtn = document.getElementById('enterReversiBtn');
 const viewClassicBtn = document.getElementById('viewClassicBtn');
+const pageFrame = document.getElementById('pageFrame');
+const pageRoot = document.getElementById('pageRoot');
 
 const travelerStorageKey = 'falan-selected-traveler';
 const spriteFrameWidth = 16;
@@ -612,7 +628,25 @@ function setKey(event, value) {
   if (event.key === 'ArrowRight' || event.key === 'd' || event.key === 'D') keyState.right = value;
 }
 
+function isMovementKey(key) {
+  return key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight'
+    || key === 'w' || key === 'W' || key === 'a' || key === 'A'
+    || key === 's' || key === 'S' || key === 'd' || key === 'D';
+}
+
+function fitPageToViewport() {
+  pageRoot.style.transform = 'scale(1)';
+  const naturalWidth = pageRoot.offsetWidth;
+  const naturalHeight = pageRoot.offsetHeight;
+  const scaleX = (window.innerWidth - 20) / naturalWidth;
+  const scaleY = (window.innerHeight - 20) / naturalHeight;
+  const scale = Math.min(scaleX, scaleY, 1);
+  pageRoot.style.transform = `scale(${scale})`;
+  pageFrame.style.alignItems = naturalHeight * scale < window.innerHeight - 24 ? 'center' : 'flex-start';
+}
+
 window.addEventListener('keydown', (event) => {
+  if (isMovementKey(event.key)) event.preventDefault();
   setKey(event, true);
   if (event.key === 'q' || event.key === 'Q') {
     event.preventDefault();
@@ -623,7 +657,11 @@ window.addEventListener('keydown', (event) => {
     cycleTraveler(1);
   }
 });
-window.addEventListener('keyup', (event) => setKey(event, false));
+window.addEventListener('keyup', (event) => {
+  if (isMovementKey(event.key)) event.preventDefault();
+  setKey(event, false);
+});
+window.addEventListener('resize', fitPageToViewport);
 prevTravelerBtn.addEventListener('click', () => cycleTraveler(-1));
 nextTravelerBtn.addEventListener('click', () => cycleTraveler(1));
 enterReversiBtn.addEventListener('click', () => {
@@ -735,6 +773,7 @@ function loop(tick) {
 }
 
 syncInfo();
+fitPageToViewport();
 requestAnimationFrame(loop);
 </script>
 </body>
