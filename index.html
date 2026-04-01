@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v1.3 -->
+<!-- 法兰城入口 v1.4 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v1.3</title>
+<title>法兰城 v1.4</title>
 <style>
 :root {
   --ink: #102016;
@@ -210,27 +210,17 @@ h1 {
   height: 56px;
   margin-bottom: 10px;
   border: 2px solid rgba(255, 240, 194, 0.16);
-  background: var(--card-bg, #4d6d55);
+  background: rgba(12, 20, 15, 0.84);
   box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.18);
 }
-.entry-portrait::before,
-.entry-portrait::after {
-  content: "";
-  position: absolute;
-}
-.entry-portrait::before {
-  left: 19px;
-  top: 12px;
-  width: 18px;
-  height: 18px;
-  background: #f3d7b5;
-}
-.entry-portrait::after {
-  left: 12px;
-  top: 30px;
-  width: 32px;
-  height: 18px;
-  background: var(--coat, #8768d7);
+.entry-portrait img,
+.entry-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 .entry-card strong {
   display: block;
@@ -265,27 +255,8 @@ h1 {
   width: 116px;
   height: 116px;
   border: 2px solid rgba(255, 240, 194, 0.18);
-  background: var(--avatar-bg, #4f6f58);
+  background: rgba(12, 20, 15, 0.84);
   box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.18);
-}
-.entry-avatar::before,
-.entry-avatar::after {
-  content: "";
-  position: absolute;
-}
-.entry-avatar::before {
-  left: 37px;
-  top: 24px;
-  width: 42px;
-  height: 38px;
-  background: #f3d7b5;
-}
-.entry-avatar::after {
-  left: 22px;
-  top: 60px;
-  width: 72px;
-  height: 40px;
-  background: var(--avatar-coat, #8768d7);
 }
 .entry-preview h3 {
   margin: 0 0 6px;
@@ -523,18 +494,6 @@ canvas {
     width: 92px;
     height: 92px;
   }
-  .entry-avatar::before {
-    left: 29px;
-    top: 18px;
-    width: 34px;
-    height: 30px;
-  }
-  .entry-avatar::after {
-    left: 18px;
-    top: 48px;
-    width: 56px;
-    height: 30px;
-  }
 }
 </style>
 </head>
@@ -545,7 +504,7 @@ canvas {
         <div class="eyebrow">Falan City Gate</div>
         <div class="title-row">
           <h1>法兰城</h1>
-          <span class="title-version">v1.3</span>
+          <span class="title-version">v1.4</span>
         </div>
         <div class="subtitle">在法兰城里慢慢逛，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
       </div>
@@ -661,13 +620,20 @@ const player = { x: 46, y: 138, w: 10, h: 14, speed: 1.35, dir: 'down', step: 0,
 const keyState = { up: false, down: false, left: false, right: false };
 const actionKeys = new Set(['Enter', ' ', 'Spacebar']);
 const travelerStorageKey = 'falan-selected-traveler';
+const spriteFrameWidth = 16;
+const spriteFrameHeight = 20;
 const travelers = [
-  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '走进法兰城先看看风景，不急着上桌，像是在等一场悠闲的开局。', coat: '#6f81d6', accent: '#97a8f0', hair: '#88634d' },
-  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '熟门熟路，适合第一次进城先找找感觉，也是默认最顺手的一位。', coat: '#7f69cf', accent: '#b499ff', hair: '#7a593f' },
-  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋小屋。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33' },
-  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔小屋准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44' },
-  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '压轴登场的狠角色', desc: '一进城就带着一点压迫感，像是会直接把今天的对局打成主线任务。', coat: '#b95a63', accent: '#ef99a4', hair: '#654230' }
+  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '走进法兰城先看看风景，不急着上桌，像是在等一场悠闲的开局。', coat: '#6f81d6', accent: '#97a8f0', hair: '#88634d', avatar: './assets/falan/avatars/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
+  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '熟门熟路，适合第一次进城先找找感觉，也是默认最顺手的一位。', coat: '#7f69cf', accent: '#b499ff', hair: '#7a593f', avatar: './assets/falan/avatars/dog.png', sprite: './assets/falan/sprites/dog.png' },
+  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋小屋。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33', avatar: './assets/falan/avatars/fat.png', sprite: './assets/falan/sprites/fat.png' },
+  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔小屋准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44', avatar: './assets/falan/avatars/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
+  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '压轴登场的狠角色', desc: '一进城就带着一点压迫感，像是会直接把今天的对局打成主线任务。', coat: '#b95a63', accent: '#ef99a4', hair: '#654230', avatar: './assets/falan/avatars/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
 ];
+const travelerSprites = Object.fromEntries(travelers.map((traveler) => {
+  const image = new Image();
+  image.src = traveler.sprite;
+  return [traveler.id, image];
+}));
 let selectedTravelerId = localStorage.getItem(travelerStorageKey) || 'dog';
 let townReady = false;
 
@@ -759,8 +725,7 @@ function updateTravelerPreview() {
   previewName.textContent = traveler.name;
   previewLevel.textContent = `${traveler.level} · ${traveler.title}`;
   previewText.textContent = traveler.desc;
-  entryAvatar.style.setProperty('--avatar-bg', `linear-gradient(180deg, ${traveler.accent}, ${traveler.coat})`);
-  entryAvatar.style.setProperty('--avatar-coat', traveler.coat);
+  entryAvatar.innerHTML = `<img src="${traveler.avatar}" alt="${traveler.name}像素头像">`;
 }
 
 function renderTravelerCards() {
@@ -770,11 +735,9 @@ function renderTravelerCards() {
     button.type = 'button';
     button.className = 'entry-card';
     button.dataset.id = traveler.id;
-    button.style.setProperty('--card-bg', `linear-gradient(180deg, ${traveler.accent}, ${traveler.coat})`);
-    button.style.setProperty('--coat', traveler.coat);
     if (traveler.id === selectedTravelerId) button.classList.add('selected');
     button.innerHTML = `
-      <div class="entry-portrait"></div>
+      <div class="entry-portrait"><img src="${traveler.avatar}" alt="${traveler.name}头像"></div>
       <strong>${traveler.name}</strong>
       <span>${traveler.level}</span>
       <p>${traveler.title}</p>
@@ -1013,9 +976,26 @@ function drawSparkle(tick) {
 
 function drawPlayer(tick) {
   const traveler = getSelectedTraveler();
+  const sprite = travelerSprites[traveler.id];
   const bob = player.moving ? Math.round(Math.sin(player.step * 6) * 1.2) : 0;
   const leg = player.moving && Math.sin(player.step * 8) > 0 ? 1 : 0;
   drawRect(player.x + 1, player.y + 13, 8, 2, 'rgba(14, 18, 14, 0.25)');
+  if (sprite && sprite.complete && sprite.naturalWidth) {
+    const frameBase = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
+    const frame = frameBase + leg;
+    const drawX = Math.round(player.x - 3);
+    const drawY = Math.round(player.y - 3 + bob);
+    if (player.dir === 'left') {
+      ctx.save();
+      ctx.translate(drawX + spriteFrameWidth, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, 0, drawY, spriteFrameWidth, spriteFrameHeight);
+      ctx.restore();
+      return;
+    }
+    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, spriteFrameWidth, spriteFrameHeight);
+    return;
+  }
   drawRect(player.x + 3, player.y + 1 + bob, 4, 3, '#f5d2ae');
   drawRect(player.x + 2, player.y + 3 + bob, 6, 2, traveler.hair);
   drawRect(player.x + 2, player.y + 5 + bob, 6, 5, traveler.accent);
