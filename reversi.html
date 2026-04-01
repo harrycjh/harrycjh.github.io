@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 黑白棋 Reversi v1.42 | 第三圈鼓励：靠角+4，边缘+2 -->
+<!-- 黑白棋 Reversi v1.43 | 第三圈鼓励：靠角+4，边缘+2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑白棋 v1.42 - Reversi</title>
+<title>黑白棋 v1.43 - Reversi</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -19,9 +19,29 @@ body {
 }
 h1 {
   font-size: 1.8em;
-  margin-bottom: 10px;
+  margin: 0;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
   letter-spacing: 4px;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.page-version {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.16);
+  color: #d8f59d;
+  font-size: 0.82rem;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 .info-bar {
   display: flex;
@@ -293,7 +313,10 @@ body.replay-mode #probCanvas { cursor: ew-resize; }
 </style>
 </head>
 <body>
-<h1>⚫ 黑白棋 ⚪</h1>
+<div class="title-row">
+  <h1>⚫ 黑白棋 ⚪</h1>
+  <span class="page-version">v1.43</span>
+</div>
 
 <div class="mode-select">
   <button id="btnPvp" onclick="setMode('pvp')">双人对战</button>
