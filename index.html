@@ -610,21 +610,27 @@ function drawPlayer() {
   const traveler = travelers[travelerIndex];
   const sprite = travelerSprites[traveler.id];
   const point = isoToScreen(player.tx, player.ty);
-  const shadowY = point.y + 6;
+  const walkPhase = player.moving ? Math.sin(player.step) : 0;
+  const bob = player.moving ? -Math.abs(walkPhase) * 3 : 0;
+  const sway = player.moving && (player.dir === 'up' || player.dir === 'down') ? walkPhase * 1.1 : 0;
+  const footY = point.y + world.tileH * 0.16;
+  const shadowY = footY + 1;
+  const shadowW = 11 + (player.moving ? Math.abs(walkPhase) * 3 : 0);
+  const shadowH = 4.5 - (player.moving ? Math.abs(walkPhase) * 0.7 : 0);
   ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
   ctx.beginPath();
-  ctx.ellipse(point.x, shadowY, 12, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(point.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (!sprite.complete || !sprite.naturalWidth) return;
-  const walk = player.moving ? (Math.sin(player.step) > 0 ? 1 : 0) : 0;
+  const walk = player.moving ? (Math.floor(player.step) % 2) : 0;
   const base = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
   const frame = base + walk;
   const scale = 1.45;
   const drawW = Math.round(spriteFrameWidth * scale);
   const drawH = Math.round(spriteFrameHeight * scale);
-  const drawX = Math.round(point.x - drawW / 2);
-  const drawY = Math.round(point.y - 36);
+  const drawX = Math.round(point.x - drawW / 2 + sway);
+  const drawY = Math.round(footY - drawH + bob);
 
   if (player.dir === 'left') {
     ctx.save();
@@ -779,7 +785,7 @@ function updatePlayer() {
       player.tx = nextTx;
       player.ty = nextTy;
     }
-    player.step += 0.34;
+    player.step += 0.26;
   }
 }
 
