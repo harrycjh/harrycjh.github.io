@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v1.6 -->
+<!-- 法兰城入口 v1.7 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v1.6</title>
+<title>法兰城 v1.7</title>
 <style>
 :root {
   --ink: #102016;
@@ -242,7 +242,7 @@ h1 {
 }
 .entry-preview {
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
+  grid-template-columns: 132px minmax(0, 1fr);
   gap: 14px;
   align-items: center;
   padding: 14px;
@@ -252,8 +252,11 @@ h1 {
 }
 .entry-avatar {
   position: relative;
-  width: 116px;
-  height: 116px;
+  width: 132px;
+  height: 132px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   border: 2px solid rgba(255, 240, 194, 0.18);
   background: rgba(12, 20, 15, 0.84);
   box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.18);
@@ -491,8 +494,8 @@ canvas {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .entry-avatar {
-    width: 92px;
-    height: 92px;
+    width: 104px;
+    height: 112px;
   }
 }
 </style>
@@ -504,7 +507,7 @@ canvas {
         <div class="eyebrow">Falan City Gate</div>
         <div class="title-row">
           <h1>法兰城</h1>
-          <span class="title-version">v1.6</span>
+          <span class="title-version">v1.7</span>
         </div>
         <div class="subtitle">在法兰城里慢慢逛，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
       </div>
@@ -625,11 +628,11 @@ const travelerStorageKey = 'falan-selected-traveler';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
-  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '走进法兰城先看看风景，不急着上桌，像是在等一场悠闲的开局。', coat: '#6f81d6', accent: '#97a8f0', hair: '#88634d', avatar: './assets/falan/avatars/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
-  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '熟门熟路，适合第一次进城先找找感觉，也是默认最顺手的一位。', coat: '#7f69cf', accent: '#b499ff', hair: '#7a593f', avatar: './assets/falan/avatars/dog.png', sprite: './assets/falan/sprites/dog.png' },
-  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋小屋。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33', avatar: './assets/falan/avatars/fat.png', sprite: './assets/falan/sprites/fat.png' },
-  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔小屋准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44', avatar: './assets/falan/avatars/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
-  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '压轴登场的狠角色', desc: '一进城就带着一点压迫感，像是会直接把今天的对局打成主线任务。', coat: '#b95a63', accent: '#ef99a4', hair: '#654230', avatar: './assets/falan/avatars/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
+  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '走进法兰城先看看风景，不急着上桌，像是在等一场悠闲的开局。', coat: '#6f81d6', accent: '#97a8f0', hair: '#88634d', avatar: './assets/falan/avatars/ghost.png', preview: './assets/falan/previews/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
+  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '熟门熟路，适合第一次进城先找找感觉，也是默认最顺手的一位。', coat: '#7f69cf', accent: '#b499ff', hair: '#7a593f', avatar: './assets/falan/avatars/dog.png', preview: './assets/falan/previews/dog.png', sprite: './assets/falan/sprites/dog.png' },
+  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋小屋。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33', avatar: './assets/falan/avatars/fat.png', preview: './assets/falan/previews/fat.png', sprite: './assets/falan/sprites/fat.png' },
+  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔小屋准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44', avatar: './assets/falan/avatars/rabbit.png', preview: './assets/falan/previews/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
+  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '压轴登场的狠角色', desc: '一进城就带着一点压迫感，像是会直接把今天的对局打成主线任务。', coat: '#b95a63', accent: '#ef99a4', hair: '#654230', avatar: './assets/falan/avatars/crayfish.png', preview: './assets/falan/previews/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
 ];
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => {
   const image = new Image();
@@ -726,7 +729,7 @@ function updateTravelerPreview() {
   previewName.textContent = traveler.name;
   previewLevel.textContent = `${traveler.level} · ${traveler.title}`;
   previewText.textContent = traveler.desc;
-  entryAvatar.innerHTML = `<img src="${traveler.avatar}" alt="${traveler.name}像素头像">`;
+  entryAvatar.innerHTML = `<img src="${traveler.preview}" alt="${traveler.name}全身像素立绘">`;
 }
 
 function renderTravelerCards() {
