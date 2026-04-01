@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v1.9 -->
+<!-- 法兰城入口 v2.0 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v1.9</title>
+<title>法兰城 v2.0</title>
 <style>
 :root {
   --ink: #102016;
@@ -507,9 +507,9 @@ canvas {
         <div class="eyebrow">Falan City Gate</div>
         <div class="title-row">
           <h1>法兰城</h1>
-          <span class="title-version">v1.9</span>
+          <span class="title-version">v2.0</span>
         </div>
-        <div class="subtitle">在法兰城里慢慢逛，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
+        <div class="subtitle">法兰城已经扩成主城框架了。现在可以从南门一路走到里谢里雅城，再顺路去东南角的黑白棋会馆。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
       </div>
       <div class="hero-chip" id="heroChip">今日城况：晴<br>今日安排：逛法兰城，打黑白棋</div>
     </section>
@@ -523,7 +523,7 @@ canvas {
             <div class="badge">互动<br><strong id="promptLabel">散步中</strong></div>
           </div>
         </div>
-        <div class="scene-tip" id="sceneTip">用方向键或 WASD 在法兰城里散步。靠近右上角的小屋门口，再按 Enter / 空格 / 右侧按钮进入黑白棋。</div>
+        <div class="scene-tip" id="sceneTip">用方向键或 WASD 在法兰城里散步。沿南门大道往北能看到城堡，往东南继续走就能到黑白棋会馆。</div>
 
         <div class="controls" aria-label="触屏控制">
           <div class="dpad">
@@ -538,7 +538,7 @@ canvas {
             <button class="pad blank" tabindex="-1" aria-hidden="true"></button>
           </div>
           <div class="action-pad">
-            <button class="action" id="enterBtn" aria-label="进入黑白棋">进入<br>小屋</button>
+            <button class="action" id="enterBtn" aria-label="进入黑白棋">进入<br>会馆</button>
           </div>
         </div>
       </div>
@@ -548,23 +548,23 @@ canvas {
           <h2>玩法</h2>
           <ul>
             <li>电脑：方向键 / <code>WASD</code> 移动，<code>Enter</code> 或空格互动。</li>
-            <li>手机：直接按方向键，靠近小屋后点“进入小屋”。</li>
+            <li>手机：直接按方向键，靠近会馆后点“进入会馆”。</li>
             <li>不想散步也可以直接跳转进黑白棋。</li>
           </ul>
         </section>
 
         <section class="status-box">
           <strong id="statusTitle">法兰城公告</strong>
-          <div id="statusText">今天城里很热闹。黑白棋小屋已经开门，欢迎来挑战。</div>
+          <div id="statusText">法兰城主城已经扩建完成，南门大道、中央广场和北侧城堡都能走到了。</div>
         </section>
 
         <div class="button-row">
           <button class="btn" id="directPlayBtn" type="button">直接进入黑白棋</button>
-          <button class="btn secondary" id="focusCabinBtn" type="button">传送到小屋门口</button>
+          <button class="btn secondary" id="focusCabinBtn" type="button">传送到会馆门口</button>
           <button class="btn secondary" id="backToSelectionBtn" type="button">回到选人界面</button>
         </div>
 
-        <div class="footer-note">现在这里已经是法兰城雏形了，后续我们还可以继续往里加传送石、旅馆、武器店、宠物店和 NPC。</div>
+        <div class="footer-note">现在法兰城已经有了大地图、城堡、中轴大道和分区骨架。后面我们可以继续往里补旅馆、银行、宠物店、武器店和更多 NPC。</div>
       </aside>
     </section>
   </main>
@@ -587,7 +587,7 @@ canvas {
         <div>
           <h3 id="previewName">小狗子</h3>
           <div class="preview-level" id="previewLevel">LV2 · 法兰城常驻旅人</div>
-          <p id="previewText">今天先选个人物进城，逛到右上角的小屋还能继续去打黑白棋。</p>
+          <p id="previewText">今天先选个人物进城，先逛中央广场和城堡，再去东南角的黑白棋会馆继续挑战。</p>
         </div>
       </div>
 
@@ -620,8 +620,12 @@ const previewText = document.getElementById('previewText');
 const entryAvatar = document.getElementById('entryAvatar');
 const enterTownBtn = document.getElementById('enterTownBtn');
 
-const world = { width: 320, height: 180 };
-const player = { x: 46, y: 138, w: 10, h: 14, speed: 1.35, dir: 'down', step: 0, moving: false };
+const world = { width: 640, height: 420, viewWidth: 320, viewHeight: 180 };
+canvas.width = world.viewWidth;
+canvas.height = world.viewHeight;
+
+const player = { x: 315, y: 360, w: 10, h: 14, speed: 1.48, dir: 'up', step: 0, moving: false };
+const camera = { x: 0, y: 0 };
 const keyState = { up: false, down: false, left: false, right: false };
 const actionKeys = new Set(['Enter', ' ', 'Spacebar']);
 const travelerStorageKey = 'falan-selected-traveler';
@@ -630,8 +634,8 @@ const spriteFrameHeight = 20;
 const travelers = [
   { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '走进法兰城先看看风景，不急着上桌，像是在等一场悠闲的开局。', coat: '#6f81d6', accent: '#97a8f0', hair: '#88634d', avatar: './assets/falan/avatars/ghost.png', preview: './assets/falan/previews/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
   { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '熟门熟路，适合第一次进城先找找感觉，也是默认最顺手的一位。', coat: '#7f69cf', accent: '#b499ff', hair: '#7a593f', avatar: './assets/falan/avatars/dog.png', preview: './assets/falan/previews/dog.png', sprite: './assets/falan/sprites/dog.png' },
-  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋小屋。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33', avatar: './assets/falan/avatars/fat.png', preview: './assets/falan/previews/fat.png', sprite: './assets/falan/sprites/fat.png' },
-  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔小屋准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44', avatar: './assets/falan/avatars/rabbit.png', preview: './assets/falan/previews/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
+  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋会馆。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33', avatar: './assets/falan/avatars/fat.png', preview: './assets/falan/previews/fat.png', sprite: './assets/falan/sprites/fat.png' },
+  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔会馆准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44', avatar: './assets/falan/avatars/rabbit.png', preview: './assets/falan/previews/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
   { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '压轴登场的狠角色', desc: '一进城就带着一点压迫感，像是会直接把今天的对局打成主线任务。', coat: '#b95a63', accent: '#ef99a4', hair: '#654230', avatar: './assets/falan/avatars/crayfish.png', preview: './assets/falan/previews/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
 ];
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => {
@@ -642,43 +646,82 @@ const travelerSprites = Object.fromEntries(travelers.map((traveler) => {
 let selectedTravelerId = localStorage.getItem(travelerStorageKey) || 'dog';
 let townReady = false;
 
+const city = {
+  southGate: { x: 286, y: 372, w: 68, h: 16 },
+  castle: { x: 244, y: 32, w: 152, h: 74 },
+  cathedral: { x: 74, y: 118, w: 120, h: 68 },
+  guildInn: { x: 446, y: 118, w: 120, h: 66 },
+  workshop: { x: 58, y: 212, w: 96, h: 40 },
+  hospital: { x: 478, y: 210, w: 90, h: 42 },
+  arena: { x: 84, y: 284, w: 124, h: 58 },
+  reversiCabin: { x: 498, y: 284, w: 76, h: 48 },
+  fountain: { x: 292, y: 244, w: 56, h: 36 }
+};
+
+const portal = { x: city.reversiCabin.x + 22, y: city.reversiCabin.y + 44, w: 28, h: 20 };
+
 const solids = [
-  { x: 24, y: 60, w: 80, h: 36 },
-  { x: 226, y: 52, w: 66, h: 42 },
-  { x: 120, y: 104, w: 56, h: 34 },
-  { x: 90, y: 108, w: 108, h: 8 },
+  { x: city.castle.x + 16, y: city.castle.y + 18, w: city.castle.w - 32, h: city.castle.h - 18 },
+  { x: city.castle.x - 22, y: city.castle.y + 18, w: 26, h: 74 },
+  { x: city.castle.x + city.castle.w - 4, y: city.castle.y + 18, w: 26, h: 74 },
+  { x: city.cathedral.x, y: city.cathedral.y, w: city.cathedral.w, h: city.cathedral.h },
+  { x: city.guildInn.x, y: city.guildInn.y, w: city.guildInn.w, h: city.guildInn.h },
+  { x: city.workshop.x, y: city.workshop.y, w: city.workshop.w, h: city.workshop.h },
+  { x: city.hospital.x, y: city.hospital.y, w: city.hospital.w, h: city.hospital.h },
+  { x: city.arena.x, y: city.arena.y, w: city.arena.w, h: city.arena.h },
+  { x: city.reversiCabin.x, y: city.reversiCabin.y, w: city.reversiCabin.w, h: city.reversiCabin.h - 2 },
+  { x: city.fountain.x + 6, y: city.fountain.y + 6, w: city.fountain.w - 12, h: city.fountain.h - 12 },
   { x: 0, y: 0, w: world.width, h: 18 }
 ];
 
-const portal = { x: 247, y: 94, w: 26, h: 22 };
-
 const clouds = [
-  { x: 26, y: 22, speed: 0.14, scale: 1 },
-  { x: 118, y: 13, speed: 0.08, scale: 0.85 },
-  { x: 248, y: 28, speed: 0.1, scale: 1.15 }
+  { x: 24, y: 18, speed: 0.1, scale: 1.15 },
+  { x: 152, y: 30, speed: 0.08, scale: 0.95 },
+  { x: 332, y: 16, speed: 0.07, scale: 1.1 },
+  { x: 502, y: 26, speed: 0.09, scale: 1.05 }
+];
+
+const trees = [
+  { x: 30, y: 86 }, { x: 208, y: 88 }, { x: 404, y: 88 }, { x: 590, y: 92 },
+  { x: 36, y: 188 }, { x: 210, y: 196 }, { x: 406, y: 192 }, { x: 590, y: 196 },
+  { x: 36, y: 332 }, { x: 92, y: 344 }, { x: 544, y: 338 }, { x: 594, y: 344 }
+];
+
+const lamps = [
+  { x: 304, y: 138 }, { x: 336, y: 138 }, { x: 304, y: 210 }, { x: 336, y: 210 },
+  { x: 304, y: 302 }, { x: 336, y: 302 }, { x: 246, y: 228 }, { x: 394, y: 228 }
 ];
 
 const flowers = [
-  { x: 122, y: 150, color: '#ffd8aa' },
-  { x: 131, y: 148, color: '#ffe991' },
-  { x: 144, y: 147, color: '#ffb6c3' },
-  { x: 157, y: 149, color: '#ffd8aa' },
-  { x: 168, y: 146, color: '#c8f3b5' },
-  { x: 206, y: 140, color: '#ffb6c3' },
-  { x: 214, y: 146, color: '#ffe991' }
+  { x: 274, y: 286, color: '#ffd8aa' }, { x: 284, y: 294, color: '#ffe991' },
+  { x: 356, y: 286, color: '#ffb6c3' }, { x: 366, y: 294, color: '#c8f3b5' },
+  { x: 258, y: 308, color: '#ffb6c3' }, { x: 382, y: 308, color: '#ffe991' }
 ];
+
+const marketStalls = [
+  { x: 424, y: 258, awning: '#d85d5f', wood: '#8a5b39' },
+  { x: 458, y: 256, awning: '#e7b35a', wood: '#8a5b39' },
+  { x: 536, y: 258, awning: '#7fc49f', wood: '#8a5b39' }
+];
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
 
 function rectsOverlap(ax, ay, aw, ah, b) {
   return ax < b.x + b.w && ax + aw > b.x && ay < b.y + b.h && ay + ah > b.y;
 }
 
-function playerRectAt(x, y) {
-  return { x, y, w: player.w, h: player.h };
-}
-
 function collides(x, y) {
   if (x < 8 || y < 20 || x + player.w > world.width - 8 || y + player.h > world.height - 10) return true;
   return solids.some((rect) => rectsOverlap(x, y, player.w, player.h, rect));
+}
+
+function updateCamera() {
+  const targetX = player.x + player.w / 2 - world.viewWidth / 2;
+  const targetY = player.y + player.h / 2 - world.viewHeight / 2;
+  camera.x = clamp(targetX, 0, world.width - world.viewWidth);
+  camera.y = clamp(targetY, 0, world.height - world.viewHeight);
 }
 
 function zoneDistance(zone) {
@@ -690,29 +733,83 @@ function zoneDistance(zone) {
 }
 
 function isNearPortal() {
-  return zoneDistance(portal) < 28;
+  return zoneDistance(portal) < 30;
 }
 
 function areaName() {
-  if (isNearPortal()) return '黑白棋小屋';
-  if (player.x < 88 && player.y < 118) return '冒险者公会前';
-  if (player.x > 204 && player.y < 118) return '竞技小屋';
-  if (player.x > 112 && player.x < 190 && player.y > 100) return '中央花圃';
-  return '法兰城南街';
+  if (isNearPortal()) return '黑白棋会馆';
+  if (player.y < 132 && player.x > 230 && player.x < 410) return '里谢里雅城前';
+  if (player.y > 338) return '法兰城南门';
+  if (player.x < 214 && player.y < 252) return '西区工坊与圣堂';
+  if (player.x > 426 && player.y < 252) return '东区旅馆与医院';
+  if (player.x < 238 && player.y >= 252) return '西区竞技场';
+  if (player.x > 404 && player.y >= 252) return '东区市集';
+  return '中央广场';
+}
+
+function areaCopy(area) {
+  switch (area) {
+    case '里谢里雅城前':
+      return {
+        title: '王城前广场',
+        text: '北侧就是里谢里雅城。沿中轴大道一路往上，法兰城的气势会先从城堡压过来。',
+        tip: '现在你已经走到城堡前的石砖大道了。这里适合以后继续加卫兵、喷泉护栏和王城入口。'
+      };
+    case '西区工坊与圣堂':
+      return {
+        title: '西区公告',
+        text: '这一侧预留给圣堂和工房街，后面很适合加工匠铺、祈祷堂和更多 NPC。',
+        tip: '西区现在已经有圣堂和工房街雏形了，往南还能继续接到竞技场。'
+      };
+    case '东区旅馆与医院':
+      return {
+        title: '东区公告',
+        text: '东区更像冒险者常驻的地方，旅馆、医院和服务建筑都集中在这边。',
+        tip: '往东北是旅馆与医院，后面可以继续扩成冒险者常去的功能区。'
+      };
+    case '西区竞技场':
+      return {
+        title: '竞技场通告',
+        text: '西南一带已经留出了竞技场的位置，整体感觉会更接近法兰城的分区式布局。',
+        tip: '这里是偏西南的竞技区，适合以后加看台、训练 NPC 和挑战入口。'
+      };
+    case '东区市集':
+      return {
+        title: '市集招牌',
+        text: '东南区改成了小市集和黑白棋会馆，后面可以顺势接宠物店、银行和仓库。',
+        tip: '继续往东南就是黑白棋会馆。靠近会馆门口后，就可以直接进入对战页面。'
+      };
+    case '法兰城南门':
+      return {
+        title: '南门值守',
+        text: '从南门进入，一路直通城堡，是法兰城最有辨识度的中轴视角。',
+        tip: '你现在在法兰城南门。顺着石砖大道一直向北走，就会看到里谢里雅城。'
+      };
+    default:
+      return {
+        title: '中央广场',
+        text: '中央喷泉和十字大道把整座城串了起来，这里会是后续继续扩张 NPC 与建筑的核心。',
+        tip: '中央广场现在已经成型。你可以从这里分流去西区、东区，或者继续北上走向城堡。'
+      };
+  }
 }
 
 function syncUi() {
   const nearPortal = isNearPortal();
-  coordLabel.textContent = areaName();
-  promptLabel.textContent = nearPortal ? '可进入' : '散步中';
-  sceneTip.textContent = nearPortal
-    ? '你已经走到黑白棋小屋门口了。按 Enter / 空格，或者点“进入小屋”，就能去黑白棋页面。'
-    : '用方向键或 WASD 在法兰城里散步。右上角的小屋是黑白棋机房，走近后就能进去。';
-  statusTitle.textContent = nearPortal ? '小屋已开门' : '法兰城公告';
-  statusText.textContent = nearPortal
-    ? '今天的对局已经准备好了。推门进去，就能开始黑白棋挑战。'
-    : '南边是法兰城南门，北边是冒险者公会，右上角是黑白棋小屋。先逛一圈，再决定要不要开战。';
-  enterBtn.textContent = nearPortal ? '进入\n黑白棋' : '靠近\n小屋';
+  const area = areaName();
+  const copy = nearPortal
+    ? {
+        title: '会馆已开门',
+        text: '黑白棋会馆就在前面，推门进去就能开始今天的对战。',
+        tip: '你已经到会馆门口了。按 Enter / 空格，或者点“进入会馆”，就能前往黑白棋页面。'
+      }
+    : areaCopy(area);
+  coordLabel.textContent = area;
+  promptLabel.textContent = nearPortal ? '可进入' : area === '里谢里雅城前' ? '城堡前' : '散步中';
+  sceneTip.textContent = copy.tip;
+  statusTitle.textContent = copy.title;
+  statusText.textContent = copy.text;
+  enterBtn.textContent = nearPortal ? '进入\n黑白棋' : '靠近\n会馆';
 }
 
 function getSelectedTraveler() {
@@ -721,7 +818,7 @@ function getSelectedTraveler() {
 
 function updateHeroChip() {
   const traveler = getSelectedTraveler();
-  heroChip.innerHTML = `今日旅人：${traveler.name} ${traveler.level}<br>称号：${traveler.title}`;
+  heroChip.innerHTML = `今日旅人：${traveler.name} ${traveler.level}<br>位置：${areaName()} · 目标：会馆与城堡`;
 }
 
 function updateTravelerPreview() {
@@ -759,6 +856,7 @@ function renderTravelerCards() {
 function confirmTravelerSelection() {
   townReady = true;
   localStorage.setItem(travelerStorageKey, selectedTravelerId);
+  updateCamera();
   updateHeroChip();
   updateTravelerPreview();
   entryOverlay.classList.remove('show');
@@ -818,10 +916,12 @@ enterBtn.addEventListener('click', tryEnter);
 directPlayBtn.addEventListener('click', goToReversi);
 focusCabinBtn.addEventListener('click', () => {
   if (!townReady) return;
-  player.x = 240;
-  player.y = 120;
+  player.x = portal.x + 8;
+  player.y = portal.y + 24;
   player.dir = 'up';
+  updateCamera();
   syncUi();
+  updateHeroChip();
 });
 backToSelectionBtn.addEventListener('click', openTravelerSelection);
 enterTownBtn.addEventListener('click', confirmTravelerSelection);
@@ -886,107 +986,193 @@ function updatePlayer() {
 
 function drawRect(x, y, w, h, color) {
   ctx.fillStyle = color;
-  ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  ctx.fillRect(Math.round(x - camera.x), Math.round(y - camera.y), Math.round(w), Math.round(h));
+}
+
+function drawText(text, x, y, color, font = '7px monospace') {
+  ctx.fillStyle = color;
+  ctx.font = font;
+  ctx.fillText(text, Math.round(x - camera.x), Math.round(y - camera.y));
 }
 
 function drawCloud(cloud, tick) {
-  const drift = (tick * cloud.speed) % (world.width + 40);
-  const x = (cloud.x + drift) % (world.width + 40) - 20;
+  const drift = (tick * cloud.speed) % (world.width + 56);
+  const x = (cloud.x + drift) % (world.width + 56) - 26;
   const y = cloud.y;
   const s = cloud.scale;
-  drawRect(x, y + 4, 20 * s, 6 * s, '#e5f1de');
-  drawRect(x + 4 * s, y, 14 * s, 6 * s, '#f7f9e7');
-  drawRect(x + 10 * s, y + 2 * s, 16 * s, 6 * s, '#e9f5e3');
+  drawRect(x, y + 4, 22 * s, 6 * s, '#e5f1de');
+  drawRect(x + 4 * s, y, 16 * s, 6 * s, '#f7f9e7');
+  drawRect(x + 10 * s, y + 2 * s, 18 * s, 6 * s, '#e9f5e3');
 }
 
-function drawTree(x, y, sway) {
-  drawRect(x + 6, y + 18, 6, 14, '#6f4c2f');
-  drawRect(x + 2 + sway, y + 8, 14, 12, '#5c8b45');
-  drawRect(x, y + 12, 18, 8, '#76aa58');
-  drawRect(x + 4 + sway, y + 2, 10, 10, '#8fc76a');
+function drawTree(tree, tick) {
+  const sway = Math.round(Math.sin(tick / 16 + tree.x * 0.02) * 1.4);
+  drawRect(tree.x + 6, tree.y + 18, 6, 14, '#6f4c2f');
+  drawRect(tree.x + 2 + sway, tree.y + 8, 14, 12, '#5c8b45');
+  drawRect(tree.x, tree.y + 12, 18, 8, '#76aa58');
+  drawRect(tree.x + 4 + sway, tree.y + 2, 10, 10, '#8fc76a');
 }
 
-function drawFarmHouse() {
-  drawRect(24, 60, 80, 36, '#d6a45f');
-  drawRect(18, 52, 92, 12, '#7f4e3d');
-  drawRect(28, 48, 72, 8, '#9e6750');
-  drawRect(36, 70, 14, 14, '#f5f0c7');
-  drawRect(80, 70, 14, 14, '#f5f0c7');
-  drawRect(56, 78, 14, 18, '#5b3422');
-  drawRect(60, 84, 4, 6, '#fce088');
-  drawRect(32, 94, 64, 3, '#493420');
-}
-
-function drawArcadeCabin(tick) {
-  drawRect(226, 52, 66, 40, '#7d5331');
-  drawRect(220, 44, 78, 12, '#56402d');
-  drawRect(228, 38, 62, 8, '#a06d42');
-  drawRect(236, 62, 46, 10, '#2d4b3f');
-  drawRect(240, 64, 38, 6, '#355948');
-  ctx.fillStyle = '#ffe899';
-  ctx.font = '7px monospace';
-  ctx.fillText('REVERSI', 237, 70);
-  drawRect(248, 74, 18, 18, '#332014');
-  drawRect(252, 80, 4, 4, '#ffd96d');
-  drawRect(258, 80, 4, 4, '#f3b2bc');
-  const pulse = Math.floor((Math.sin(tick / 10) + 1) * 2);
-  drawRect(270, 78, 6, 6, pulse > 1 ? '#8df08b' : '#f5efbe');
-}
-
-function drawPond(tick) {
-  drawRect(120, 104, 56, 34, '#40626a');
-  drawRect(124, 108, 48, 26, '#6cb9c6');
-  const ripple = Math.sin(tick / 14) * 2;
-  drawRect(132 + ripple, 116, 18, 2, '#bdebf0');
-  drawRect(148 - ripple, 124, 14, 2, '#bdebf0');
-  drawRect(136, 132, 20, 2, '#8fd6e2');
-}
-
-function drawFlowerPatch(tick) {
-  drawRect(114, 138, 62, 22, '#5b482c');
-  for (let row = 0; row < 3; row++) {
-    drawRect(116, 142 + row * 6, 58, 2, '#7c6138');
-  }
-  flowers.forEach((flower, index) => {
-    const sway = Math.round(Math.sin(tick / 12 + index) * 1.4);
-    drawRect(flower.x, flower.y - 4, 2, 6, '#79b35f');
-    drawRect(flower.x - 1 + sway, flower.y - 6, 4, 4, flower.color);
-  });
-}
-
-function drawFences() {
-  for (let x = 90; x <= 196; x += 12) {
-    drawRect(x, 108, 2, 14, '#c69d62');
-  }
-  drawRect(90, 114, 108, 2, '#d8b16c');
-}
-
-function drawPaths() {
-  drawRect(0, 146, 320, 22, '#c89c63');
-  drawRect(250, 92, 20, 56, '#c89c63');
-  drawRect(58, 92, 14, 56, '#c89c63');
-  drawRect(62, 112, 192, 14, '#d7af74');
-  for (let x = 0; x < 320; x += 12) {
-    drawRect(x, 164, 6, 2, '#b48852');
-  }
+function drawLamp(lamp, tick) {
+  const pulse = 0.7 + (Math.sin(tick / 9 + lamp.x * 0.04) + 1) * 0.15;
+  drawRect(lamp.x, lamp.y, 2, 14, '#5e4a30');
+  drawRect(lamp.x - 2, lamp.y - 4, 6, 4, '#2a3324');
+  drawRect(lamp.x - 1, lamp.y - 3, 4, 3, `rgba(255, 236, 169, ${pulse})`);
 }
 
 function drawMountains() {
-  drawRect(0, 18, 320, 38, '#7ea1a6');
-  drawRect(0, 42, 48, 14, '#6c8f8f');
-  drawRect(24, 34, 52, 22, '#65807f');
-  drawRect(62, 26, 70, 30, '#6f8d8b');
-  drawRect(118, 38, 54, 18, '#62817b');
-  drawRect(152, 24, 84, 32, '#5d7976');
-  drawRect(222, 36, 50, 20, '#6f8c88');
-  drawRect(252, 28, 68, 28, '#627d7c');
+  drawRect(0, 18, world.width, 54, '#7ea1a6');
+  for (let x = -20; x < world.width + 40; x += 74) {
+    const top = 26 + (x % 3) * 4;
+    drawRect(x, 42, 54, 18, '#6c8f8f');
+    drawRect(x + 16, top, 62, 30, '#65807f');
+    drawRect(x + 42, 34, 68, 22, '#6f8d8b');
+  }
+}
+
+function drawRoads() {
+  drawRect(0, 348, world.width, 34, '#c89c63');
+  drawRect(0, 360, world.width, 10, '#d6ae74');
+  drawRect(296, 96, 48, world.height - 96, '#c89c63');
+  drawRect(308, 96, 24, world.height - 96, '#d6ae74');
+  drawRect(38, 216, world.width - 76, 34, '#c89c63');
+  drawRect(54, 228, world.width - 108, 10, '#d6ae74');
+  drawRect(224, 100, 192, 42, '#d9c3a0');
+
+  for (let y = 102; y < world.height; y += 16) {
+    drawRect(318, y, 4, 8, '#b48852');
+  }
+  for (let x = 10; x < world.width; x += 18) {
+    drawRect(x, 364, 8, 3, '#b48852');
+  }
+  for (let x = 54; x < world.width - 54; x += 18) {
+    drawRect(x, 232, 8, 3, '#b48852');
+  }
+}
+
+function drawSouthGate() {
+  drawRect(264, 338, 112, 14, '#7b5740');
+  drawRect(272, 330, 20, 28, '#6d4b35');
+  drawRect(348, 330, 20, 28, '#6d4b35');
+  drawRect(290, 334, 58, 10, '#9a6f4d');
+  drawRect(city.southGate.x, city.southGate.y, city.southGate.w, city.southGate.h, '#e5c188');
+  drawRect(city.southGate.x + 6, city.southGate.y + 5, city.southGate.w - 12, 4, '#b48852');
+}
+
+function drawCastle(tick) {
+  const flag = Math.round(Math.sin(tick / 11) * 2);
+  drawRect(city.castle.x - 22, city.castle.y + 18, 26, 74, '#c9baa0');
+  drawRect(city.castle.x + city.castle.w - 4, city.castle.y + 18, 26, 74, '#c9baa0');
+  drawRect(city.castle.x, city.castle.y + 16, city.castle.w, city.castle.h, '#d8ccb3');
+  drawRect(city.castle.x + 14, city.castle.y + 10, city.castle.w - 28, 12, '#b6a488');
+  for (let x = city.castle.x - 22; x <= city.castle.x + city.castle.w + 10; x += 10) {
+    drawRect(x, city.castle.y + 8, 6, 10, '#e5d7bd');
+  }
+  drawRect(city.castle.x + 62, city.castle.y + 48, 28, 42, '#5c4533');
+  drawRect(city.castle.x + 70, city.castle.y + 24, 12, 20, '#f1efdf');
+  drawRect(city.castle.x + 24, city.castle.y + 34, 12, 18, '#f1efdf');
+  drawRect(city.castle.x + 116, city.castle.y + 34, 12, 18, '#f1efdf');
+  drawRect(city.castle.x + 10, city.castle.y - 6, 2, 22, '#7c5a40');
+  drawRect(city.castle.x + city.castle.w - 12, city.castle.y - 6, 2, 22, '#7c5a40');
+  drawRect(city.castle.x + 12, city.castle.y - 4, 10 + flag, 6, '#b85155');
+  drawRect(city.castle.x + city.castle.w - 22 - flag, city.castle.y - 4, 10 + flag, 6, '#4d65bf');
+  drawText('里谢里雅城', city.castle.x + 42, city.castle.y + 66, '#6c4d34');
+}
+
+function drawCathedral() {
+  drawRect(city.cathedral.x, city.cathedral.y, city.cathedral.w, city.cathedral.h, '#ccb691');
+  drawRect(city.cathedral.x + 10, city.cathedral.y - 12, city.cathedral.w - 20, 18, '#73503f');
+  drawRect(city.cathedral.x + 22, city.cathedral.y + 16, 18, 18, '#efe5c6');
+  drawRect(city.cathedral.x + 80, city.cathedral.y + 16, 18, 18, '#efe5c6');
+  drawRect(city.cathedral.x + 48, city.cathedral.y + 28, 20, 40, '#604431');
+  drawRect(city.cathedral.x + 56, city.cathedral.y + 8, 4, 18, '#f0d98f');
+  drawRect(city.cathedral.x + 49, city.cathedral.y + 15, 18, 4, '#f0d98f');
+}
+
+function drawGuildInn() {
+  drawRect(city.guildInn.x, city.guildInn.y, city.guildInn.w, city.guildInn.h, '#b99667');
+  drawRect(city.guildInn.x - 8, city.guildInn.y - 12, city.guildInn.w + 16, 18, '#6b4a33');
+  drawRect(city.guildInn.x + 12, city.guildInn.y + 18, 18, 16, '#f7eac8');
+  drawRect(city.guildInn.x + 86, city.guildInn.y + 18, 18, 16, '#f7eac8');
+  drawRect(city.guildInn.x + 48, city.guildInn.y + 32, 22, 34, '#5b3422');
+  drawText('旅馆', city.guildInn.x + 48, city.guildInn.y + 14, '#ffe89d');
+}
+
+function drawWorkshop() {
+  drawRect(city.workshop.x, city.workshop.y, city.workshop.w, city.workshop.h, '#c4874a');
+  drawRect(city.workshop.x - 6, city.workshop.y - 10, city.workshop.w + 12, 14, '#7f4e35');
+  drawRect(city.workshop.x + 14, city.workshop.y + 12, 14, 12, '#f7e4b1');
+  drawRect(city.workshop.x + 58, city.workshop.y + 10, 20, 18, '#4c3424');
+  drawText('工房', city.workshop.x + 34, city.workshop.y + 36, '#2e1b11');
+}
+
+function drawHospital() {
+  drawRect(city.hospital.x, city.hospital.y, city.hospital.w, city.hospital.h, '#d9d7d8');
+  drawRect(city.hospital.x + 10, city.hospital.y + 8, city.hospital.w - 20, 10, '#b7c8d9');
+  drawRect(city.hospital.x + 16, city.hospital.y + 16, 16, 12, '#f1fbff');
+  drawRect(city.hospital.x + 58, city.hospital.y + 16, 16, 12, '#f1fbff');
+  drawRect(city.hospital.x + 36, city.hospital.y + 20, 18, 18, '#f7f0da');
+  drawRect(city.hospital.x + 43, city.hospital.y + 22, 4, 14, '#df7777');
+  drawRect(city.hospital.x + 38, city.hospital.y + 27, 14, 4, '#df7777');
+}
+
+function drawArena() {
+  drawRect(city.arena.x, city.arena.y, city.arena.w, city.arena.h, '#b8824f');
+  drawRect(city.arena.x - 8, city.arena.y + 8, city.arena.w + 16, 10, '#8d5c38');
+  drawRect(city.arena.x + 16, city.arena.y + 18, city.arena.w - 32, 26, '#d8b16c');
+  for (let x = city.arena.x + 12; x < city.arena.x + city.arena.w - 8; x += 14) {
+    drawRect(x, city.arena.y + 44, 8, 6, '#7c5738');
+  }
+  drawText('竞技场', city.arena.x + 36, city.arena.y + 35, '#5a351c');
+}
+
+function drawMarket() {
+  marketStalls.forEach((stall) => {
+    drawRect(stall.x, stall.x < 500 ? 264 : 262, 26, 20, stall.wood);
+    drawRect(stall.x - 2, stall.x < 500 ? 258 : 256, 30, 8, stall.awning);
+    drawRect(stall.x + 4, stall.x < 500 ? 284 : 282, 3, 12, '#6b4a33');
+    drawRect(stall.x + 18, stall.x < 500 ? 284 : 282, 3, 12, '#6b4a33');
+  });
+}
+
+function drawReversiCabin(tick) {
+  drawRect(city.reversiCabin.x, city.reversiCabin.y, city.reversiCabin.w, city.reversiCabin.h, '#765133');
+  drawRect(city.reversiCabin.x - 8, city.reversiCabin.y - 12, city.reversiCabin.w + 16, 16, '#56402d');
+  drawRect(city.reversiCabin.x + 10, city.reversiCabin.y + 10, city.reversiCabin.w - 20, 12, '#2d4b3f');
+  drawRect(city.reversiCabin.x + 14, city.reversiCabin.y + 12, city.reversiCabin.w - 28, 8, '#355948');
+  drawText('REVERSI', city.reversiCabin.x + 12, city.reversiCabin.y + 20, '#ffe899');
+  drawRect(city.reversiCabin.x + 26, city.reversiCabin.y + 24, 24, 24, '#332014');
+  drawRect(city.reversiCabin.x + 32, city.reversiCabin.y + 30, 4, 4, '#ffd96d');
+  drawRect(city.reversiCabin.x + 40, city.reversiCabin.y + 30, 4, 4, '#f3b2bc');
+  const pulse = Math.floor((Math.sin(tick / 10) + 1) * 2);
+  drawRect(city.reversiCabin.x + 54, city.reversiCabin.y + 30, 8, 6, pulse > 1 ? '#8df08b' : '#f5efbe');
+}
+
+function drawFountain(tick) {
+  drawRect(city.fountain.x, city.fountain.y, city.fountain.w, city.fountain.h, '#466875');
+  drawRect(city.fountain.x + 4, city.fountain.y + 4, city.fountain.w - 8, city.fountain.h - 8, '#6cb9c6');
+  drawRect(city.fountain.x + 24, city.fountain.y + 8, 8, 20, '#d9ddd7');
+  drawRect(city.fountain.x + 18, city.fountain.y + 12, 20, 4, '#f7f2d8');
+  const ripple = Math.sin(tick / 14) * 2;
+  drawRect(city.fountain.x + 10 + ripple, city.fountain.y + 18, 18, 2, '#bdebf0');
+  drawRect(city.fountain.x + 22 - ripple, city.fountain.y + 26, 16, 2, '#bdebf0');
+}
+
+function drawFlowerBeds(tick) {
+  drawRect(250, 276, 140, 44, '#5b482c');
+  drawRect(270, 236, 98, 10, '#7a6440');
+  flowers.forEach((flower, index) => {
+    const sway = Math.round(Math.sin(tick / 10 + index) * 1.5);
+    drawRect(flower.x, flower.y - 5, 2, 7, '#79b35f');
+    drawRect(flower.x - 1 + sway, flower.y - 8, 4, 4, flower.color);
+  });
 }
 
 function drawSparkle(tick) {
   if (!isNearPortal()) return;
   const phase = Math.floor((tick / 8) % 4);
-  const x = 258;
-  const y = 100;
+  const x = portal.x + 10;
+  const y = portal.y - 10;
   drawRect(x + phase, y, 2, 6, '#fff4b7');
   drawRect(x - 2, y + 2 + phase, 6, 2, '#ffe18e');
 }
@@ -1000,8 +1186,8 @@ function drawPlayer(tick) {
   if (sprite && sprite.complete && sprite.naturalWidth) {
     const frameBase = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
     const frame = frameBase + leg;
-    const drawX = Math.round(player.x - 3);
-    const drawY = Math.round(player.y - 3 + bob);
+    const drawX = Math.round(player.x - 3 - camera.x);
+    const drawY = Math.round(player.y - 3 + bob - camera.y);
     if (player.dir === 'left') {
       ctx.save();
       ctx.translate(drawX + spriteFrameWidth, 0);
@@ -1030,41 +1216,49 @@ function drawPlayer(tick) {
 }
 
 function drawScene(tick) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawRect(0, 0, world.width, world.height, '#a6d7d5');
   drawMountains();
   clouds.forEach((cloud) => drawCloud(cloud, tick));
-  drawRect(0, 56, world.width, world.height - 56, '#74ad59');
-  drawRect(0, 146, world.width, 34, '#8dc96b');
+  drawRect(0, 72, world.width, world.height - 72, '#76af5b');
+  drawRect(0, 342, world.width, world.height - 342, '#8dc96b');
 
-  for (let y = 60; y < world.height; y += 10) {
-    for (let x = (y % 20 === 0 ? 2 : 8); x < world.width; x += 18) {
+  for (let y = 78; y < world.height; y += 12) {
+    for (let x = (y % 24 === 0 ? 4 : 10); x < world.width; x += 18) {
       drawRect(x, y, 2, 2, '#87be66');
     }
   }
 
-  drawTree(8, 62, Math.round(Math.sin(tick / 18)));
-  drawTree(96, 34, Math.round(Math.cos(tick / 20)));
-  drawTree(182, 34, Math.round(Math.sin(tick / 15)));
-  drawTree(292, 56, Math.round(Math.cos(tick / 17)));
-  drawFarmHouse();
-  drawArcadeCabin(tick);
-  drawPaths();
-  drawPond(tick);
-  drawFences();
-  drawFlowerPatch(tick);
+  drawRoads();
+  drawSouthGate();
+  drawCastle(tick);
+  drawCathedral();
+  drawGuildInn();
+  drawWorkshop();
+  drawHospital();
+  drawArena();
+  drawMarket();
+  drawReversiCabin(tick);
+  drawFountain(tick);
+  drawFlowerBeds(tick);
+  trees.forEach((tree) => drawTree(tree, tick));
+  lamps.forEach((lamp) => drawLamp(lamp, tick));
   drawSparkle(tick);
   drawPlayer(tick);
 }
 
 function loop(tick) {
   updatePlayer();
+  updateCamera();
   syncUi();
+  updateHeroChip();
   drawScene(tick / 16.6);
   requestAnimationFrame(loop);
 }
 
 renderTravelerCards();
 updateTravelerPreview();
+updateCamera();
 updateHeroChip();
 syncUi();
 requestAnimationFrame(loop);
