@@ -190,8 +190,8 @@ def make_sprite_sheet(traveler):
     order = [
         ("down", 0),
         ("down", 1),
-        ("side", 0),
-        ("side", 1),
+        ("right", 0),
+        ("right", 1),
         ("up", 0),
         ("up", 1),
     ]
