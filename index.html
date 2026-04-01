@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黑白棋入口</title>
+<meta http-equiv="refresh" content="0; url=./reversi.html">
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(127,255,127,0.2), transparent 35%),
+    linear-gradient(135deg, #071b11 0%, #103122 52%, #08140f 100%);
+  color: #eefbf0;
+}
+.card {
+  width: min(92vw, 420px);
+  padding: 28px 24px;
+  border-radius: 20px;
+  text-align: center;
+  background: rgba(7, 24, 16, 0.78);
+  border: 1px solid rgba(127, 255, 127, 0.18);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+}
+h1 {
+  margin: 0 0 10px;
+  font-size: 2rem;
+}
+p {
+  margin: 0;
+  opacity: 0.82;
+  line-height: 1.6;
+}
+a {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  background: #9ef5a9;
+  color: #0d2d19;
+  font-weight: 700;
+}
+</style>
+<script>
+window.location.replace('./reversi.html');
+</script>
+</head>
+<body>
+  <main class="card">
+    <h1>黑白棋</h1>
+    <p>正在进入游戏，如果没有自动跳转，可以点下面的按钮。</p>
+    <a href="./reversi.html">进入 Reversi</a>
+  </main>
+</body>
+</html>
