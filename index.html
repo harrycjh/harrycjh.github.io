@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v1.4 -->
+<!-- 法兰城入口 v1.5 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v1.4</title>
+<title>法兰城 v1.5</title>
 <style>
 :root {
   --ink: #102016;
@@ -504,7 +504,7 @@ canvas {
         <div class="eyebrow">Falan City Gate</div>
         <div class="title-row">
           <h1>法兰城</h1>
-          <span class="title-version">v1.4</span>
+          <span class="title-version">v1.5</span>
         </div>
         <div class="subtitle">在法兰城里慢慢逛，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
       </div>
@@ -558,6 +558,7 @@ canvas {
         <div class="button-row">
           <button class="btn" id="directPlayBtn" type="button">直接进入黑白棋</button>
           <button class="btn secondary" id="focusCabinBtn" type="button">传送到小屋门口</button>
+          <button class="btn secondary" id="backToSelectionBtn" type="button">回到选人界面</button>
         </div>
 
         <div class="footer-note">现在这里已经是法兰城雏形了，后续我们还可以继续往里加传送石、旅馆、武器店、宠物店和 NPC。</div>
@@ -607,6 +608,7 @@ const statusText = document.getElementById('statusText');
 const enterBtn = document.getElementById('enterBtn');
 const directPlayBtn = document.getElementById('directPlayBtn');
 const focusCabinBtn = document.getElementById('focusCabinBtn');
+const backToSelectionBtn = document.getElementById('backToSelectionBtn');
 const entryOverlay = document.getElementById('entryOverlay');
 const travelerGrid = document.getElementById('travelerGrid');
 const previewName = document.getElementById('previewName');
@@ -761,6 +763,18 @@ function confirmTravelerSelection() {
   syncUi();
 }
 
+function openTravelerSelection() {
+  townReady = false;
+  player.moving = false;
+  keyState.up = false;
+  keyState.down = false;
+  keyState.left = false;
+  keyState.right = false;
+  renderTravelerCards();
+  updateTravelerPreview();
+  entryOverlay.classList.add('show');
+}
+
 function goToReversi() {
   document.body.classList.add('leaving');
   setTimeout(() => {
@@ -807,6 +821,7 @@ focusCabinBtn.addEventListener('click', () => {
   player.dir = 'up';
   syncUi();
 });
+backToSelectionBtn.addEventListener('click', openTravelerSelection);
 enterTownBtn.addEventListener('click', confirmTravelerSelection);
 
 window.addEventListener('keydown', (event) => {
