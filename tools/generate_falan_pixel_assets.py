@@ -5,8 +5,10 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 AVATAR_DIR = ROOT / "assets" / "falan" / "avatars"
+PREVIEW_DIR = ROOT / "assets" / "falan" / "previews"
 SPRITE_DIR = ROOT / "assets" / "falan" / "sprites"
 AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+PREVIEW_DIR.mkdir(parents=True, exist_ok=True)
 SPRITE_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -109,6 +111,10 @@ def make_avatar(traveler):
         px(draw, scale, 3, 2, 10, 3, traveler["coat"])
         px(draw, scale, 2, 4, 2, 2, traveler["accent"])
         px(draw, scale, 12, 4, 2, 2, traveler["accent"])
+        px(draw, scale, 0, 7, 3, 2, traveler["coat"])
+        px(draw, scale, 1, 6, 2, 1, traveler["accent"])
+        px(draw, scale, 13, 7, 3, 2, traveler["coat"])
+        px(draw, scale, 13, 6, 2, 1, traveler["accent"])
         px(draw, scale, 5, 10, 6, 1, traveler["detail"])
 
     image.save(AVATAR_DIR / f"{traveler['id']}.png")
@@ -181,7 +187,31 @@ def draw_body(draw, traveler, direction, step):
         px(draw, 1, 4, 2, 8, 3, coat)
         px(draw, 1, 2, 5, 2, 2, accent)
         px(draw, 1, 12, 5, 2, 2, accent)
+        if direction in ("down", "up"):
+            px(draw, 1, 1, 8, 3, 2, coat)
+            px(draw, 1, 2, 7, 2, 1, accent)
+            px(draw, 1, 12, 8, 3, 2, coat)
+            px(draw, 1, 12, 7, 2, 1, accent)
+        else:
+            px(draw, 1, 1, 7, 2, 2, accent)
+            px(draw, 1, 2, 9, 2, 1, coat)
+            px(draw, 1, 11, 7, 4, 2, coat)
+            px(draw, 1, 13, 6, 2, 1, accent)
         px(draw, 1, 6, 10, 4, 1, detail)
+
+
+def make_preview(traveler):
+    base = Image.new("RGBA", (24, 28), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(base)
+    px(draw, 1, 7, 23, 10, 2, (18, 28, 22, 180))
+
+    body = Image.new("RGBA", (16, 20), (0, 0, 0, 0))
+    body_draw = ImageDraw.Draw(body)
+    draw_body(body_draw, traveler, "down", 0)
+    base.alpha_composite(body, (4, 3))
+
+    scaled = base.resize((96, 112), Image.Resampling.NEAREST)
+    scaled.save(PREVIEW_DIR / f"{traveler['id']}.png")
 
 
 def make_sprite_sheet(traveler):
@@ -209,6 +239,7 @@ def make_sprite_sheet(traveler):
 def main():
     for traveler in TRAVELERS:
         make_avatar(traveler)
+        make_preview(traveler)
         make_sprite_sheet(traveler)
 
 
