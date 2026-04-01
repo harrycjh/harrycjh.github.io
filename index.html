@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.1 -->
+<!-- 法兰城 v3.2 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.1</title>
+<title>法兰城 v3.2</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -252,9 +252,9 @@ button:hover {
       <div class="eyebrow">Falan Isometric Trial</div>
       <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.1</div>
+        <div class="version">v3.2</div>
       </div>
-      <p>这是法兰城首页的 45 度等角试装版。现在不只是地面转成等角，城堡、圣堂、旅馆、工房、医院、竞技场和会馆本身也都改成了等角建筑 sprite，方便你直接判断值不值得继续往这个方向做。</p>
+      <p>这是法兰城首页的素材试装版。主建筑和城镇主体改用 Xilurus 的像素等角素材重新拼装，树木、石墙和部分结构细节混搭 OpenGameArt，先让你看一眼“更像一座 JRPG 主城”的气质能不能立住。</p>
     </section>
 
     <section class="layout">
@@ -262,18 +262,18 @@ button:hover {
         <div class="map-head">
           <div>
             <h2>晨光法兰城</h2>
-            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这个版本已经接入首页，但我保留了旧版入口，方便你随时对比。</p>
+            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这一版开始用真实免费素材拼装法兰城，重点看建筑比例、树木密度和主城味道有没有出来。</p>
           </div>
           <div class="map-badges">
             <div class="badge">45° 等角投影</div>
-            <div class="badge">建筑已转等角</div>
-            <div class="badge">首页试装版</div>
+            <div class="badge">Xilurus 主城素材</div>
+            <div class="badge">OGA 树木与石构</div>
           </div>
         </div>
         <div class="canvas-wrap">
           <canvas id="isoCanvas" width="720" height="480"></canvas>
         </div>
-        <div class="note">当前地图里已经摆进里谢里雅城、圣堂、旅馆工会、工房、医院、竞技场和黑白棋会馆。你主要看两件事：一是 45 度观感顺不顺，二是建筑和道路的比例是不是更像一座真正的主城。</div>
+        <div class="note">当前地图里已经用素材重拼了里谢里雅城、圣堂、旅馆工会、工房、医院、竞技场和黑白棋会馆，也补了市集地毯、桌子、灌木和树木。你主要看三件事：45 度观感顺不顺，法兰城有没有“小而暖”的冒险主城味道，以及 Xilurus 这套素材能不能扛住你后续扩图。</div>
       </div>
 
       <aside class="side">
@@ -306,7 +306,7 @@ button:hover {
             <div class="legend-item"><span class="swatch" style="background:#d7c6aa;"></span>王城前石砖区</div>
             <div class="legend-item"><span class="swatch" style="background:#6db4c0;"></span>中央喷泉水面</div>
           </div>
-          <p class="foot">如果你觉得这版方向不对，可以直接点“查看旧版”对比；如果方向对，我下一步就把交互、建筑精度和城镇结构继续往这个等角版本上提。</p>
+          <p class="foot">这版已经接入真实素材。后续如果你觉得方向对，我就继续往法兰城四区、城门、室内和更大的里谢里雅城外墙扩。</p>
         </section>
       </aside>
     </section>
@@ -346,13 +346,21 @@ let travelerIndex = Math.max(0, travelers.findIndex((traveler) => traveler.id ==
 if (travelerIndex < 0) travelerIndex = 1;
 
 const images = {
-  castle: loadImage('./assets/falan/building-drafts-iso/castle-iso-v1.png'),
-  cathedral: loadImage('./assets/falan/building-drafts-iso/cathedral-iso-v1.png'),
-  guildInn: loadImage('./assets/falan/building-drafts-iso/guild-inn-iso-v1.png'),
-  workshop: loadImage('./assets/falan/building-drafts-iso/workshop-iso-v1.png'),
-  hospital: loadImage('./assets/falan/building-drafts-iso/hospital-iso-v1.png'),
-  arena: loadImage('./assets/falan/building-drafts-iso/arena-iso-v1.png'),
-  reversiHall: loadImage('./assets/falan/building-drafts-iso/reversi-hall-iso-v1.png')
+  castle: loadImage('./assets/falan/kitbash/buildings/castle-xil-oga.png'),
+  cathedral: loadImage('./assets/falan/kitbash/buildings/cathedral-xil-oga.png'),
+  guildInn: loadImage('./assets/falan/kitbash/buildings/guild-inn-xil-oga.png'),
+  workshop: loadImage('./assets/falan/kitbash/buildings/workshop-xil-oga.png'),
+  hospital: loadImage('./assets/falan/kitbash/buildings/hospital-xil-oga.png'),
+  arena: loadImage('./assets/falan/kitbash/buildings/arena-xil-oga.png'),
+  reversiHall: loadImage('./assets/falan/kitbash/buildings/reversi-hall-xil-oga.png'),
+  treeOak: loadImage('./assets/falan/kitbash/flora/tree-oak.png'),
+  treeRound: loadImage('./assets/falan/kitbash/flora/tree-round.png'),
+  treePine: loadImage('./assets/falan/kitbash/flora/tree-pine.png'),
+  bushWide: loadImage('./assets/falan/kitbash/flora/bush-wide.png'),
+  marketRed: loadImage('./assets/falan/kitbash/props/market-red.png'),
+  marketRedAlt: loadImage('./assets/falan/kitbash/props/market-red-alt.png'),
+  marketTable: loadImage('./assets/falan/kitbash/props/market-table.png'),
+  plankFloor: loadImage('./assets/falan/kitbash/props/plank-floor.png')
 };
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
 
@@ -377,19 +385,38 @@ const player = {
 };
 
 const buildings = [
-  { id: 'castle', tx: 9, ty: 2.2, scale: 0.31, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 7.4, y: 0.8, w: 3.2, h: 2.1 } },
-  { id: 'cathedral', tx: 4.2, ty: 5.2, scale: 0.3, label: '大圣堂', focus: '西区圣堂', footprint: { x: 3.2, y: 4.1, w: 2.2, h: 1.8 } },
-  { id: 'guildInn', tx: 13.7, ty: 5.3, scale: 0.33, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 12.7, y: 4.2, w: 2.6, h: 1.9 } },
-  { id: 'workshop', tx: 3.6, ty: 9.2, scale: 0.28, label: '工房', focus: '西区工匠街', footprint: { x: 2.8, y: 8.5, w: 1.8, h: 1.4 } },
-  { id: 'hospital', tx: 14.3, ty: 9.1, scale: 0.34, label: '医院', focus: '东区医院', footprint: { x: 13.6, y: 8.5, w: 1.8, h: 1.4 } },
-  { id: 'arena', tx: 5.1, ty: 12.3, scale: 0.31, label: '竞技场', focus: '竞技场看台', footprint: { x: 4.2, y: 11.3, w: 2.4, h: 1.5 } },
-  { id: 'reversiHall', tx: 13.7, ty: 12.2, scale: 0.35, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 12.9, y: 11.6, w: 1.8, h: 1.5 } }
+  { id: 'castle', tx: 9, ty: 2.2, scale: 0.44, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 7.4, y: 0.8, w: 3.2, h: 2.1 } },
+  { id: 'cathedral', tx: 4.25, ty: 5.25, scale: 0.52, label: '大圣堂', focus: '西区圣堂', footprint: { x: 3.2, y: 4.1, w: 2.2, h: 1.8 } },
+  { id: 'guildInn', tx: 13.7, ty: 5.3, scale: 0.54, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 12.7, y: 4.2, w: 2.6, h: 1.9 } },
+  { id: 'workshop', tx: 3.7, ty: 9.2, scale: 0.47, label: '工房', focus: '西区工匠街', footprint: { x: 2.8, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'hospital', tx: 14.2, ty: 9.1, scale: 0.54, label: '医院', focus: '东区医院', footprint: { x: 13.6, y: 8.5, w: 1.8, h: 1.4 } },
+  { id: 'arena', tx: 5.15, ty: 12.3, scale: 0.58, label: '竞技场', focus: '竞技场看台', footprint: { x: 4.2, y: 11.3, w: 2.4, h: 1.5 } },
+  { id: 'reversiHall', tx: 13.7, ty: 12.2, scale: 0.56, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 12.9, y: 11.6, w: 1.8, h: 1.5 } }
 ];
 
 const decorativeTrees = [
-  { tx: 1.1, ty: 4.6, size: 1.05 }, { tx: 1.2, ty: 7.6, size: 1.2 }, { tx: 2.2, ty: 13.4, size: 1.1 },
-  { tx: 5.8, ty: 2.8, size: 1.05 }, { tx: 11.9, ty: 2.8, size: 1.05 }, { tx: 16.2, ty: 6.8, size: 1.15 },
-  { tx: 16.5, ty: 12.8, size: 1.18 }, { tx: 8.6, ty: 14.8, size: 1.05 }, { tx: 10.8, ty: 14.9, size: 1.05 }
+  { tx: 1.25, ty: 4.7, asset: 'treePine', scale: 0.48, shadow: [16, 8] },
+  { tx: 1.25, ty: 7.6, asset: 'treeOak', scale: 0.42, shadow: [18, 9] },
+  { tx: 2.2, ty: 13.2, asset: 'treeRound', scale: 0.46, shadow: [18, 8] },
+  { tx: 5.9, ty: 2.9, asset: 'treePine', scale: 0.44, shadow: [15, 8] },
+  { tx: 11.8, ty: 2.9, asset: 'treePine', scale: 0.44, shadow: [15, 8] },
+  { tx: 16.2, ty: 6.7, asset: 'treeOak', scale: 0.44, shadow: [18, 9] },
+  { tx: 16.5, ty: 12.8, asset: 'treeRound', scale: 0.5, shadow: [19, 9] },
+  { tx: 8.5, ty: 14.75, asset: 'treeRound', scale: 0.42, shadow: [16, 8] },
+  { tx: 10.7, ty: 14.75, asset: 'treeRound', scale: 0.42, shadow: [16, 8] }
+];
+
+const decorativeProps = [
+  { tx: 12.55, ty: 5.95, asset: 'marketRed', scale: 1.0, shadow: [8, 4] },
+  { tx: 14.95, ty: 6.1, asset: 'marketRedAlt', scale: 1.0, shadow: [8, 4] },
+  { tx: 13.95, ty: 6.55, asset: 'marketTable', scale: 1.0, shadow: [8, 4] },
+  { tx: 13.2, ty: 9.8, asset: 'bushWide', scale: 0.38, shadow: [11, 5] },
+  { tx: 14.8, ty: 9.85, asset: 'bushWide', scale: 0.35, shadow: [11, 5] },
+  { tx: 4.15, ty: 11.3, asset: 'plankFloor', scale: 0.92, shadow: [12, 5] },
+  { tx: 5.95, ty: 11.3, asset: 'plankFloor', scale: 0.92, shadow: [12, 5] },
+  { tx: 5.15, ty: 11.8, asset: 'marketTable', scale: 1.0, shadow: [8, 4] },
+  { tx: 12.9, ty: 12.7, asset: 'marketRed', scale: 1.0, shadow: [8, 4] },
+  { tx: 14.3, ty: 12.75, asset: 'marketRedAlt', scale: 1.0, shadow: [8, 4] }
 ];
 
 function loadImage(src) {
@@ -481,31 +508,22 @@ function drawDiamond(tx, ty, colors, elevation = 0) {
   ctx.fill();
 }
 
-function drawTree(tree, tick) {
-  const point = isoToScreen(tree.tx, tree.ty);
-  const sway = Math.sin(tick / 14 + tree.tx * 0.7) * 2;
-  const size = tree.size;
-  ctx.fillStyle = 'rgba(13, 20, 14, 0.28)';
-  ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 8, 12 * size, 5 * size, 0, 0, Math.PI * 2);
-  ctx.fill();
+function drawPlacedSprite(item, image) {
+  if (!image.complete || !image.naturalWidth) return;
+  const point = isoToScreen(item.tx, item.ty);
+  const width = Math.max(1, Math.round(image.naturalWidth * item.scale));
+  const height = Math.max(1, Math.round(image.naturalHeight * item.scale));
+  const x = Math.round(point.x - width / 2);
+  const y = Math.round(point.y - height + (item.lift || 6));
 
-  ctx.fillStyle = '#6d4b31';
-  ctx.fillRect(Math.round(point.x - 3 * size), Math.round(point.y - 18 * size), Math.round(6 * size), Math.round(22 * size));
-  ctx.fillStyle = '#5a8a44';
-  ctx.beginPath();
-  ctx.moveTo(point.x, point.y - 44 * size);
-  ctx.lineTo(point.x + 18 * size + sway, point.y - 14 * size);
-  ctx.lineTo(point.x - 18 * size + sway, point.y - 14 * size);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = '#86be63';
-  ctx.beginPath();
-  ctx.moveTo(point.x, point.y - 58 * size);
-  ctx.lineTo(point.x + 14 * size + sway, point.y - 24 * size);
-  ctx.lineTo(point.x - 14 * size + sway, point.y - 24 * size);
-  ctx.closePath();
-  ctx.fill();
+  if (item.shadow) {
+    ctx.fillStyle = 'rgba(13, 20, 14, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(point.x, point.y + 6, item.shadow[0], item.shadow[1], 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.drawImage(image, x, y, width, height);
 }
 
 function drawFountain(tick) {
@@ -749,13 +767,15 @@ function drawScene(tick) {
 
   const renderables = [
     ...decorativeTrees.map((tree) => ({ type: 'tree', sort: tree.tx + tree.ty + 0.15, tree })),
+    ...decorativeProps.map((prop) => ({ type: 'prop', sort: prop.tx + prop.ty + 0.18, prop })),
     ...buildings.map((building) => ({ type: 'building', sort: building.tx + building.ty + 0.25, building })),
     { type: 'player', sort: player.tx + player.ty + 0.22 }
   ].sort((a, b) => a.sort - b.sort);
 
   const focus = currentFocus();
   renderables.forEach((item) => {
-    if (item.type === 'tree') drawTree(item.tree, tick);
+    if (item.type === 'tree') drawPlacedSprite(item.tree, images[item.tree.asset]);
+    if (item.type === 'prop') drawPlacedSprite(item.prop, images[item.prop.asset]);
     if (item.type === 'building') drawBuilding(item.building, focus.id);
     if (item.type === 'player') drawPlayer();
   });
