@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.3 -->
+<!-- 法兰城 v3.4 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.3</title>
+<title>法兰城 v3.4</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -252,9 +252,9 @@ button:hover {
       <div class="eyebrow">Falan Isometric Trial</div>
       <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.3</div>
+        <div class="version">v3.4</div>
       </div>
-      <p>这是法兰城首页的放大扩图区试装版。主建筑和城镇主体继续沿用 Xilurus 的像素等角素材，树木和石构混搭 OpenGameArt，但这次把主城比例、可走范围和街区留白都往外扩了一圈，先看它能不能更像一座真正能逛的小城。</p>
+      <p>这是法兰城首页的超扩图区试装版。主建筑和城镇主体继续沿用 Xilurus 的像素等角素材，树木和石构混搭 OpenGameArt，这次把整体观感再放大约 50%，并把法兰城世界面积拉到上一版的约 3 倍，改成跟随视角后重点看它像不像一座真正能逛的 JRPG 主城。</p>
     </section>
 
     <section class="layout">
@@ -262,18 +262,18 @@ button:hover {
         <div class="map-head">
           <div>
             <h2>晨光法兰城</h2>
-            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这一版把主城整体放大并扩图，重点看主路、喷泉广场、东南会馆和北侧王城的空间感是不是更舒服。</p>
+            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这一版已经切成跟随视角，重点看放大后的建筑、宽很多的主路，以及真正扩开的四区空间是不是更像法兰城。</p>
           </div>
           <div class="map-badges">
             <div class="badge">45° 等角投影</div>
             <div class="badge">Xilurus 主城素材</div>
-            <div class="badge">扩图放大版</div>
+            <div class="badge">3 倍面积跟随视角</div>
           </div>
         </div>
         <div class="canvas-wrap">
-          <canvas id="isoCanvas" width="820" height="560"></canvas>
+          <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">当前地图已经把里谢里雅城、圣堂、旅馆工会、工房、医院、竞技场和黑白棋会馆整体放大，同时把南侧和东西两翼空地扩开了，行走空间也更宽。你主要看三件事：地图有没有更舒展，建筑比例会不会更顺眼，以及会不会比上一版更像能逛的法兰城。</div>
+        <div class="note">当前地图已经切到更大的跟随视角，并把里谢里雅城、圣堂、旅馆工会、工房、医院、竞技场和黑白棋会馆全部放大了。你主要看三件事：一是镜头跟着走时有没有主城感，二是建筑尺度会不会更舒服，三是扩开的法兰城有没有比上一版更像一张真正的世界地图。</div>
       </div>
 
       <aside class="side">
@@ -306,7 +306,7 @@ button:hover {
             <div class="legend-item"><span class="swatch" style="background:#d7c6aa;"></span>王城前石砖区</div>
             <div class="legend-item"><span class="swatch" style="background:#6db4c0;"></span>中央喷泉水面</div>
           </div>
-          <p class="foot">这版已经把主城整体放大。后续如果方向对，我就继续往法兰城四区、城门、室内和更完整的里谢里雅城外墙扩。</p>
+          <p class="foot">这版已经把法兰城做成更大的跟随视角。后续如果方向对，我就继续往四区、城门、室内和更完整的里谢里雅城外墙扩。</p>
         </section>
       </aside>
     </section>
@@ -367,61 +367,87 @@ const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler
 const keyState = { up: false, down: false, left: false, right: false };
 
 const world = {
-  cols: 22,
-  rows: 20,
-  tileW: 38,
-  tileH: 19,
+  cols: 38,
+  rows: 34,
+  tileW: 56,
+  tileH: 28,
   originX: canvas.width / 2,
-  originY: 86
+  originY: 448
+};
+
+const city = {
+  centerTx: 19,
+  centerTy: 17,
+  castleTx: 19,
+  castleTy: 3.8,
+  fountainTx: 19,
+  fountainTy: 17
+};
+
+const camera = {
+  x: 0,
+  y: 0,
+  marginX: 110,
+  marginTop: 76,
+  marginBottom: 88
 };
 
 const player = {
-  tx: 11,
-  ty: 16,
+  tx: 19,
+  ty: 29.5,
   dir: 'up',
   step: 0,
   moving: false,
-  speed: 0.062
+  speed: 0.08
 };
 
 const buildings = [
-  { id: 'castle', tx: 11, ty: 2.4, scale: 0.54, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 8.9, y: 0.9, w: 4.2, h: 2.5 } },
-  { id: 'cathedral', tx: 5.4, ty: 5.9, scale: 0.64, label: '大圣堂', focus: '西区圣堂', footprint: { x: 4.1, y: 4.8, w: 2.7, h: 2.1 } },
-  { id: 'guildInn', tx: 16.4, ty: 5.9, scale: 0.66, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 14.8, y: 4.7, w: 3.2, h: 2.3 } },
-  { id: 'workshop', tx: 4.9, ty: 10.8, scale: 0.58, label: '工房', focus: '西区工匠街', footprint: { x: 3.8, y: 10.0, w: 2.3, h: 1.8 } },
-  { id: 'hospital', tx: 17.0, ty: 10.6, scale: 0.66, label: '医院', focus: '东区医院', footprint: { x: 15.9, y: 9.7, w: 2.2, h: 1.8 } },
-  { id: 'arena', tx: 6.2, ty: 15.0, scale: 0.72, label: '竞技场', focus: '竞技场看台', footprint: { x: 4.8, y: 13.8, w: 2.9, h: 2.0 } },
-  { id: 'reversiHall', tx: 16.2, ty: 15.1, scale: 0.68, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 15.0, y: 14.0, w: 2.4, h: 1.9 } }
+  { id: 'castle', tx: 19, ty: 3.8, scale: 0.82, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 15.9, y: 1.2, w: 6.4, h: 3.6 } },
+  { id: 'cathedral', tx: 9.2, ty: 8.4, scale: 0.96, label: '大圣堂', focus: '西区圣堂', footprint: { x: 7.1, y: 6.8, w: 4.0, h: 3.0 } },
+  { id: 'guildInn', tx: 29.4, ty: 8.4, scale: 0.98, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 27.1, y: 6.8, w: 4.8, h: 3.2 } },
+  { id: 'workshop', tx: 8.4, ty: 18.2, scale: 0.86, label: '工房', focus: '西区工匠街', footprint: { x: 6.9, y: 16.7, w: 3.2, h: 2.5 } },
+  { id: 'hospital', tx: 30.0, ty: 18.1, scale: 0.98, label: '医院', focus: '东区医院', footprint: { x: 28.4, y: 16.8, w: 3.3, h: 2.6 } },
+  { id: 'arena', tx: 9.0, ty: 27.5, scale: 1.08, label: '竞技场', focus: '竞技场看台', footprint: { x: 7.0, y: 25.0, w: 4.8, h: 3.2 } },
+  { id: 'reversiHall', tx: 29.2, ty: 27.8, scale: 1.02, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 27.4, y: 26.0, w: 3.6, h: 2.7 } }
 ];
 
 const decorativeTrees = [
-  { tx: 1.8, ty: 4.9, asset: 'treePine', scale: 0.58, shadow: [20, 10] },
-  { tx: 1.8, ty: 8.6, asset: 'treeOak', scale: 0.54, shadow: [22, 11] },
-  { tx: 2.6, ty: 16.0, asset: 'treeRound', scale: 0.58, shadow: [22, 10] },
-  { tx: 7.1, ty: 2.9, asset: 'treePine', scale: 0.52, shadow: [18, 9] },
-  { tx: 14.9, ty: 2.8, asset: 'treePine', scale: 0.52, shadow: [18, 9] },
-  { tx: 20.0, ty: 7.0, asset: 'treeOak', scale: 0.56, shadow: [22, 11] },
-  { tx: 19.6, ty: 15.8, asset: 'treeRound', scale: 0.62, shadow: [23, 11] },
-  { tx: 9.4, ty: 18.2, asset: 'treeRound', scale: 0.54, shadow: [20, 9] },
-  { tx: 12.8, ty: 18.0, asset: 'treeRound', scale: 0.54, shadow: [20, 9] },
-  { tx: 4.1, ty: 17.6, asset: 'treePine', scale: 0.5, shadow: [18, 9] },
-  { tx: 17.9, ty: 18.2, asset: 'treeOak', scale: 0.5, shadow: [20, 10] }
+  { tx: 3.6, ty: 6.0, asset: 'treePine', scale: 0.84, shadow: [28, 14] },
+  { tx: 4.2, ty: 11.4, asset: 'treeOak', scale: 0.78, shadow: [30, 15] },
+  { tx: 4.2, ty: 28.6, asset: 'treeRound', scale: 0.82, shadow: [30, 14] },
+  { tx: 12.0, ty: 4.4, asset: 'treePine', scale: 0.74, shadow: [26, 13] },
+  { tx: 26.6, ty: 4.6, asset: 'treePine', scale: 0.74, shadow: [26, 13] },
+  { tx: 35.0, ty: 11.0, asset: 'treeOak', scale: 0.8, shadow: [30, 15] },
+  { tx: 34.0, ty: 28.8, asset: 'treeRound', scale: 0.88, shadow: [32, 15] },
+  { tx: 15.2, ty: 31.2, asset: 'treeRound', scale: 0.78, shadow: [28, 13] },
+  { tx: 22.8, ty: 31.0, asset: 'treeRound', scale: 0.78, shadow: [28, 13] },
+  { tx: 8.2, ty: 32.0, asset: 'treePine', scale: 0.72, shadow: [26, 13] },
+  { tx: 29.8, ty: 32.0, asset: 'treeOak', scale: 0.72, shadow: [28, 14] },
+  { tx: 10.8, ty: 13.4, asset: 'treeRound', scale: 0.72, shadow: [26, 12] },
+  { tx: 27.6, ty: 13.4, asset: 'treeRound', scale: 0.72, shadow: [26, 12] }
 ];
 
 const decorativeProps = [
-  { tx: 14.9, ty: 6.7, asset: 'marketRed', scale: 1.18, shadow: [9, 5] },
-  { tx: 17.4, ty: 6.9, asset: 'marketRedAlt', scale: 1.18, shadow: [9, 5] },
-  { tx: 16.1, ty: 7.45, asset: 'marketTable', scale: 1.18, shadow: [9, 5] },
-  { tx: 15.8, ty: 11.7, asset: 'bushWide', scale: 0.48, shadow: [14, 6] },
-  { tx: 17.9, ty: 11.8, asset: 'bushWide', scale: 0.45, shadow: [14, 6] },
-  { tx: 5.0, ty: 13.9, asset: 'plankFloor', scale: 1.15, shadow: [14, 6] },
-  { tx: 7.2, ty: 13.9, asset: 'plankFloor', scale: 1.15, shadow: [14, 6] },
-  { tx: 6.1, ty: 14.6, asset: 'marketTable', scale: 1.15, shadow: [9, 5] },
-  { tx: 15.5, ty: 15.9, asset: 'marketRed', scale: 1.16, shadow: [9, 5] },
-  { tx: 17.0, ty: 15.95, asset: 'marketRedAlt', scale: 1.16, shadow: [9, 5] },
-  { tx: 9.7, ty: 17.1, asset: 'bushWide', scale: 0.44, shadow: [13, 6] },
-  { tx: 12.3, ty: 16.9, asset: 'bushWide', scale: 0.44, shadow: [13, 6] }
+  { tx: 27.2, ty: 10.2, asset: 'marketRed', scale: 1.7, shadow: [13, 6] },
+  { tx: 31.0, ty: 10.5, asset: 'marketRedAlt', scale: 1.7, shadow: [13, 6] },
+  { tx: 29.2, ty: 11.4, asset: 'marketTable', scale: 1.55, shadow: [13, 6] },
+  { tx: 27.8, ty: 19.8, asset: 'bushWide', scale: 0.7, shadow: [18, 8] },
+  { tx: 31.0, ty: 20.1, asset: 'bushWide', scale: 0.68, shadow: [18, 8] },
+  { tx: 8.3, ty: 24.8, asset: 'plankFloor', scale: 1.7, shadow: [18, 8] },
+  { tx: 11.2, ty: 24.8, asset: 'plankFloor', scale: 1.7, shadow: [18, 8] },
+  { tx: 9.8, ty: 25.9, asset: 'marketTable', scale: 1.45, shadow: [13, 6] },
+  { tx: 27.8, ty: 28.7, asset: 'marketRed', scale: 1.65, shadow: [13, 6] },
+  { tx: 30.4, ty: 28.8, asset: 'marketRedAlt', scale: 1.65, shadow: [13, 6] },
+  { tx: 16.1, ty: 28.0, asset: 'bushWide', scale: 0.66, shadow: [18, 8] },
+  { tx: 22.1, ty: 27.8, asset: 'bushWide', scale: 0.66, shadow: [18, 8] }
 ];
+
+function isoToWorld(tx, ty) {
+  return {
+    x: (tx - ty) * world.tileW / 2,
+    y: (tx + ty) * world.tileH / 2
+  };
+}
 
 function loadImage(src) {
   const image = new Image();
@@ -430,9 +456,10 @@ function loadImage(src) {
 }
 
 function isoToScreen(tx, ty) {
+  const point = isoToWorld(tx, ty);
   return {
-    x: (tx - ty) * world.tileW / 2 + world.originX,
-    y: (tx + ty) * world.tileH / 2 + world.originY
+    x: point.x - camera.x + world.originX,
+    y: point.y - camera.y + world.originY
   };
 }
 
@@ -450,12 +477,20 @@ function collides(tx, ty) {
 }
 
 function tileType(tx, ty) {
-  const dx = Math.abs(tx - 11);
-  const dy = Math.abs(ty - 10);
-  if (tx >= 9 && tx <= 13 && ty <= 5) return 'stone';
-  if (dx <= 1.2 || dy <= 1.2) return 'road';
-  if (dx <= 2.4 && dy <= 2.4) return 'plaza';
-  if (tx >= 10 && tx <= 12 && ty >= 9 && ty <= 11) return 'fountain';
+  const dx = Math.abs(tx - city.centerTx);
+  const dy = Math.abs(ty - city.centerTy);
+  const onMainNorthSouth = dx <= 1.5 && ty >= 6 && ty <= 31;
+  const onMainEastWest = dy <= 1.5 && tx >= 7 && tx <= 31;
+  const onNorthWestRoad = Math.abs(ty - 9.5) <= 1.2 && tx >= 9 && tx <= 19;
+  const onNorthEastRoad = Math.abs(ty - 9.5) <= 1.2 && tx >= 19 && tx <= 31;
+  const onSouthWestRoad = Math.abs(ty - 26.5) <= 1.2 && tx >= 8 && tx <= 19;
+  const onSouthEastRoad = Math.abs(ty - 26.5) <= 1.2 && tx >= 19 && tx <= 31;
+  const onWestLane = Math.abs(tx - 9.5) <= 1.2 && ty >= 13 && ty <= 26;
+  const onEastLane = Math.abs(tx - 29.5) <= 1.2 && ty >= 13 && ty <= 26;
+  if (tx >= 16 && tx <= 22 && ty <= 7) return 'stone';
+  if (onMainNorthSouth || onMainEastWest || onNorthWestRoad || onNorthEastRoad || onSouthWestRoad || onSouthEastRoad || onWestLane || onEastLane) return 'road';
+  if (dx <= 3.4 && dy <= 3.4) return 'plaza';
+  if (tx >= city.fountainTx - 1 && tx <= city.fountainTx + 1 && ty >= city.fountainTy - 1 && ty <= city.fountainTy + 1) return 'fountain';
   return 'grass';
 }
 
@@ -531,19 +566,19 @@ function drawPlacedSprite(item, image) {
 }
 
 function drawFountain(tick) {
-  for (let ty = 9; ty <= 11; ty++) {
-    for (let tx = 10; tx <= 12; tx++) {
+  for (let ty = city.fountainTy - 1; ty <= city.fountainTy + 1; ty++) {
+    for (let tx = city.fountainTx - 1; tx <= city.fountainTx + 1; tx++) {
       drawDiamond(tx, ty, tilePalette('fountain', tx, ty), 1);
     }
   }
-  const point = isoToScreen(11, 10);
+  const point = isoToScreen(city.fountainTx, city.fountainTy);
   ctx.fillStyle = '#e9e5d7';
-  ctx.fillRect(Math.round(point.x - 7), Math.round(point.y - 31), 14, 24);
-  ctx.fillRect(Math.round(point.x - 18), Math.round(point.y - 18), 36, 6);
+  ctx.fillRect(Math.round(point.x - 10), Math.round(point.y - 40), 20, 30);
+  ctx.fillRect(Math.round(point.x - 24), Math.round(point.y - 23), 48, 8);
   const ripple = Math.sin(tick / 11) * 2;
   ctx.fillStyle = '#d9fbff';
-  ctx.fillRect(Math.round(point.x - 2), Math.round(point.y - 38), 4, 14);
-  ctx.fillRect(Math.round(point.x - 10 + ripple), Math.round(point.y - 12), 20, 4);
+  ctx.fillRect(Math.round(point.x - 3), Math.round(point.y - 52), 6, 16);
+  ctx.fillRect(Math.round(point.x - 13 + ripple), Math.round(point.y - 14), 26, 5);
 }
 
 function drawBuilding(building, focusId) {
@@ -578,18 +613,18 @@ function drawPlayer() {
   const shadowY = point.y + 6;
   ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
   ctx.beginPath();
-  ctx.ellipse(point.x, shadowY, 9, 4, 0, 0, Math.PI * 2);
+  ctx.ellipse(point.x, shadowY, 12, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (!sprite.complete || !sprite.naturalWidth) return;
   const walk = player.moving ? (Math.sin(player.step) > 0 ? 1 : 0) : 0;
   const base = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
   const frame = base + walk;
-  const scale = 1.18;
+  const scale = 1.45;
   const drawW = Math.round(spriteFrameWidth * scale);
   const drawH = Math.round(spriteFrameHeight * scale);
   const drawX = Math.round(point.x - drawW / 2);
-  const drawY = Math.round(point.y - 30);
+  const drawY = Math.round(point.y - 36);
 
   if (player.dir === 'left') {
     ctx.save();
@@ -604,12 +639,12 @@ function drawPlayer() {
 
 function areaName() {
   const { tx, ty } = player;
-  if (tx > 14.7 && ty > 13.6) return '黑白棋会馆';
-  if (ty < 5.4) return '里谢里雅城前';
-  if (tx < 7.4 && ty < 10.4) return '西区圣堂与工房';
-  if (tx > 14.4 && ty < 10.4) return '东区旅馆与医院';
-  if (tx < 8.5 && ty > 13.2) return '西区竞技场';
-  if (tx > 13.2 && ty > 9.8) return '东区市集';
+  if (tx > 26.5 && ty > 24.5) return '黑白棋会馆';
+  if (ty < 7.6) return '里谢里雅城前';
+  if (tx < 12.5 && ty < 20.5) return '西区圣堂与工房';
+  if (tx > 25.0 && ty < 20.5) return '东区旅馆与医院';
+  if (tx < 12.8 && ty > 23.5) return '西区竞技场';
+  if (tx > 24.5 && ty > 16.5) return '东区市集';
   return '中央广场';
 }
 
@@ -668,6 +703,22 @@ function fitPageToViewport() {
   const scale = Math.min(scaleX, scaleY, 1);
   pageRoot.style.transform = `scale(${scale})`;
   pageFrame.style.alignItems = naturalHeight * scale < window.innerHeight - 24 ? 'center' : 'flex-start';
+}
+
+function updateCamera() {
+  const target = isoToWorld(player.tx, player.ty);
+  const minWorldX = -world.rows * world.tileW / 2;
+  const maxWorldX = world.cols * world.tileW / 2;
+  const minWorldY = 0;
+  const maxWorldY = (world.cols + world.rows) * world.tileH / 2;
+
+  const minCameraX = minWorldX + world.originX - camera.marginX;
+  const maxCameraX = maxWorldX + world.originX - (canvas.width - camera.marginX);
+  const minCameraY = minWorldY + world.originY - camera.marginTop;
+  const maxCameraY = maxWorldY + world.originY - (canvas.height - camera.marginBottom);
+
+  camera.x = clamp(target.x, Math.min(minCameraX, maxCameraX), Math.max(minCameraX, maxCameraX));
+  camera.y = clamp(target.y, Math.min(minCameraY, maxCameraY), Math.max(minCameraY, maxCameraY));
 }
 
 window.addEventListener('keydown', (event) => {
@@ -758,9 +809,9 @@ function drawGround(tick) {
 
   const pulse = 0.3 + (Math.sin(tick / 14) + 1) * 0.08;
   ctx.fillStyle = `rgba(246, 228, 164, ${pulse})`;
-  const point = isoToScreen(16.2, 15.1);
+  const point = isoToScreen(29.2, 27.8);
   ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 2, 18, 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(point.x, point.y + 2, 22, 8, 0, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -794,11 +845,13 @@ function drawScene(tick) {
 
 function loop(tick) {
   updatePlayer();
+  updateCamera();
   syncInfo();
   drawScene(tick / 16.6);
   requestAnimationFrame(loop);
 }
 
+updateCamera();
 syncInfo();
 fitPageToViewport();
 requestAnimationFrame(loop);
