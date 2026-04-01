@@ -78,6 +78,24 @@ def make_avatar(traveler):
     image = Image.new("RGBA", (16 * scale, 16 * scale), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
 
+    kind = traveler["kind"]
+    if kind == "dog":
+        px(draw, scale, 2, 12, 12, 2, "#233321")
+        px(draw, scale, 2, 3, 2, 5, traveler["hair"])
+        px(draw, scale, 12, 3, 2, 5, traveler["hair"])
+        px(draw, scale, 5, 2, 6, 2, traveler["hair"])
+        px(draw, scale, 4, 4, 8, 5, traveler["skin"])
+        px(draw, scale, 6, 6, 1, 1, "#221714")
+        px(draw, scale, 9, 6, 1, 1, "#221714")
+        px(draw, scale, 6, 7, 4, 2, traveler["detail"])
+        px(draw, scale, 7, 7, 2, 1, "#221714")
+        px(draw, scale, 4, 9, 8, 3, traveler["coat"])
+        px(draw, scale, 5, 10, 6, 1, traveler["accent"])
+        px(draw, scale, 4, 12, 2, 1, traveler["skin"])
+        px(draw, scale, 10, 12, 2, 1, traveler["skin"])
+        image.save(AVATAR_DIR / f"{traveler['id']}.png")
+        return
+
     px(draw, scale, 2, 11, 12, 3, "#233321")
     px(draw, scale, 3, 3, 10, 10, traveler["coat"])
     px(draw, scale, 4, 4, 8, 6, traveler["skin"])
@@ -86,7 +104,6 @@ def make_avatar(traveler):
     px(draw, scale, 10, 6, 1, 1, "#221714")
     px(draw, scale, 7, 8, 2, 1, "#d48476")
 
-    kind = traveler["kind"]
     if kind == "ghost":
         px(draw, scale, 3, 1, 10, 3, traveler["accent"])
         px(draw, scale, 5, 0, 6, 2, traveler["detail"])
@@ -120,7 +137,150 @@ def make_avatar(traveler):
     image.save(AVATAR_DIR / f"{traveler['id']}.png")
 
 
+def draw_dog_body(draw, traveler, direction, step):
+    skin = traveler["skin"]
+    hair = traveler["hair"]
+    coat = traveler["coat"]
+    accent = traveler["accent"]
+    detail = traveler["detail"]
+    leg_a = 1 if step else 0
+    leg_b = 1 - leg_a
+
+    if direction == "down":
+        px(draw, 1, 2, 4, 2, 5, hair)
+        px(draw, 1, 12, 4, 2, 5, hair)
+        px(draw, 1, 4, 4, 8, 5, skin)
+        px(draw, 1, 5, 3, 6, 2, hair)
+        px(draw, 1, 6, 6, 1, 1, "#241916")
+        px(draw, 1, 9, 6, 1, 1, "#241916")
+        px(draw, 1, 6, 7, 4, 2, detail)
+        px(draw, 1, 7, 7, 2, 1, "#241916")
+        px(draw, 1, 3, 10, 10, 3, coat)
+        px(draw, 1, 5, 10, 6, 1, accent)
+        px(draw, 1, 3, 12, 2, 3 + leg_b, "#47382d")
+        px(draw, 1, 5, 13, 2, 3 + leg_a, "#47382d")
+        px(draw, 1, 9, 13, 2, 3 + leg_b, "#47382d")
+        px(draw, 1, 11, 12, 2, 3 + leg_a, "#47382d")
+        px(draw, 1, 3, 16, 2, 1, "#201814")
+        px(draw, 1, 5, 16, 2, 1, "#201814")
+        px(draw, 1, 9, 16, 2, 1, "#201814")
+        px(draw, 1, 11, 16, 2, 1, "#201814")
+        return
+
+    if direction == "up":
+        px(draw, 1, 2, 4, 2, 5, hair)
+        px(draw, 1, 12, 4, 2, 5, hair)
+        px(draw, 1, 4, 4, 8, 5, hair)
+        px(draw, 1, 3, 10, 10, 3, coat)
+        px(draw, 1, 5, 10, 6, 1, accent)
+        px(draw, 1, 12, 10, 2, 1, accent)
+        px(draw, 1, 13, 9, 1, 1, accent)
+        px(draw, 1, 3, 12, 2, 3 + leg_b, "#47382d")
+        px(draw, 1, 5, 13, 2, 3 + leg_a, "#47382d")
+        px(draw, 1, 9, 13, 2, 3 + leg_b, "#47382d")
+        px(draw, 1, 11, 12, 2, 3 + leg_a, "#47382d")
+        px(draw, 1, 3, 16, 2, 1, "#201814")
+        px(draw, 1, 5, 16, 2, 1, "#201814")
+        px(draw, 1, 9, 16, 2, 1, "#201814")
+        px(draw, 1, 11, 16, 2, 1, "#201814")
+        return
+
+    def sx(x, w):
+        return 16 - x - w if direction == "left" else x
+
+    px(draw, 1, sx(2, 2), 10, 2, 1, accent)
+    px(draw, 1, sx(1, 2), 9, 2, 1, accent)
+    px(draw, 1, sx(4, 7), 9, 7, 4, coat)
+    px(draw, 1, sx(5, 5), 10, 5, 1, accent)
+    px(draw, 1, sx(10, 4), 5, 4, 4, skin)
+    px(draw, 1, sx(9, 2), 3, 2, 4, hair)
+    px(draw, 1, sx(11, 2), 4, 2, 2, hair)
+    px(draw, 1, sx(12, 1), 6, 1, 1, "#241916")
+    px(draw, 1, sx(13, 2), 6, 2, 2, detail)
+    px(draw, 1, sx(14, 1), 6, 1, 1, "#241916")
+    px(draw, 1, sx(4, 2), 13, 2, 3 + leg_b, "#47382d")
+    px(draw, 1, sx(6, 2), 13, 2, 3 + leg_a, "#47382d")
+    px(draw, 1, sx(8, 2), 13, 2, 3 + leg_b, "#47382d")
+    px(draw, 1, sx(10, 2), 13, 2, 3 + leg_a, "#47382d")
+    px(draw, 1, sx(4, 2), 16, 2, 1, "#201814")
+    px(draw, 1, sx(6, 2), 16, 2, 1, "#201814")
+    px(draw, 1, sx(8, 2), 16, 2, 1, "#201814")
+    px(draw, 1, sx(10, 2), 16, 2, 1, "#201814")
+
+
+def draw_crayfish_body(draw, traveler, direction, step):
+    skin = traveler["skin"]
+    coat = traveler["coat"]
+    accent = traveler["accent"]
+    detail = traveler["detail"]
+    leg_shift = 1 if step else 0
+
+    if direction == "down":
+        px(draw, 1, 4, 2, 8, 3, coat)
+        px(draw, 1, 5, 5, 6, 3, skin)
+        px(draw, 1, 6, 6, 1, 1, "#241916")
+        px(draw, 1, 9, 6, 1, 1, "#241916")
+        px(draw, 1, 4, 8, 8, 5, coat)
+        px(draw, 1, 5, 10, 6, 1, accent)
+        px(draw, 1, 1, 8, 2, 2, coat)
+        px(draw, 1, 0, 7, 2, 1, accent)
+        px(draw, 1, 0, 10, 2, 1, accent)
+        px(draw, 1, 13, 8, 2, 2, coat)
+        px(draw, 1, 14, 7, 2, 1, accent)
+        px(draw, 1, 14, 10, 2, 1, accent)
+        px(draw, 1, 5, 13, 2, 3 + leg_shift, "#47382d")
+        px(draw, 1, 9, 13, 2, 3 + (1 - leg_shift), "#47382d")
+        px(draw, 1, 5, 16, 2, 1, "#201814")
+        px(draw, 1, 9, 16, 2, 1, "#201814")
+        px(draw, 1, 6, 10, 4, 1, detail)
+        return
+
+    if direction == "up":
+        px(draw, 1, 4, 2, 8, 3, coat)
+        px(draw, 1, 4, 8, 8, 5, coat)
+        px(draw, 1, 5, 10, 6, 1, accent)
+        px(draw, 1, 1, 8, 2, 2, coat)
+        px(draw, 1, 0, 7, 2, 1, accent)
+        px(draw, 1, 0, 10, 2, 1, accent)
+        px(draw, 1, 13, 8, 2, 2, coat)
+        px(draw, 1, 14, 7, 2, 1, accent)
+        px(draw, 1, 14, 10, 2, 1, accent)
+        px(draw, 1, 5, 13, 2, 3 + leg_shift, "#47382d")
+        px(draw, 1, 9, 13, 2, 3 + (1 - leg_shift), "#47382d")
+        px(draw, 1, 5, 16, 2, 1, "#201814")
+        px(draw, 1, 9, 16, 2, 1, "#201814")
+        return
+
+    def sx(x, w):
+        return 16 - x - w if direction == "left" else x
+
+    px(draw, 1, sx(5, 6), 3, 6, 3, coat)
+    px(draw, 1, sx(8, 4), 5, 4, 3, skin)
+    px(draw, 1, sx(10, 1), 6, 1, 1, "#241916")
+    px(draw, 1, sx(4, 7), 8, 7, 5, coat)
+    px(draw, 1, sx(5, 5), 10, 5, 1, accent)
+    px(draw, 1, sx(2, 2), 9, 2, 1, coat)
+    px(draw, 1, sx(1, 1), 8, 1, 1, accent)
+    px(draw, 1, sx(1, 1), 10, 1, 1, accent)
+    px(draw, 1, sx(11, 2), 8, 2, 2, coat)
+    px(draw, 1, sx(13, 2), 7, 2, 1, accent)
+    px(draw, 1, sx(13, 2), 10, 2, 1, accent)
+    px(draw, 1, sx(5, 2), 13, 2, 3 + leg_shift, "#47382d")
+    px(draw, 1, sx(9, 2), 13, 2, 3 + (1 - leg_shift), "#47382d")
+    px(draw, 1, sx(5, 2), 16, 2, 1, "#201814")
+    px(draw, 1, sx(9, 2), 16, 2, 1, "#201814")
+    px(draw, 1, sx(8, 3), 10, 3, 1, detail)
+
+
 def draw_body(draw, traveler, direction, step):
+    kind = traveler["kind"]
+    if kind == "dog":
+        draw_dog_body(draw, traveler, direction, step)
+        return
+    if kind == "crayfish":
+        draw_crayfish_body(draw, traveler, direction, step)
+        return
+
     skin = traveler["skin"]
     hair = traveler["hair"]
     coat = traveler["coat"]
@@ -159,7 +319,6 @@ def draw_body(draw, traveler, direction, step):
     px(draw, 1, 5, 16, 2, 1, "#201814")
     px(draw, 1, 9, 16, 2, 1, "#201814")
 
-    kind = traveler["kind"]
     if kind == "ghost":
         px(draw, 1, 3, 3, 1, 4, accent)
         px(draw, 1, 12, 3, 1, 4, accent)
@@ -183,23 +342,6 @@ def draw_body(draw, traveler, direction, step):
             front_x = 8 if direction == "right" else 5
             px(draw, 1, rear_x, 0, 2, 4, detail)
             px(draw, 1, front_x, 1, 1, 3, accent)
-    elif kind == "crayfish":
-        px(draw, 1, 4, 2, 8, 3, coat)
-        px(draw, 1, 2, 5, 2, 2, accent)
-        px(draw, 1, 12, 5, 2, 2, accent)
-        if direction in ("down", "up"):
-            px(draw, 1, 1, 8, 3, 2, coat)
-            px(draw, 1, 2, 7, 2, 1, accent)
-            px(draw, 1, 12, 8, 3, 2, coat)
-            px(draw, 1, 12, 7, 2, 1, accent)
-        else:
-            px(draw, 1, 1, 7, 2, 2, accent)
-            px(draw, 1, 2, 9, 2, 1, coat)
-            px(draw, 1, 11, 7, 4, 2, coat)
-            px(draw, 1, 13, 6, 2, 1, accent)
-        px(draw, 1, 6, 10, 4, 1, detail)
-
-
 def make_preview(traveler):
     base = Image.new("RGBA", (24, 28), (0, 0, 0, 0))
     draw = ImageDraw.Draw(base)
@@ -207,8 +349,12 @@ def make_preview(traveler):
 
     body = Image.new("RGBA", (16, 20), (0, 0, 0, 0))
     body_draw = ImageDraw.Draw(body)
-    draw_body(body_draw, traveler, "down", 0)
-    base.alpha_composite(body, (4, 3))
+    preview_direction = "right" if traveler["kind"] == "dog" else "down"
+    preview_offset = (4, 3)
+    draw_body(body_draw, traveler, preview_direction, 0)
+    if traveler["kind"] == "dog":
+        preview_offset = (3, 3)
+    base.alpha_composite(body, preview_offset)
 
     scaled = base.resize((96, 112), Image.Resampling.NEAREST)
     scaled.save(PREVIEW_DIR / f"{traveler['id']}.png")
