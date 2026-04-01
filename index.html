@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城入口 v1.2 -->
+<!-- 法兰城入口 v1.3 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v1.2</title>
+<title>法兰城 v1.3</title>
 <style>
 :root {
   --ink: #102016;
@@ -108,6 +108,204 @@ h1 {
   font-size: 0.86rem;
   letter-spacing: 1px;
   min-width: 220px;
+}
+.entry-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(4, 9, 6, 0.38);
+  backdrop-filter: blur(3px);
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+.entry-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.entry-modal {
+  width: min(980px, calc(100vw - 20px));
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  padding: 18px;
+  border: 2px solid rgba(255, 233, 170, 0.22);
+  background:
+    linear-gradient(180deg, rgba(56, 77, 57, 0.92), rgba(18, 28, 21, 0.96)),
+    radial-gradient(circle at top right, rgba(255, 228, 159, 0.12), transparent 24%);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.entry-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.entry-kicker {
+  color: #ffe99a;
+  font-size: 0.82rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.entry-head h2 {
+  margin: 6px 0 8px;
+  font-size: clamp(1.5rem, 3.2vw, 2.4rem);
+  letter-spacing: 2px;
+  color: #fbffd8;
+}
+.entry-head p {
+  margin: 0;
+  max-width: 560px;
+  color: rgba(246, 248, 220, 0.86);
+  line-height: 1.7;
+}
+.entry-stamp {
+  padding: 10px 12px;
+  min-width: 132px;
+  border: 2px solid rgba(255, 232, 150, 0.16);
+  background: rgba(12, 22, 16, 0.8);
+  color: #ffe79c;
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  letter-spacing: 1px;
+}
+.entry-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.entry-card {
+  border: 2px solid rgba(230, 242, 196, 0.12);
+  background: linear-gradient(180deg, rgba(19, 31, 23, 0.82), rgba(12, 20, 15, 0.96));
+  color: inherit;
+  cursor: pointer;
+  padding: 12px 10px;
+  text-align: left;
+  transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.entry-card:hover,
+.entry-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 232, 150, 0.3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+.entry-card.selected {
+  border-color: rgba(255, 232, 150, 0.48);
+  background:
+    linear-gradient(180deg, rgba(74, 99, 71, 0.9), rgba(21, 32, 24, 0.96)),
+    radial-gradient(circle at top, rgba(255, 228, 159, 0.1), transparent 30%);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+}
+.entry-portrait {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 10px;
+  border: 2px solid rgba(255, 240, 194, 0.16);
+  background: var(--card-bg, #4d6d55);
+  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.18);
+}
+.entry-portrait::before,
+.entry-portrait::after {
+  content: "";
+  position: absolute;
+}
+.entry-portrait::before {
+  left: 19px;
+  top: 12px;
+  width: 18px;
+  height: 18px;
+  background: #f3d7b5;
+}
+.entry-portrait::after {
+  left: 12px;
+  top: 30px;
+  width: 32px;
+  height: 18px;
+  background: var(--coat, #8768d7);
+}
+.entry-card strong {
+  display: block;
+  color: #fbffd8;
+  font-size: 0.96rem;
+  margin-bottom: 4px;
+}
+.entry-card span {
+  display: block;
+  color: #ffe79c;
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+}
+.entry-card p {
+  margin: 0;
+  color: rgba(245, 247, 225, 0.76);
+  line-height: 1.5;
+  font-size: 0.8rem;
+}
+.entry-preview {
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 2px solid rgba(255, 248, 204, 0.12);
+  background: linear-gradient(180deg, rgba(63, 95, 63, 0.24), rgba(19, 31, 24, 0.86));
+}
+.entry-avatar {
+  position: relative;
+  width: 116px;
+  height: 116px;
+  border: 2px solid rgba(255, 240, 194, 0.18);
+  background: var(--avatar-bg, #4f6f58);
+  box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.18);
+}
+.entry-avatar::before,
+.entry-avatar::after {
+  content: "";
+  position: absolute;
+}
+.entry-avatar::before {
+  left: 37px;
+  top: 24px;
+  width: 42px;
+  height: 38px;
+  background: #f3d7b5;
+}
+.entry-avatar::after {
+  left: 22px;
+  top: 60px;
+  width: 72px;
+  height: 40px;
+  background: var(--avatar-coat, #8768d7);
+}
+.entry-preview h3 {
+  margin: 0 0 6px;
+  color: #fbffd8;
+  font-size: 1.24rem;
+}
+.entry-preview .preview-level {
+  color: #ffe79c;
+  font-size: 0.88rem;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.entry-preview p {
+  margin: 0;
+  color: rgba(245, 247, 225, 0.84);
+  line-height: 1.7;
+}
+.entry-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 .layout {
   display: grid;
@@ -287,6 +485,9 @@ canvas {
   .layout {
     grid-template-columns: 1fr;
   }
+  .entry-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 @media (max-width: 760px) {
   .page {
@@ -304,6 +505,36 @@ canvas {
   .subtitle {
     max-width: none;
   }
+  .entry-head,
+  .entry-preview {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+  .entry-head {
+    justify-content: stretch;
+  }
+  .entry-stamp {
+    min-width: 0;
+  }
+  .entry-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .entry-avatar {
+    width: 92px;
+    height: 92px;
+  }
+  .entry-avatar::before {
+    left: 29px;
+    top: 18px;
+    width: 34px;
+    height: 30px;
+  }
+  .entry-avatar::after {
+    left: 18px;
+    top: 48px;
+    width: 56px;
+    height: 30px;
+  }
 }
 </style>
 </head>
@@ -314,11 +545,11 @@ canvas {
         <div class="eyebrow">Falan City Gate</div>
         <div class="title-row">
           <h1>法兰城</h1>
-          <span class="title-version">v1.2</span>
+          <span class="title-version">v1.3</span>
         </div>
         <div class="subtitle">在法兰城里慢慢逛，靠近右上角的黑白棋小屋，就能进入对战。桌面支持方向键/WASD，手机可以直接用下面的方向键。</div>
       </div>
-      <div class="hero-chip">今日城况：晴<br>今日安排：逛法兰城，打黑白棋</div>
+      <div class="hero-chip" id="heroChip">今日城况：晴<br>今日安排：逛法兰城，打黑白棋</div>
     </section>
 
     <section class="layout">
@@ -375,11 +606,40 @@ canvas {
     </section>
   </main>
 
+  <div class="entry-overlay show" id="entryOverlay" aria-label="法兰城选人界面">
+    <div class="entry-modal">
+      <div class="entry-head">
+        <div>
+          <div class="entry-kicker">Falan City Entry</div>
+          <h2>选择旅人</h2>
+          <p>法兰城背景会保留在后面，你先在这张大窗口里选一个旅人，再正式进入城里散步。选中的人会成为你这次进入法兰城的身份。</p>
+        </div>
+        <div class="entry-stamp">法兰城入城登记<br>选择角色后进入</div>
+      </div>
+
+      <div class="entry-grid" id="travelerGrid"></div>
+
+      <div class="entry-preview">
+        <div class="entry-avatar" id="entryAvatar"></div>
+        <div>
+          <h3 id="previewName">小狗子</h3>
+          <div class="preview-level" id="previewLevel">LV2 · 法兰城常驻旅人</div>
+          <p id="previewText">今天先选个人物进城，逛到右上角的小屋还能继续去打黑白棋。</p>
+        </div>
+      </div>
+
+      <div class="entry-actions">
+        <button class="btn" id="enterTownBtn" type="button">进入法兰城</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 const canvas = document.getElementById('world');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
+const heroChip = document.getElementById('heroChip');
 const sceneTip = document.getElementById('sceneTip');
 const coordLabel = document.getElementById('coordLabel');
 const promptLabel = document.getElementById('promptLabel');
@@ -388,11 +648,28 @@ const statusText = document.getElementById('statusText');
 const enterBtn = document.getElementById('enterBtn');
 const directPlayBtn = document.getElementById('directPlayBtn');
 const focusCabinBtn = document.getElementById('focusCabinBtn');
+const entryOverlay = document.getElementById('entryOverlay');
+const travelerGrid = document.getElementById('travelerGrid');
+const previewName = document.getElementById('previewName');
+const previewLevel = document.getElementById('previewLevel');
+const previewText = document.getElementById('previewText');
+const entryAvatar = document.getElementById('entryAvatar');
+const enterTownBtn = document.getElementById('enterTownBtn');
 
 const world = { width: 320, height: 180 };
 const player = { x: 46, y: 138, w: 10, h: 14, speed: 1.35, dir: 'down', step: 0, moving: false };
 const keyState = { up: false, down: false, left: false, right: false };
 const actionKeys = new Set(['Enter', ' ', 'Spacebar']);
+const travelerStorageKey = 'falan-selected-traveler';
+const travelers = [
+  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '走进法兰城先看看风景，不急着上桌，像是在等一场悠闲的开局。', coat: '#6f81d6', accent: '#97a8f0', hair: '#88634d' },
+  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '熟门熟路，适合第一次进城先找找感觉，也是默认最顺手的一位。', coat: '#7f69cf', accent: '#b499ff', hair: '#7a593f' },
+  { id: 'fat', name: '臭胖子', level: 'LV3', title: '路过喷泉的老熟人', desc: '看起来有点凶，实际上最懂城里哪条路能最快摸到黑白棋小屋。', coat: '#c06b58', accent: '#f0a28d', hair: '#6f4b33' },
+  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '动作轻快的冒险家', desc: '脚步轻、节奏快，像是刚从公会出来就直奔小屋准备挑战。', coat: '#58a086', accent: '#8fe0c5', hair: '#775a44' },
+  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '压轴登场的狠角色', desc: '一进城就带着一点压迫感，像是会直接把今天的对局打成主线任务。', coat: '#b95a63', accent: '#ef99a4', hair: '#654230' }
+];
+let selectedTravelerId = localStorage.getItem(travelerStorageKey) || 'dog';
+let townReady = false;
 
 const solids = [
   { x: 22, y: 56, w: 84, h: 44 },
@@ -468,6 +745,59 @@ function syncUi() {
   enterBtn.textContent = nearPortal ? '进入\n黑白棋' : '靠近\n小屋';
 }
 
+function getSelectedTraveler() {
+  return travelers.find((traveler) => traveler.id === selectedTravelerId) || travelers[1];
+}
+
+function updateHeroChip() {
+  const traveler = getSelectedTraveler();
+  heroChip.innerHTML = `今日旅人：${traveler.name} ${traveler.level}<br>称号：${traveler.title}`;
+}
+
+function updateTravelerPreview() {
+  const traveler = getSelectedTraveler();
+  previewName.textContent = traveler.name;
+  previewLevel.textContent = `${traveler.level} · ${traveler.title}`;
+  previewText.textContent = traveler.desc;
+  entryAvatar.style.setProperty('--avatar-bg', `linear-gradient(180deg, ${traveler.accent}, ${traveler.coat})`);
+  entryAvatar.style.setProperty('--avatar-coat', traveler.coat);
+}
+
+function renderTravelerCards() {
+  travelerGrid.innerHTML = '';
+  travelers.forEach((traveler) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'entry-card';
+    button.dataset.id = traveler.id;
+    button.style.setProperty('--card-bg', `linear-gradient(180deg, ${traveler.accent}, ${traveler.coat})`);
+    button.style.setProperty('--coat', traveler.coat);
+    if (traveler.id === selectedTravelerId) button.classList.add('selected');
+    button.innerHTML = `
+      <div class="entry-portrait"></div>
+      <strong>${traveler.name}</strong>
+      <span>${traveler.level}</span>
+      <p>${traveler.title}</p>
+    `;
+    button.addEventListener('click', () => {
+      selectedTravelerId = traveler.id;
+      localStorage.setItem(travelerStorageKey, selectedTravelerId);
+      renderTravelerCards();
+      updateTravelerPreview();
+    });
+    travelerGrid.appendChild(button);
+  });
+}
+
+function confirmTravelerSelection() {
+  townReady = true;
+  localStorage.setItem(travelerStorageKey, selectedTravelerId);
+  updateHeroChip();
+  updateTravelerPreview();
+  entryOverlay.classList.remove('show');
+  syncUi();
+}
+
 function goToReversi() {
   document.body.classList.add('leaving');
   setTimeout(() => {
@@ -476,6 +806,7 @@ function goToReversi() {
 }
 
 function tryEnter() {
+  if (!townReady) return;
   if (!isNearPortal()) return;
   goToReversi();
 }
@@ -507,13 +838,22 @@ document.querySelectorAll('.pad').forEach(bindPadButton);
 enterBtn.addEventListener('click', tryEnter);
 directPlayBtn.addEventListener('click', goToReversi);
 focusCabinBtn.addEventListener('click', () => {
+  if (!townReady) return;
   player.x = 240;
   player.y = 120;
   player.dir = 'up';
   syncUi();
 });
+enterTownBtn.addEventListener('click', confirmTravelerSelection);
 
 window.addEventListener('keydown', (event) => {
+  if (!townReady) {
+    if (actionKeys.has(event.key)) {
+      event.preventDefault();
+      confirmTravelerSelection();
+    }
+    return;
+  }
   if (event.key === 'ArrowUp' || event.key === 'w' || event.key === 'W') keyState.up = true;
   if (event.key === 'ArrowDown' || event.key === 's' || event.key === 'S') keyState.down = true;
   if (event.key === 'ArrowLeft' || event.key === 'a' || event.key === 'A') keyState.left = true;
@@ -532,6 +872,10 @@ window.addEventListener('keyup', (event) => {
 });
 
 function updatePlayer() {
+  if (!townReady) {
+    player.moving = false;
+    return;
+  }
   let dx = 0;
   let dy = 0;
   if (keyState.left) dx -= 1;
@@ -668,13 +1012,14 @@ function drawSparkle(tick) {
 }
 
 function drawPlayer(tick) {
+  const traveler = getSelectedTraveler();
   const bob = player.moving ? Math.round(Math.sin(player.step * 6) * 1.2) : 0;
   const leg = player.moving && Math.sin(player.step * 8) > 0 ? 1 : 0;
   drawRect(player.x + 1, player.y + 13, 8, 2, 'rgba(14, 18, 14, 0.25)');
   drawRect(player.x + 3, player.y + 1 + bob, 4, 3, '#f5d2ae');
-  drawRect(player.x + 2, player.y + 3 + bob, 6, 2, '#8a5f39');
-  drawRect(player.x + 2, player.y + 5 + bob, 6, 5, '#9d7bdb');
-  drawRect(player.x + 1, player.y + 8 + bob, 8, 3, '#6e4da9');
+  drawRect(player.x + 2, player.y + 3 + bob, 6, 2, traveler.hair);
+  drawRect(player.x + 2, player.y + 5 + bob, 6, 5, traveler.accent);
+  drawRect(player.x + 1, player.y + 8 + bob, 8, 3, traveler.coat);
   drawRect(player.x + 2, player.y + 11 + bob, 2, 3 + leg, '#48392b');
   drawRect(player.x + 6, player.y + 11 + bob, 2, 3 + (1 - leg), '#48392b');
 
@@ -683,7 +1028,7 @@ function drawPlayer(tick) {
   } else if (player.dir === 'right') {
     drawRect(player.x + 7, player.y + 6 + bob, 2, 3, '#f5d2ae');
   } else {
-    drawRect(player.x + 2, player.y + 6 + bob, 6, 2, '#b293f3');
+    drawRect(player.x + 2, player.y + 6 + bob, 6, 2, traveler.accent);
   }
 }
 
@@ -721,6 +1066,9 @@ function loop(tick) {
   requestAnimationFrame(loop);
 }
 
+renderTravelerCards();
+updateTravelerPreview();
+updateHeroChip();
 syncUi();
 requestAnimationFrame(loop);
 </script>
