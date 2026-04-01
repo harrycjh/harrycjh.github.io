@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.4 -->
+<!-- 法兰城 v3.5 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.4</title>
+<title>法兰城 v3.5</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -240,8 +240,165 @@ button:hover {
   color: rgba(237, 241, 214, 0.56);
   font-size: 0.88rem;
 }
+.selection-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(7, 12, 9, 0.72);
+  backdrop-filter: blur(6px);
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+.selection-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.selection-panel {
+  width: min(1080px, calc(100vw - 40px));
+  border: 2px solid rgba(232, 204, 134, 0.2);
+  background:
+    radial-gradient(circle at top, rgba(255, 229, 161, 0.08), transparent 36%),
+    linear-gradient(180deg, rgba(32, 50, 38, 0.98), rgba(11, 18, 13, 0.98));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+  padding: 20px 22px 22px;
+}
+.selection-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+.selection-head h2 {
+  margin: 8px 0 0;
+  color: var(--gold);
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+}
+.selection-head p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 720px;
+}
+.selection-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid rgba(232, 204, 134, 0.2);
+  color: var(--gold);
+  letter-spacing: 1.5px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+.selection-layout {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+  gap: 18px;
+}
+.selection-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.selection-card {
+  appearance: none;
+  width: 100%;
+  border: 1px solid rgba(232, 204, 134, 0.14);
+  background: linear-gradient(180deg, rgba(39, 58, 44, 0.96), rgba(16, 25, 18, 0.98));
+  padding: 10px 8px;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+.selection-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(232, 204, 134, 0.32);
+  background: linear-gradient(180deg, rgba(50, 72, 55, 0.98), rgba(18, 28, 20, 1));
+}
+.selection-card.active {
+  border-color: rgba(232, 204, 134, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(255, 233, 171, 0.16), 0 12px 28px rgba(0, 0, 0, 0.28);
+  background: linear-gradient(180deg, rgba(63, 86, 66, 0.98), rgba(22, 34, 24, 1));
+}
+.selection-card:focus-visible {
+  outline: 2px solid rgba(248, 223, 136, 0.8);
+  outline-offset: 2px;
+}
+.selection-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.selection-card strong {
+  color: var(--ink);
+  font-size: 0.94rem;
+}
+.selection-card span {
+  color: var(--gold);
+  font-size: 0.78rem;
+}
+.selection-stage {
+  border: 1px solid rgba(232, 204, 134, 0.14);
+  background: linear-gradient(180deg, rgba(22, 34, 25, 0.96), rgba(11, 17, 12, 1));
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+.selection-preview {
+  min-height: 290px;
+  border: 1px solid rgba(219, 231, 189, 0.09);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(232, 204, 134, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(36, 52, 39, 0.96), rgba(12, 18, 13, 1));
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.selection-preview img {
+  width: min(240px, 42vw);
+  max-height: 250px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.selection-copy h3 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 1.28rem;
+}
+.selection-copy .level {
+  margin-top: 6px;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+.selection-copy p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.selection-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.selection-actions button {
+  min-width: 160px;
+}
 @media (max-width: 1080px) {
   .layout { grid-template-columns: 1fr; }
+  .selection-layout { grid-template-columns: 1fr; }
+  .selection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .selection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 </style>
 </head>
@@ -250,11 +407,11 @@ button:hover {
   <main class="page" id="pageRoot">
     <section class="hero">
       <div class="eyebrow">Falan Isometric Trial</div>
-      <div class="title-row">
+        <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.4</div>
+        <div class="version">v3.5</div>
       </div>
-      <p>这是法兰城首页的超扩图区试装版。主建筑和城镇主体继续沿用 Xilurus 的像素等角素材，树木和石构混搭 OpenGameArt，这次把整体观感再放大约 50%，并把法兰城世界面积拉到上一版的约 3 倍，改成跟随视角后重点看它像不像一座真正能逛的 JRPG 主城。</p>
+      <p>这是法兰城首页的超扩图区试装版。主建筑和城镇主体继续沿用 Xilurus 的像素等角素材，树木和石构混搭 OpenGameArt；这一版补回了进城选人界面，并统一修正建筑、树木和摆件的落地阴影，让整个主城看起来更贴地、更像一座真正能逛的 JRPG 城镇。</p>
     </section>
 
     <section class="layout">
@@ -295,6 +452,7 @@ button:hover {
             <button type="button" id="nextTravelerBtn">下一个旅人</button>
             <button type="button" id="enterReversiBtn">进入黑白棋</button>
             <button type="button" id="viewClassicBtn">查看旧版</button>
+            <button type="button" id="openSelectionBtn">选人界面</button>
           </div>
         </section>
 
@@ -313,6 +471,35 @@ button:hover {
   </main>
   </div>
 
+  <div class="selection-overlay" id="selectionOverlay">
+    <div class="selection-panel">
+      <div class="selection-head">
+        <div>
+          <div class="selection-tag">Traveler Select</div>
+          <h2>进入法兰城前，先选一位旅人</h2>
+          <p>这次恢复的是法兰城入场选人界面。先挑一个看顺眼的旅人，再带他进城；之后如果你想换人，也可以随时从右侧面板重新打开。</p>
+        </div>
+      </div>
+      <div class="selection-layout">
+        <div class="selection-grid" id="selectionGrid"></div>
+        <div class="selection-stage">
+          <div class="selection-preview">
+            <img id="selectionPreviewImg" src="./assets/falan/previews/dog.png" alt="旅人预览">
+          </div>
+          <div class="selection-copy">
+            <h3 id="selectionName">小狗子</h3>
+            <div class="level" id="selectionLevel">LV2 · 法兰城常驻旅人</div>
+            <p id="selectionDesc">人型狗狗旅人，适合作为法兰城等角版的默认看板角色。</p>
+          </div>
+          <div class="selection-actions">
+            <button type="button" id="confirmSelectionBtn">进入法兰城</button>
+            <button type="button" id="cancelSelectionBtn">沿用当前旅人</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
 const canvas = document.getElementById('isoCanvas');
 const ctx = canvas.getContext('2d');
@@ -328,22 +515,33 @@ const prevTravelerBtn = document.getElementById('prevTravelerBtn');
 const nextTravelerBtn = document.getElementById('nextTravelerBtn');
 const enterReversiBtn = document.getElementById('enterReversiBtn');
 const viewClassicBtn = document.getElementById('viewClassicBtn');
+const openSelectionBtn = document.getElementById('openSelectionBtn');
 const pageFrame = document.getElementById('pageFrame');
 const pageRoot = document.getElementById('pageRoot');
+const selectionOverlay = document.getElementById('selectionOverlay');
+const selectionGrid = document.getElementById('selectionGrid');
+const selectionPreviewImg = document.getElementById('selectionPreviewImg');
+const selectionNameEl = document.getElementById('selectionName');
+const selectionLevelEl = document.getElementById('selectionLevel');
+const selectionDescEl = document.getElementById('selectionDesc');
+const confirmSelectionBtn = document.getElementById('confirmSelectionBtn');
+const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
 
 const travelerStorageKey = 'falan-selected-traveler';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
-  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '进城第一件事不是赶路，而是先看看城堡和大道在 45 度里够不够有味道。', avatar: './assets/falan/avatars/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
-  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '人型狗狗旅人，适合作为法兰城等角版的默认看板角色。', avatar: './assets/falan/avatars/dog.png', sprite: './assets/falan/sprites/dog.png' },
-  { id: 'fat', name: '臭胖子', level: 'LV3', title: '喷泉边的狠角色', desc: '适合拿来测试会馆门口和中央广场的视觉压迫感。', avatar: './assets/falan/avatars/fat.png', sprite: './assets/falan/sprites/fat.png' },
-  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '轻快的等角冒险家', desc: '脚步最适合验证 45 度视角下的移动节奏和清爽感。', avatar: './assets/falan/avatars/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
-  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '带双钳的压轴旅人', desc: '更适合测试建筑前景和角色 silhouette 是否够强。', avatar: './assets/falan/avatars/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
+  { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '进城第一件事不是赶路，而是先看看城堡和大道在 45 度里够不够有味道。', avatar: './assets/falan/avatars/ghost.png', preview: './assets/falan/previews/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
+  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '人型狗狗旅人，适合作为法兰城等角版的默认看板角色。', avatar: './assets/falan/avatars/dog.png', preview: './assets/falan/previews/dog.png', sprite: './assets/falan/sprites/dog.png' },
+  { id: 'fat', name: '臭胖子', level: 'LV3', title: '喷泉边的狠角色', desc: '适合拿来测试会馆门口和中央广场的视觉压迫感。', avatar: './assets/falan/avatars/fat.png', preview: './assets/falan/previews/fat.png', sprite: './assets/falan/sprites/fat.png' },
+  { id: 'rabbit', name: '小兔子', level: 'LV4', title: '轻快的等角冒险家', desc: '脚步最适合验证 45 度视角下的移动节奏和清爽感。', avatar: './assets/falan/avatars/rabbit.png', preview: './assets/falan/previews/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
+  { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '带双钳的压轴旅人', desc: '更适合测试建筑前景和角色 silhouette 是否够强。', avatar: './assets/falan/avatars/crayfish.png', preview: './assets/falan/previews/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
 ];
 
 let travelerIndex = Math.max(0, travelers.findIndex((traveler) => traveler.id === localStorage.getItem(travelerStorageKey)));
 if (travelerIndex < 0) travelerIndex = 1;
+let pendingTravelerIndex = travelerIndex;
+let selectionOpen = true;
 
 const images = {
   castle: loadImage('./assets/falan/kitbash/buildings/castle-xil-oga.png'),
@@ -552,13 +750,15 @@ function drawPlacedSprite(item, image) {
   const point = isoToScreen(item.tx, item.ty);
   const width = Math.max(1, Math.round(image.naturalWidth * item.scale));
   const height = Math.max(1, Math.round(image.naturalHeight * item.scale));
-  const x = Math.round(point.x - width / 2);
-  const y = Math.round(point.y - height + (item.lift || 6));
+  const footY = point.y + world.tileH * 0.16 + (item.groundOffset || 0);
+  const shadowY = footY + (item.shadowOffsetY || 1);
+  const x = Math.round(point.x - width / 2 + (item.offsetX || 0));
+  const y = Math.round(footY - height + (item.lift || 0));
 
   if (item.shadow) {
-    ctx.fillStyle = 'rgba(13, 20, 14, 0.28)';
+    ctx.fillStyle = 'rgba(13, 20, 14, 0.24)';
     ctx.beginPath();
-    ctx.ellipse(point.x, point.y + 6, item.shadow[0], item.shadow[1], 0, 0, Math.PI * 2);
+    ctx.ellipse(point.x, shadowY, item.shadow[0], item.shadow[1], 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -587,13 +787,22 @@ function drawBuilding(building, focusId) {
   const anchor = isoToScreen(building.tx, building.ty);
   const width = Math.round(image.naturalWidth * building.scale);
   const height = Math.round(image.naturalHeight * building.scale);
+  const footY = anchor.y + world.tileH * 0.15;
+  const shadowY = footY + 1;
+  const shadowW = clamp(Math.round(width * 0.18), 18, 58);
+  const shadowH = clamp(Math.round(height * 0.05), 6, 14);
   const x = Math.round(anchor.x - width / 2);
-  const y = Math.round(anchor.y - height + 2);
+  const y = Math.round(footY - height);
+
+  ctx.fillStyle = 'rgba(10, 16, 12, 0.22)';
+  ctx.beginPath();
+  ctx.ellipse(anchor.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
+  ctx.fill();
 
   if (focusId === building.id) {
     ctx.fillStyle = 'rgba(248, 223, 136, 0.12)';
     ctx.beginPath();
-    ctx.ellipse(anchor.x, anchor.y + 6, 28, 11, 0, 0, Math.PI * 2);
+    ctx.ellipse(anchor.x, shadowY, shadowW + 8, shadowH + 2, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -681,10 +890,75 @@ function syncInfo() {
   portraitImg.alt = `${traveler.name}头像`;
 }
 
-function cycleTraveler(step) {
-  travelerIndex = (travelerIndex + step + travelers.length) % travelers.length;
+function resetKeyState() {
+  keyState.up = false;
+  keyState.down = false;
+  keyState.left = false;
+  keyState.right = false;
+}
+
+function applyTraveler(index) {
+  travelerIndex = (index + travelers.length) % travelers.length;
   localStorage.setItem(travelerStorageKey, travelers[travelerIndex].id);
   syncInfo();
+}
+
+function syncSelectionPanel() {
+  const traveler = travelers[pendingTravelerIndex];
+  selectionPreviewImg.src = traveler.preview;
+  selectionPreviewImg.alt = `${traveler.name}全身预览`;
+  selectionNameEl.textContent = traveler.name;
+  selectionLevelEl.textContent = `${traveler.level} · ${traveler.title}`;
+  selectionDescEl.textContent = traveler.desc;
+
+  Array.from(selectionGrid.children).forEach((card, index) => {
+    card.classList.toggle('active', index === pendingTravelerIndex);
+    card.setAttribute('aria-pressed', index === pendingTravelerIndex ? 'true' : 'false');
+  });
+}
+
+function renderSelectionGrid() {
+  selectionGrid.innerHTML = '';
+  travelers.forEach((traveler, index) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'selection-card';
+    card.innerHTML = `
+      <img src="${traveler.avatar}" alt="${traveler.name}头像">
+      <strong>${traveler.name}</strong>
+      <span>${traveler.level}</span>
+    `;
+    card.addEventListener('click', () => {
+      pendingTravelerIndex = index;
+      syncSelectionPanel();
+    });
+    selectionGrid.appendChild(card);
+  });
+}
+
+function openTravelerSelection(resetPending = true) {
+  if (resetPending) pendingTravelerIndex = travelerIndex;
+  selectionOpen = true;
+  resetKeyState();
+  syncSelectionPanel();
+  selectionOverlay.classList.add('active');
+}
+
+function closeTravelerSelection(apply = true) {
+  if (apply) applyTraveler(pendingTravelerIndex);
+  else syncInfo();
+  selectionOpen = false;
+  resetKeyState();
+  selectionOverlay.classList.remove('active');
+}
+
+function cycleTraveler(step) {
+  if (selectionOpen) {
+    pendingTravelerIndex = (pendingTravelerIndex + step + travelers.length) % travelers.length;
+    syncSelectionPanel();
+    return;
+  }
+  applyTraveler(travelerIndex + step);
 }
 
 function setKey(event, value) {
@@ -729,6 +1003,25 @@ function updateCamera() {
 
 window.addEventListener('keydown', (event) => {
   if (isMovementKey(event.key)) event.preventDefault();
+  if (selectionOpen) {
+    if (event.key === 'q' || event.key === 'Q' || event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      cycleTraveler(-1);
+    }
+    if (event.key === 'e' || event.key === 'E' || event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      cycleTraveler(1);
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      closeTravelerSelection(true);
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeTravelerSelection(false);
+    }
+    return;
+  }
   setKey(event, true);
   if (event.key === 'q' || event.key === 'Q') {
     event.preventDefault();
@@ -741,6 +1034,7 @@ window.addEventListener('keydown', (event) => {
 });
 window.addEventListener('keyup', (event) => {
   if (isMovementKey(event.key)) event.preventDefault();
+  if (selectionOpen) return;
   setKey(event, false);
 });
 window.addEventListener('resize', fitPageToViewport);
@@ -752,8 +1046,21 @@ enterReversiBtn.addEventListener('click', () => {
 viewClassicBtn.addEventListener('click', () => {
   window.location.href = './falan-classic-preview.html';
 });
+openSelectionBtn.addEventListener('click', () => {
+  openTravelerSelection(true);
+});
+confirmSelectionBtn.addEventListener('click', () => {
+  closeTravelerSelection(true);
+});
+cancelSelectionBtn.addEventListener('click', () => {
+  closeTravelerSelection(false);
+});
 
 function updatePlayer() {
+  if (selectionOpen) {
+    player.moving = false;
+    return;
+  }
   let dtx = 0;
   let dty = 0;
   if (keyState.up) {
@@ -859,6 +1166,8 @@ function loop(tick) {
 
 updateCamera();
 syncInfo();
+renderSelectionGrid();
+openTravelerSelection(true);
 fitPageToViewport();
 requestAnimationFrame(loop);
 </script>
