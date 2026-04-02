@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.17 -->
+<!-- 法兰城 v3.18 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.17</title>
+<title>法兰城 v3.18</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -495,9 +495,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.17</div>
+        <div class="version">v3.18</div>
       </div>
-      <p>这一版先回到《魔力宝贝》客户端里拼出来的完整法兰城原图，方便我们更快核对道路、建筑和碰撞关系。中央里谢里雅堡缺失的大型物件也已经补回来了，旅人选择、移动和进入黑白棋会馆这些交互会继续保留。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并先试装一小批已经确认位置的地图局部动画。这样既能保留真实法兰城的道路和建筑关系，也能开始验证原版城内会动的小物件是否能在首页里还原出来。</p>
     </section>
 
     <section class="layout">
@@ -513,13 +513,14 @@ button:hover {
             <div class="badge">11128 x 8300 原图</div>
             <div class="badge">完整原图直载</div>
             <div class="badge">碰撞遮罩试装</div>
+            <div class="badge">局部动画试装</div>
           </div>
         </div>
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">为了快速迭代法兰城布局，这一版先直接使用完整原图。这样修正层级和定位问题时会更直接，后面如果需要再切回更激进的性能方案。</div>
+        <div class="note">为了快速迭代法兰城布局，这一版继续直接使用完整原图，并只加一小批已经确认位置的原版局部动效。先把会动的小细节试装进去，后面再继续分辨哪些是地图动画、哪些是 NPC 或服务端行为。</div>
       </div>
 
       <aside class="side">
@@ -554,7 +555,7 @@ button:hover {
             <div class="legend-item"><span class="swatch" style="background:#8eb0ff;"></span>旅人当前位置</div>
             <div class="legend-item"><span class="swatch" style="background:#39463d;"></span>源图物件碰撞试装</div>
           </div>
-          <p class="foot">这版先优先把原版地图接进来。后续如果方向对，我就继续做更准的碰撞、建筑前后层级、会馆入口和更多法兰城功能点。</p>
+          <p class="foot">这版先优先把原版地图和少量确认过的局部动效接进来。后续如果方向对，我就继续做更准的碰撞、建筑前后层级、会馆入口和更多法兰城功能点。</p>
         </section>
       </aside>
     </section>
@@ -658,6 +659,10 @@ const sceneMap = {
   scale: 1
 };
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
+const overlaySheets = {
+  114040: loadImage('./assets/falan/anims-114040.png'),
+  114041: loadImage('./assets/falan/anims-114041.png')
+};
 const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
@@ -671,6 +676,35 @@ const landmarks = [
   { id: 'eastInn', label: '东区旅馆', focus: '旅馆与公会街', area: '东区旅馆与医院', tx: 168.0, ty: 132.0 },
   { id: 'arena', label: '竞技场', focus: '竞技场与剧场区', area: '西区竞技场', tx: 150.0, ty: 205.0 },
   { id: 'reversiHall', label: '黑白棋会馆', focus: '会馆入口', area: '黑白棋会馆', tx: 196.0, ty: 168.0 }
+];
+const overlayAnimations = {
+  114040: {
+    frameTicks: 12,
+    sheet: 114040,
+    frames: [
+      { sx: 0, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -41 },
+      { sx: 50, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -42 },
+      { sx: 100, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -43 },
+      { sx: 150, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -42 }
+    ]
+  },
+  114041: {
+    frameTicks: 12,
+    sheet: 114041,
+    frames: [
+      { sx: 0, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -41 },
+      { sx: 50, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -42 },
+      { sx: 100, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -43 },
+      { sx: 150, sy: 0, sw: 48, sh: 55, ofsX: -20, ofsY: -42 }
+    ]
+  }
+};
+const sceneOverlays = [
+  { id: 'castle-a', anim: 114040, tx: 57, ty: 81 },
+  { id: 'castle-b', anim: 114040, tx: 103, ty: 232 },
+  { id: 'city-c', anim: 114041, tx: 115, ty: 182 },
+  { id: 'city-d', anim: 114041, tx: 143, ty: 154 },
+  { id: 'city-e', anim: 114041, tx: 165, ty: 198 }
 ];
 const camera = { x: 0, y: 0 };
 const player = {
@@ -1177,6 +1211,22 @@ function drawLoadedTiles(bounds, sx, sy, sw, sh) {
   }
 }
 
+function drawOverlayAnimations(tick) {
+  sceneOverlays.forEach((overlay) => {
+    const animation = overlayAnimations[overlay.anim];
+    if (!animation) return;
+    const sheet = overlaySheets[animation.sheet];
+    if (!sheet || !sheet.complete || !sheet.naturalWidth) return;
+    const frameIndex = Math.floor(tick / animation.frameTicks) % animation.frames.length;
+    const frame = animation.frames[frameIndex];
+    const point = mapToScreen(overlay.tx, overlay.ty);
+    const drawX = Math.round(point.x + frame.ofsX);
+    const drawY = Math.round(point.y + frame.ofsY);
+    if (drawX + frame.sw < -32 || drawY + frame.sh < -32 || drawX > canvas.width + 32 || drawY > canvas.height + 32) return;
+    ctx.drawImage(sheet, frame.sx, frame.sy, frame.sw, frame.sh, drawX, drawY, frame.sw, frame.sh);
+  });
+}
+
 function drawScene(tick) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#11171b';
@@ -1191,6 +1241,7 @@ function drawScene(tick) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
+  drawOverlayAnimations(tick);
   drawFocusMarker(tick);
   drawPlayer();
 
