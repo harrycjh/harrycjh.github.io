@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.27 -->
+<!-- 法兰城 v3.28 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.27</title>
+<title>法兰城 v3.28</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,7 +554,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.27</div>
+        <div class="version">v3.28</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。上一轮挂进去的局部动画经复核更像角色动作资源，因此先撤下，避免继续把错误动效叠在法兰城地图上。</p>
     </section>
@@ -1119,15 +1119,16 @@ function drawSelectionPreview(tickMs) {
   );
   const drawW = Math.round(action.frameWidth * drawScale);
   const drawH = Math.round(action.frameHeight * drawScale);
-  const drawX = Math.round((selectionPreviewCanvas.width - drawW) / 2);
-  const drawY = Math.round((selectionPreviewCanvas.height - drawH) / 2);
-  const footY = drawY + action.anchorY * drawScale;
+  const footX = Math.round(selectionPreviewCanvas.width / 2);
+  const footY = Math.round(selectionPreviewCanvas.height * 0.7);
+  const drawX = Math.round(footX - action.anchorX * drawScale);
+  const drawY = Math.round(footY - action.anchorY * drawScale);
   const shadowW = Math.max(14, Math.round(18 * drawScale));
   const shadowH = Math.max(4, Math.round(6 * drawScale));
 
   selectionPreviewCtx.fillStyle = 'rgba(8, 12, 9, 0.3)';
   selectionPreviewCtx.beginPath();
-  selectionPreviewCtx.ellipse(selectionPreviewCanvas.width / 2, footY + 3, shadowW, shadowH, 0, 0, Math.PI * 2);
+  selectionPreviewCtx.ellipse(footX, footY + 3, shadowW, shadowH, 0, 0, Math.PI * 2);
   selectionPreviewCtx.fill();
 
   selectionPreviewCtx.drawImage(
