@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.11 -->
+<!-- 法兰城 v3.12 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.11</title>
+<title>法兰城 v3.12</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -495,7 +495,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.11</div>
+        <div class="version">v3.12</div>
       </div>
       <p>这一版把首页的法兰城直接切成了《魔力宝贝》客户端里拼出来的真实主城地图。现在先保留旅人选择、移动和进入黑白棋会馆这些交互，再逐步把真实碰撞、重点建筑和更多功能一点点接回来。</p>
     </section>
@@ -658,7 +658,8 @@ const sceneMap = {
 };
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
 const keyState = { up: false, down: false, left: false, right: false };
-const collisionState = { ready: false, data: null, width: 0, height: 0 };
+const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
+const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
 const landmarks = [
   { id: 'castle', label: '里谢里雅城', focus: '王城前广场', area: '里谢里雅城前', tx: 88.0, ty: 136.0 },
   { id: 'cathedral', label: '西区圣堂', focus: '大圣堂周边', area: '西区圣堂与工房', tx: 64.0, ty: 156.0 },
@@ -705,6 +706,8 @@ function prepareCollisionMask() {
   collisionState.data = offctx.getImageData(0, 0, offscreen.width, offscreen.height).data;
   collisionState.width = offscreen.width;
   collisionState.height = offscreen.height;
+  collisionState.scaleX = collisionState.width / sceneMap.width;
+  collisionState.scaleY = collisionState.height / sceneMap.height;
   collisionState.ready = true;
 }
 
@@ -713,17 +716,21 @@ if (sceneMap.collisionImage.complete && sceneMap.collisionImage.naturalWidth) pr
 
 function blockedAtPixel(x, y) {
   if (!collisionState.ready) return false;
+  const sampleX = x * collisionState.scaleX;
+  const sampleY = y * collisionState.scaleY;
+  const dx = Math.max(1, Math.round(4 * collisionState.scaleX));
+  const dy = Math.max(1, Math.round(4 * collisionState.scaleY));
   const probes = [
     [0, 0],
-    [0, 4],
-    [-4, 2],
-    [4, 2],
-    [0, -3]
+    [0, dy],
+    [-dx, Math.max(1, Math.round(2 * collisionState.scaleY))],
+    [dx, Math.max(1, Math.round(2 * collisionState.scaleY))],
+    [0, -Math.max(1, Math.round(3 * collisionState.scaleY))]
   ];
   let hits = 0;
   for (const [dx, dy] of probes) {
-    const px = Math.round(x + dx);
-    const py = Math.round(y + dy);
+    const px = Math.round(sampleX + dx);
+    const py = Math.round(sampleY + dy);
     if (px < 0 || py < 0 || px >= collisionState.width || py >= collisionState.height) {
       hits += 1;
       continue;
@@ -762,13 +769,34 @@ function areaName() {
 function syncInfo() {
   const traveler = travelers[travelerIndex];
   const focus = currentFocus();
-  zoneNameEl.textContent = areaName();
-  coordLabelEl.textContent = `${player.tx.toFixed(1)}, ${(sceneMap.rows - 1 - player.ty).toFixed(1)}`;
-  focusLabelEl.textContent = focus.focus;
-  travelerNameEl.textContent = `${traveler.name} ${traveler.level}`;
-  travelerDescEl.textContent = traveler.desc;
-  portraitImg.src = traveler.avatar;
-  portraitImg.alt = `${traveler.name}头像`;
+  const zone = areaName();
+  const coord = `${player.tx.toFixed(1)}, ${(sceneMap.rows - 1 - player.ty).toFixed(1)}`;
+  const travelerName = `${traveler.name} ${traveler.level}`;
+  if (uiState.zone !== zone) {
+    zoneNameEl.textContent = zone;
+    uiState.zone = zone;
+  }
+  if (uiState.coord !== coord) {
+    coordLabelEl.textContent = coord;
+    uiState.coord = coord;
+  }
+  if (uiState.focus !== focus.focus) {
+    focusLabelEl.textContent = focus.focus;
+    uiState.focus = focus.focus;
+  }
+  if (uiState.traveler !== travelerName) {
+    travelerNameEl.textContent = travelerName;
+    uiState.traveler = travelerName;
+  }
+  if (uiState.desc !== traveler.desc) {
+    travelerDescEl.textContent = traveler.desc;
+    uiState.desc = traveler.desc;
+  }
+  if (uiState.portrait !== traveler.avatar) {
+    portraitImg.src = traveler.avatar;
+    portraitImg.alt = `${traveler.name}头像`;
+    uiState.portrait = traveler.avatar;
+  }
 }
 
 function resetKeyState() {
@@ -1044,7 +1072,11 @@ function drawScene(tick) {
   ctx.fillStyle = '#11171b';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   if (sceneMap.image.complete && sceneMap.image.naturalWidth) {
-    ctx.drawImage(sceneMap.image, Math.round(-camera.x), Math.round(-camera.y));
+    const sx = Math.max(0, Math.floor(camera.x));
+    const sy = Math.max(0, Math.floor(camera.y));
+    const sw = Math.min(canvas.width, sceneMap.width - sx);
+    const sh = Math.min(canvas.height, sceneMap.height - sy);
+    ctx.drawImage(sceneMap.image, sx, sy, sw, sh, 0, 0, sw, sh);
   } else {
     ctx.fillStyle = '#27362d';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
