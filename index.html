@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.26 -->
+<!-- 法兰城 v3.27 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.26</title>
+<title>法兰城 v3.27</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,7 +554,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.26</div>
+        <div class="version">v3.27</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。上一轮挂进去的局部动画经复核更像角色动作资源，因此先撤下，避免继续把错误动效叠在法兰城地图上。</p>
     </section>
@@ -794,7 +794,7 @@ const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 14 };
-const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 640, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
+const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 3000, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
 const landmarks = [
@@ -1096,7 +1096,7 @@ function drawSelectionPreview(tickMs) {
     const drawW = Math.round(previewImage.naturalWidth * drawScale);
     const drawH = Math.round(previewImage.naturalHeight * drawScale);
     const drawX = Math.round((selectionPreviewCanvas.width - drawW) / 2);
-    const drawY = Math.round(selectionPreviewCanvas.height - drawH - 8);
+    const drawY = Math.round((selectionPreviewCanvas.height - drawH) / 2);
     selectionPreviewCtx.drawImage(previewImage, drawX, drawY, drawW, drawH);
     return;
   }
@@ -1119,9 +1119,9 @@ function drawSelectionPreview(tickMs) {
   );
   const drawW = Math.round(action.frameWidth * drawScale);
   const drawH = Math.round(action.frameHeight * drawScale);
-  const footY = selectionPreviewCanvas.height - 9;
   const drawX = Math.round((selectionPreviewCanvas.width - drawW) / 2);
-  const drawY = Math.round(footY - action.anchorY * drawScale);
+  const drawY = Math.round((selectionPreviewCanvas.height - drawH) / 2);
+  const footY = drawY + action.anchorY * drawScale;
   const shadowW = Math.max(14, Math.round(18 * drawScale));
   const shadowH = Math.max(4, Math.round(6 * drawScale));
 
