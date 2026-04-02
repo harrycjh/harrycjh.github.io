@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.20 -->
+<!-- 法兰城 v3.21 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.20</title>
+<title>法兰城 v3.21</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -549,7 +549,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.20</div>
+        <div class="version">v3.21</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。上一轮挂进去的局部动画经复核更像角色动作资源，因此先撤下，避免继续把错误动效叠在法兰城地图上。</p>
     </section>
@@ -645,7 +645,7 @@ button:hover {
         <div class="selection-grid" id="selectionGrid"></div>
         <div class="selection-stage">
           <div class="selection-preview">
-            <img id="selectionPreviewImg" src="./assets/falan/previews/dog.png" alt="旅人预览">
+            <img id="selectionPreviewImg" src="./assets/falan/crossgate100253/preview.png" alt="旅人预览">
           </div>
           <div class="selection-copy">
             <h3 id="selectionName">小狗子</h3>
@@ -701,13 +701,53 @@ const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
   { id: 'ghost', name: '大头鬼', level: 'LV1', title: '慢悠悠巡城人', desc: '进城第一件事不是赶路，而是先看看城堡和大道在 45 度里够不够有味道。', avatar: './assets/falan/avatars/ghost.png', preview: './assets/falan/previews/ghost.png', sprite: './assets/falan/sprites/ghost.png' },
-  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '人型狗狗旅人，适合作为法兰城等角版的默认看板角色。', avatar: './assets/falan/avatars/dog.png', preview: './assets/falan/previews/dog.png', sprite: './assets/falan/sprites/dog.png' },
+  { id: 'dog', name: '小狗子', level: 'LV2', title: '法兰城常驻旅人', desc: '改成了魔力宝贝风格的新旅人，用 8 方向动作在法兰城里跑图会更有味道。', avatar: './assets/falan/crossgate100253/avatar.png', preview: './assets/falan/crossgate100253/preview.png', sprite: './assets/falan/sprites/dog.png', animationSet: 'crossgate100253' },
   { id: 'fat', name: '臭胖子', level: 'LV3', title: '喷泉边的狠角色', desc: '适合拿来测试会馆门口和中央广场的视觉压迫感。', avatar: './assets/falan/avatars/fat.png', preview: './assets/falan/previews/fat.png', sprite: './assets/falan/sprites/fat.png' },
   { id: 'rabbit', name: '小兔子', level: 'LV4', title: '轻快的等角冒险家', desc: '脚步最适合验证 45 度视角下的移动节奏和清爽感。', avatar: './assets/falan/avatars/rabbit.png', preview: './assets/falan/previews/rabbit.png', sprite: './assets/falan/sprites/rabbit.png' },
   { id: 'crayfish', name: '小龙虾', level: 'LV5', title: '带双钳的压轴旅人', desc: '更适合测试建筑前景和角色 silhouette 是否够强。', avatar: './assets/falan/avatars/crayfish.png', preview: './assets/falan/previews/crayfish.png', sprite: './assets/falan/sprites/crayfish.png' }
 ];
 
-let travelerIndex = Math.max(0, travelers.findIndex((traveler) => traveler.id === localStorage.getItem(travelerStorageKey)));
+const crossgateAnimationSets = {
+  crossgate100253: {
+    scale: 0.54,
+    directions: {
+      0: {
+        idle: { src: './assets/falan/crossgate100253/dir0-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 62, frameHeight: 79, gap: 6, anchorX: 35, anchorY: 66 },
+        walk: { src: './assets/falan/crossgate100253/dir0-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 67, frameHeight: 82, gap: 6, anchorX: 36, anchorY: 66 }
+      },
+      1: {
+        idle: { src: './assets/falan/crossgate100253/dir1-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 53, frameHeight: 77, gap: 6, anchorX: 23, anchorY: 65 },
+        walk: { src: './assets/falan/crossgate100253/dir1-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 49, frameHeight: 81, gap: 6, anchorX: 23, anchorY: 65 }
+      },
+      2: {
+        idle: { src: './assets/falan/crossgate100253/dir2-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 89, frameHeight: 79, gap: 6, anchorX: 26, anchorY: 66 },
+        walk: { src: './assets/falan/crossgate100253/dir2-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 81, frameHeight: 82, gap: 6, anchorX: 30, anchorY: 66 }
+      },
+      3: {
+        idle: { src: './assets/falan/crossgate100253/dir3-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 87, frameHeight: 91, gap: 6, anchorX: 23, anchorY: 73 },
+        walk: { src: './assets/falan/crossgate100253/dir3-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 93, frameHeight: 85, gap: 6, anchorX: 30, anchorY: 74 }
+      },
+      4: {
+        idle: { src: './assets/falan/crossgate100253/dir4-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 69, frameHeight: 111, gap: 6, anchorX: 27, anchorY: 75 },
+        walk: { src: './assets/falan/crossgate100253/dir4-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 68, frameHeight: 107, gap: 6, anchorX: 29, anchorY: 78 }
+      },
+      5: {
+        idle: { src: './assets/falan/crossgate100253/dir5-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 58, frameHeight: 109, gap: 6, anchorX: 33, anchorY: 72 },
+        walk: { src: './assets/falan/crossgate100253/dir5-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 44, frameHeight: 111, gap: 6, anchorX: 22, anchorY: 75 }
+      },
+      6: {
+        idle: { src: './assets/falan/crossgate100253/dir6-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 88, frameHeight: 97, gap: 6, anchorX: 62, anchorY: 76 },
+        walk: { src: './assets/falan/crossgate100253/dir6-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 83, frameHeight: 99, gap: 6, anchorX: 52, anchorY: 78 }
+      },
+      7: {
+        idle: { src: './assets/falan/crossgate100253/dir7-idle.png', frameCount: 4, durationMs: 1200, frameWidth: 84, frameHeight: 84, gap: 6, anchorX: 62, anchorY: 73 },
+        walk: { src: './assets/falan/crossgate100253/dir7-walk.png', frameCount: 6, durationMs: 1000, frameWidth: 92, frameHeight: 85, gap: 6, anchorX: 62, anchorY: 74 }
+      }
+    }
+  }
+};
+
+let travelerIndex = travelers.findIndex((traveler) => traveler.id === localStorage.getItem(travelerStorageKey));
 if (travelerIndex < 0) travelerIndex = 1;
 let pendingTravelerIndex = travelerIndex;
 let selectionOpen = true;
@@ -732,6 +772,16 @@ const sceneMap = {
   scale: 1
 };
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
+const crossgateSheetImages = Object.fromEntries(
+  Object.entries(crossgateAnimationSets).flatMap(([setId, set]) =>
+    Object.entries(set.directions).flatMap(([dir, actions]) =>
+      Object.entries(actions).map(([actionName, action]) => [
+        `${setId}-${dir}-${actionName}`,
+        loadImage(action.src)
+      ])
+    )
+  )
+);
 const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
@@ -751,6 +801,7 @@ const player = {
   tx: defaultSpawn.tx,
   ty: defaultSpawn.ty,
   dir: defaultSpawn.dir,
+  dir8: 4,
   step: 0,
   moving: false,
   speed: 0.16
@@ -976,6 +1027,7 @@ function teleportToDisplayCoord() {
   const internal = displayToInternal(clampedDisplayX, clampedDisplayY);
   player.tx = internal.tx;
   player.ty = internal.ty;
+  player.dir8 = 4;
   player.moving = false;
   player.step = 0;
   resetKeyState();
@@ -1002,6 +1054,7 @@ function resetPlayerToSpawn() {
   player.tx = defaultSpawn.tx;
   player.ty = defaultSpawn.ty;
   player.dir = defaultSpawn.dir;
+  player.dir8 = 4;
   player.step = 0;
   player.moving = false;
 }
@@ -1249,6 +1302,9 @@ function updatePlayer() {
     player.dir = 'right';
   }
 
+  if (dtx !== 0 || dty !== 0) {
+    player.dir8 = resolveDir8(dtx, dty, player.dir8);
+  }
   player.moving = dtx !== 0 || dty !== 0;
   if (player.moving) {
     const nextTx = clamp(player.tx + dtx, 1, sceneMap.cols - 1);
@@ -1259,6 +1315,21 @@ function updatePlayer() {
     }
     player.step += 0.22;
   }
+}
+
+function resolveDir8(dtx, dty, fallback = 4) {
+  const epsilon = 0.001;
+  const sx = Math.abs(dtx) < epsilon ? 0 : dtx > 0 ? 1 : -1;
+  const sy = Math.abs(dty) < epsilon ? 0 : dty > 0 ? 1 : -1;
+  if (sx === -1 && sy === -1) return 0;
+  if (sx === 0 && sy === -1) return 1;
+  if (sx === 1 && sy === -1) return 2;
+  if (sx === 1 && sy === 0) return 3;
+  if (sx === 1 && sy === 1) return 4;
+  if (sx === 0 && sy === 1) return 5;
+  if (sx === -1 && sy === 1) return 6;
+  if (sx === -1 && sy === 0) return 7;
+  return fallback;
 }
 
 function drawFocusMarker(tick) {
@@ -1329,29 +1400,35 @@ function drawScene(tick) {
   }
 
   drawFocusMarker(tick);
-  drawPlayer();
+  drawPlayer(tick);
 
   ctx.fillStyle = 'rgba(240, 229, 193, 0.85)';
   ctx.font = '13px "Courier New", monospace';
   ctx.fillText('FALAN CITY MAP 1000', 18, 26);
 }
 
-function drawPlayer() {
+function drawPlayer(tick = 0) {
   const traveler = travelers[travelerIndex];
-  const sprite = travelerSprites[traveler.id];
   const point = mapToScreen(player.tx, player.ty);
   const walkPhase = player.moving ? Math.sin(player.step) : 0;
   const bob = player.moving ? -Math.abs(walkPhase) * 3 : 0;
   const sway = player.moving && (player.dir === 'up' || player.dir === 'down') ? walkPhase * 1.1 : 0;
   const footY = point.y + 2;
   const shadowY = footY + 2;
-  const shadowW = 12 + (player.moving ? Math.abs(walkPhase) * 3 : 0);
-  const shadowH = 4.5 - (player.moving ? Math.abs(walkPhase) * 0.7 : 0);
+  const isCrossgateTraveler = Boolean(traveler.animationSet && crossgateAnimationSets[traveler.animationSet]);
+  const shadowW = (isCrossgateTraveler ? 16 : 12) + (player.moving ? Math.abs(walkPhase) * 3 : 0);
+  const shadowH = (isCrossgateTraveler ? 5.2 : 4.5) - (player.moving ? Math.abs(walkPhase) * 0.7 : 0);
   ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
   ctx.beginPath();
   ctx.ellipse(point.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
   ctx.fill();
 
+  if (isCrossgateTraveler) {
+    drawCrossgateTraveler(traveler, point, footY, bob, tick);
+    return;
+  }
+
+  const sprite = travelerSprites[traveler.id];
   if (!sprite.complete || !sprite.naturalWidth) return;
   const walk = player.moving ? (Math.floor(player.step) % 2) : 0;
   const base = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
@@ -1371,6 +1448,37 @@ function drawPlayer() {
   } else {
     ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, drawW, drawH);
   }
+}
+
+function drawCrossgateTraveler(traveler, point, footY, bob, tick) {
+  const animationSet = crossgateAnimationSets[traveler.animationSet];
+  if (!animationSet) return;
+  const dir = String(player.dir8 ?? 4);
+  const actionName = player.moving ? 'walk' : 'idle';
+  const action = animationSet.directions[dir]?.[actionName];
+  const image = crossgateSheetImages[`${traveler.animationSet}-${dir}-${actionName}`];
+  if (!action || !image?.complete || !image.naturalWidth) return;
+
+  const frameSpan = (action.durationMs / 16.6) / action.frameCount;
+  const frameIndex = Math.floor(tick / Math.max(frameSpan, 1)) % action.frameCount;
+  const frameStep = action.frameWidth + action.gap;
+  const drawW = Math.round(action.frameWidth * animationSet.scale);
+  const drawH = Math.round(action.frameHeight * animationSet.scale);
+  const anchorX = Math.round(action.anchorX * animationSet.scale);
+  const anchorY = Math.round(action.anchorY * animationSet.scale);
+  const drawX = Math.round(point.x - anchorX);
+  const drawY = Math.round(footY - anchorY + bob);
+  ctx.drawImage(
+    image,
+    frameIndex * frameStep,
+    0,
+    action.frameWidth,
+    action.frameHeight,
+    drawX,
+    drawY,
+    drawW,
+    drawH
+  );
 }
 
 function loop(tick) {
