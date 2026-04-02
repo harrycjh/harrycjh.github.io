@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.37 -->
+<!-- 法兰城 v3.38 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.37</title>
+<title>法兰城 v3.38</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -203,6 +203,82 @@ canvas {
 .map-shell:fullscreen .map-fullscreen-exit,
 .map-shell:-webkit-full-screen .map-fullscreen-exit {
   display: inline-flex;
+}
+.mobile-joystick {
+  position: absolute;
+  left: max(18px, env(safe-area-inset-left));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 4;
+  width: 148px;
+  height: 148px;
+  display: none;
+  touch-action: none;
+  user-select: none;
+}
+.mobile-joystick.visible {
+  display: block;
+}
+.mobile-joystick-base {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 204, 134, 0.26);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.12), transparent 38%),
+    rgba(8, 13, 10, 0.36);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.04),
+    0 14px 32px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(5px);
+}
+.mobile-joystick-base::before,
+.mobile-joystick-base::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  background: rgba(232, 204, 134, 0.12);
+  transform: translate(-50%, -50%);
+}
+.mobile-joystick-base::before {
+  width: 2px;
+  height: 76%;
+}
+.mobile-joystick-base::after {
+  width: 76%;
+  height: 2px;
+}
+.mobile-joystick-thumb {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 58px;
+  height: 58px;
+  margin-left: -29px;
+  margin-top: -29px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 204, 134, 0.34);
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.24), transparent 42%),
+    linear-gradient(180deg, rgba(105, 131, 111, 0.86), rgba(30, 44, 34, 0.92));
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.04),
+    0 10px 20px rgba(0, 0, 0, 0.26);
+  transition: transform 90ms ease-out;
+  pointer-events: none;
+}
+.mobile-joystick-caption {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 204, 134, 0.2);
+  background: rgba(10, 16, 12, 0.55);
+  color: rgba(242, 237, 201, 0.78);
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 .note {
   margin-top: 12px;
@@ -554,7 +630,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.37</div>
+        <div class="version">v3.38</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会优先尝试进入地图全屏，并在支持的浏览器里启用陀螺仪控制上下左右。</p>
     </section>
@@ -564,7 +640,7 @@ button:hover {
         <div class="map-head">
           <div>
             <h2>真实法兰城</h2>
-            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这一版不再是程序拼的假城镇，而是把客户端里的 <code>1000.dat</code> 法兰城真实地图接进首页，先做成可逛、可验证的 prototype。</p>
+            <p>按 <code>WASD</code> 或方向键移动。手机端现在同时支持陀螺仪和左下角摇杆，右侧可以单独开关陀螺仪。这一版不再是程序拼的假城镇，而是把客户端里的 <code>1000.dat</code> 法兰城真实地图接进首页，先做成可逛、可验证的 prototype。</p>
           </div>
           <div class="map-badges">
             <div class="badge">Cross Gate 原始地图</div>
@@ -577,6 +653,12 @@ button:hover {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
+          <div class="mobile-joystick" id="mobileJoystick" hidden aria-hidden="true">
+            <div class="mobile-joystick-base" id="mobileJoystickBase">
+              <div class="mobile-joystick-thumb" id="mobileJoystickThumb"></div>
+            </div>
+            <div class="mobile-joystick-caption">移动摇杆</div>
+          </div>
         </div>
         <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM，方便边逛边校区域。</div>
       </div>
@@ -600,6 +682,7 @@ button:hover {
             <button type="button" id="openSelectionBtn">选人界面</button>
             <button type="button" id="fullscreenBtn">全屏游玩</button>
             <button type="button" id="toggleMusicBtn">关闭音乐</button>
+            <button type="button" id="toggleGyroBtn">关闭陀螺仪</button>
           </div>
           <div class="teleport-tool">
             <div class="teleport-title">调试传送</div>
@@ -684,12 +767,16 @@ const portraitImg = document.getElementById('portraitImg');
 const openSelectionBtn = document.getElementById('openSelectionBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const toggleMusicBtn = document.getElementById('toggleMusicBtn');
+const toggleGyroBtn = document.getElementById('toggleGyroBtn');
 const teleportXInput = document.getElementById('teleportXInput');
 const teleportYInput = document.getElementById('teleportYInput');
 const teleportBtn = document.getElementById('teleportBtn');
 const teleportStatusEl = document.getElementById('teleportStatus');
 const mapShell = document.getElementById('mapShell');
 const mapFullscreenExit = document.getElementById('mapFullscreenExit');
+const mobileJoystick = document.getElementById('mobileJoystick');
+const mobileJoystickBase = document.getElementById('mobileJoystickBase');
+const mobileJoystickThumb = document.getElementById('mobileJoystickThumb');
 const pageFrame = document.getElementById('pageFrame');
 const pageRoot = document.getElementById('pageRoot');
 const selectionOverlay = document.getElementById('selectionOverlay');
@@ -706,6 +793,7 @@ selectionPreviewCtx.imageSmoothingEnabled = false;
 
 const travelerStorageKey = 'falan-selected-traveler';
 const bgmEnabledStorageKey = 'falan-bgm-enabled';
+const gyroEnabledStorageKey = 'falan-gyro-enabled';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
@@ -795,12 +883,14 @@ const crossgateSheetImages = Object.fromEntries(
   )
 );
 const keyState = { up: false, down: false, left: false, right: false };
+const touchKeyState = { up: false, down: false, left: false, right: false };
 const gyroKeyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '', bgm: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
 const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 3000, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
+const joystickState = { active: false, pointerId: null, dx: 0, dy: 0, radius: 36 };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
 const moatMusicRect = {
@@ -836,6 +926,7 @@ const bgmState = {
 const mobileState = {
   isMobile: window.matchMedia('(pointer: coarse)').matches || /Android|webOS|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent),
   gyroSupported: typeof window.DeviceOrientationEvent !== 'undefined',
+  gyroWanted: localStorage.getItem(gyroEnabledStorageKey) !== 'off',
   gyroEnabled: false,
   gyroPermissionState: 'unknown',
   gyroListenerBound: false,
@@ -864,12 +955,20 @@ function createBgmTracks() {
 }
 
 function getMovementState() {
+  const useGyro = mobileState.gyroEnabled && !joystickState.active;
   return {
-    up: keyState.up || gyroKeyState.up,
-    down: keyState.down || gyroKeyState.down,
-    left: keyState.left || gyroKeyState.left,
-    right: keyState.right || gyroKeyState.right
+    up: keyState.up || touchKeyState.up || (useGyro && gyroKeyState.up),
+    down: keyState.down || touchKeyState.down || (useGyro && gyroKeyState.down),
+    left: keyState.left || touchKeyState.left || (useGyro && gyroKeyState.left),
+    right: keyState.right || touchKeyState.right || (useGyro && gyroKeyState.right)
   };
+}
+
+function resetTouchMovement() {
+  touchKeyState.up = false;
+  touchKeyState.down = false;
+  touchKeyState.left = false;
+  touchKeyState.right = false;
 }
 
 function resetGyroMovement() {
@@ -941,6 +1040,79 @@ async function requestGyroControls() {
     console.warn('gyro permission failed', error);
     return false;
   }
+}
+
+function syncGyroToggleButton() {
+  const available = mobileState.isMobile && mobileState.gyroSupported;
+  toggleGyroBtn.disabled = !available;
+  if (!available) {
+    toggleGyroBtn.textContent = '陀螺仪不可用';
+    toggleGyroBtn.setAttribute('aria-pressed', 'false');
+    return;
+  }
+  toggleGyroBtn.textContent = mobileState.gyroWanted ? '关闭陀螺仪' : '打开陀螺仪';
+  toggleGyroBtn.setAttribute('aria-pressed', mobileState.gyroWanted ? 'true' : 'false');
+}
+
+async function setGyroEnabled(enabled) {
+  mobileState.gyroWanted = enabled;
+  localStorage.setItem(gyroEnabledStorageKey, enabled ? 'on' : 'off');
+  if (!enabled) {
+    mobileState.gyroEnabled = false;
+    mobileState.baseline = null;
+    resetGyroMovement();
+  } else if (mobileState.isMobile) {
+    await requestGyroControls();
+  }
+  syncGyroToggleButton();
+}
+
+function syncJoystickThumb() {
+  mobileJoystickThumb.style.transform = `translate(${joystickState.dx}px, ${joystickState.dy}px)`;
+}
+
+function resetJoystick() {
+  joystickState.active = false;
+  joystickState.pointerId = null;
+  joystickState.dx = 0;
+  joystickState.dy = 0;
+  resetTouchMovement();
+  syncJoystickThumb();
+}
+
+function applyJoystickVector(dx, dy) {
+  joystickState.dx = dx;
+  joystickState.dy = dy;
+  const nx = dx / joystickState.radius;
+  const ny = dy / joystickState.radius;
+  touchKeyState.left = nx < -0.35;
+  touchKeyState.right = nx > 0.35;
+  touchKeyState.up = ny < -0.35;
+  touchKeyState.down = ny > 0.35;
+  syncJoystickThumb();
+}
+
+function updateJoystickFromPointer(event) {
+  const rect = mobileJoystickBase.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  let dx = event.clientX - centerX;
+  let dy = event.clientY - centerY;
+  const distance = Math.hypot(dx, dy);
+  if (distance > joystickState.radius) {
+    const factor = joystickState.radius / distance;
+    dx *= factor;
+    dy *= factor;
+  }
+  applyJoystickVector(dx, dy);
+}
+
+function syncMobileJoystickVisibility() {
+  const visible = mobileState.isMobile && !selectionOpen;
+  mobileJoystick.hidden = !visible;
+  mobileJoystick.classList.toggle('visible', visible);
+  mobileJoystick.setAttribute('aria-hidden', visible ? 'false' : 'true');
+  if (!visible) resetJoystick();
 }
 
 function mapToPreview(tx, ty) {
@@ -1166,7 +1338,7 @@ async function maybeEnterMobileFullscreen() {
 async function activateMobileImmersive(tryGyro = true) {
   if (!mobileState.isMobile) return;
   await maybeEnterMobileFullscreen();
-  if (tryGyro) await requestGyroControls();
+  if (tryGyro && mobileState.gyroWanted) await requestGyroControls();
 }
 
 function syncBgm(force = false) {
@@ -1270,7 +1442,9 @@ function resetKeyState() {
   keyState.down = false;
   keyState.left = false;
   keyState.right = false;
+  resetTouchMovement();
   resetGyroMovement();
+  resetJoystick();
 }
 
 function applyTraveler(index) {
@@ -1390,6 +1564,7 @@ function openTravelerSelection(resetPending = true) {
   resetKeyState();
   syncSelectionPanel();
   selectionOverlay.classList.add('active');
+  syncMobileJoystickVisibility();
   syncInfo();
   syncBgm();
 }
@@ -1403,6 +1578,7 @@ function closeTravelerSelection(apply = true) {
   selectionOpen = false;
   resetKeyState();
   selectionOverlay.classList.remove('active');
+  syncMobileJoystickVisibility();
   syncBgm();
 }
 
@@ -1543,6 +1719,9 @@ fullscreenBtn.addEventListener('click', () => {
 toggleMusicBtn.addEventListener('click', () => {
   setBgmEnabled(!bgmState.enabled);
 });
+toggleGyroBtn.addEventListener('click', async () => {
+  await setGyroEnabled(!mobileState.gyroWanted);
+});
 teleportBtn.addEventListener('click', () => {
   teleportToDisplayCoord();
 });
@@ -1560,6 +1739,28 @@ teleportYInput.addEventListener('keydown', (event) => {
 });
 mapFullscreenExit.addEventListener('click', () => {
   toggleFullscreen();
+});
+mobileJoystickBase.addEventListener('pointerdown', (event) => {
+  if (!mobileState.isMobile) return;
+  event.preventDefault();
+  joystickState.active = true;
+  joystickState.pointerId = event.pointerId;
+  mobileJoystickBase.setPointerCapture?.(event.pointerId);
+  updateJoystickFromPointer(event);
+});
+mobileJoystickBase.addEventListener('pointermove', (event) => {
+  if (!joystickState.active || joystickState.pointerId !== event.pointerId) return;
+  event.preventDefault();
+  updateJoystickFromPointer(event);
+});
+mobileJoystickBase.addEventListener('pointerup', (event) => {
+  if (joystickState.pointerId !== event.pointerId) return;
+  event.preventDefault();
+  resetJoystick();
+});
+mobileJoystickBase.addEventListener('pointercancel', (event) => {
+  if (joystickState.pointerId !== event.pointerId) return;
+  resetJoystick();
 });
 confirmSelectionBtn.addEventListener('click', async () => {
   await activateMobileImmersive(true);
@@ -1831,6 +2032,8 @@ if (skipSelectionOnLoad) {
 fitPageToViewport();
 syncFullscreenButton();
 syncMusicToggleButton();
+syncGyroToggleButton();
+syncMobileJoystickVisibility();
 syncBgm();
 if (mobileState.isMobile) {
   setTimeout(() => {
