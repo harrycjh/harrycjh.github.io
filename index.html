@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.9 -->
+<!-- 法兰城 v3.11 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.9</title>
+<title>法兰城 v3.11</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -495,7 +495,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.9</div>
+        <div class="version">v3.11</div>
       </div>
       <p>这一版把首页的法兰城直接切成了《魔力宝贝》客户端里拼出来的真实主城地图。现在先保留旅人选择、移动和进入黑白棋会馆这些交互，再逐步把真实碰撞、重点建筑和更多功能一点点接回来。</p>
     </section>
@@ -510,6 +510,7 @@ button:hover {
           <div class="map-badges">
             <div class="badge">Cross Gate 原始地图</div>
             <div class="badge">1000.dat</div>
+            <div class="badge">11128 x 8300 原图</div>
             <div class="badge">碰撞遮罩试装</div>
           </div>
         </div>
@@ -517,7 +518,7 @@ button:hover {
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">当前先走一条最稳的接入路线：用真实法兰城底图做主画面，再把旅人叠在上面移动，并试装一层基于源地图物件层推出来的阻挡遮罩。你主要看两件事：一是这张图本身是不是你要的法兰城，二是人物在上面逛的时候有没有“终于回到原版地图里”的感觉。</div>
+        <div class="note">当前首页直接使用导出的法兰城原始底图与原图坐标。现在看到的是原图上的真实视口，不再额外压成小图，所以会更接近直接站在法兰城里看的感觉。</div>
       </div>
 
       <aside class="side">
@@ -645,15 +646,15 @@ function loadImage(src) {
 const sceneMap = {
   image: loadImage('./assets/falan/map/falan-city-1000.png'),
   collisionImage: loadImage('./assets/falan/map/falan-city-1000-occupancy.png'),
-  width: 2003,
-  height: 1494,
+  width: 11128,
+  height: 8300,
   cols: 300,
   rows: 300,
   halfW: 32,
   halfH: 23,
   baseX: 7004,
   baseY: -1578,
-  scale: 0.18
+  scale: 1
 };
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
 const keyState = { up: false, down: false, left: false, right: false };
