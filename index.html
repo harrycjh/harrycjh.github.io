@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.31 -->
+<!-- 法兰城 v3.32 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.31</title>
+<title>法兰城 v3.32</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,9 +554,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.31</div>
+        <div class="version">v3.32</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图也先接上原版 BGM，方便一边跑图一边校区域与氛围。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图也先接上原版 BGM，并把主地图角色改成固定脚底锚点，减少走路时的悬浮感。</p>
     </section>
 
     <section class="layout">
@@ -1621,7 +1621,7 @@ function drawPlayer(tick = 0) {
   ctx.fill();
 
   if (isCrossgateTraveler) {
-    drawCrossgateTraveler(traveler, point, footY, bob, tick);
+    drawCrossgateTraveler(traveler, point, footY, tick);
     return;
   }
 
@@ -1647,7 +1647,7 @@ function drawPlayer(tick = 0) {
   }
 }
 
-function drawCrossgateTraveler(traveler, point, footY, bob, tick) {
+function drawCrossgateTraveler(traveler, point, footY, tick) {
   const animationSet = crossgateAnimationSets[traveler.animationSet];
   if (!animationSet) return;
   const dir = String(player.dir8 ?? 4);
@@ -1664,7 +1664,7 @@ function drawCrossgateTraveler(traveler, point, footY, bob, tick) {
   const anchorX = Math.round(action.anchorX * animationSet.scale);
   const anchorY = Math.round(action.anchorY * animationSet.scale);
   const drawX = Math.round(point.x - anchorX);
-  const drawY = Math.round(footY - anchorY + bob);
+  const drawY = Math.round(footY - anchorY);
   ctx.drawImage(
     image,
     frameIndex * frameStep,
