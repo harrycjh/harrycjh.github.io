@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.32 -->
+<!-- 法兰城 v3.33 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.32</title>
+<title>法兰城 v3.33</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,9 +554,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.32</div>
+        <div class="version">v3.33</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图也先接上原版 BGM，并把主地图角色改成固定脚底锚点，减少走路时的悬浮感。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图会主动尝试播放原版 BGM，里谢里雅堡也改成按你给的四点范围切歌。</p>
     </section>
 
     <section class="layout">
@@ -807,7 +807,12 @@ const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion:
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 3000, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
-const moatMusicZone = { minTx: 64, maxTx: 114, minTy: 112, maxTy: 162 };
+const moatMusicPolygon = [
+  { tx: 100.6, ty: 153.3 },
+  { tx: 87.8, ty: 165.6 },
+  { tx: 61.9, ty: 153.3 },
+  { tx: 88.0, ty: 140.6 }
+];
 const landmarks = [
   { id: 'castle', label: '里谢里雅城', focus: '王城前广场', area: '里谢里雅城前', tx: 88.0, ty: 136.0 },
   { id: 'cathedral', label: '西区圣堂', focus: '大圣堂周边', area: '西区圣堂与工房', tx: 64.0, ty: 156.0 },
@@ -827,7 +832,7 @@ const player = {
   speed: 0.06
 };
 const bgmTracks = createBgmTracks();
-const bgmState = { unlocked: false, currentKey: '', desiredKey: 'selection' };
+const bgmState = { currentKey: '', desiredKey: 'selection' };
 
 sceneMap.previewImage.addEventListener('load', () => {
   mapRenderState.dirty = true;
@@ -1015,11 +1020,32 @@ function areaName() {
   return currentFocus().area;
 }
 
+function pointOnSegment(px, py, ax, ay, bx, by) {
+  const cross = (px - ax) * (by - ay) - (py - ay) * (bx - ax);
+  if (Math.abs(cross) > 0.0001) return false;
+  const dot = (px - ax) * (bx - ax) + (py - ay) * (by - ay);
+  if (dot < 0) return false;
+  const squaredLength = (bx - ax) ** 2 + (by - ay) ** 2;
+  return dot <= squaredLength;
+}
+
+function pointInPolygon(px, py, polygon) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+    const xi = polygon[i].tx;
+    const yi = polygon[i].ty;
+    const xj = polygon[j].tx;
+    const yj = polygon[j].ty;
+    if (pointOnSegment(px, py, xi, yi, xj, yj)) return true;
+    const intersects = ((yi > py) !== (yj > py))
+      && (px < ((xj - xi) * (py - yi)) / ((yj - yi) || Number.EPSILON) + xi);
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
 function isInsideMoatZone(displayTx, displayTy) {
-  return displayTx >= moatMusicZone.minTx
-    && displayTx <= moatMusicZone.maxTx
-    && displayTy >= moatMusicZone.minTy
-    && displayTy <= moatMusicZone.maxTy;
+  return pointInPolygon(displayTx, displayTy, moatMusicPolygon);
 }
 
 function currentBgmKey() {
@@ -1033,24 +1059,22 @@ function bgmLabelForKey(key) {
 }
 
 function maybeUnlockBgm() {
-  if (!bgmState.unlocked) bgmState.unlocked = true;
   syncBgm(true);
 }
 
 function syncBgm(force = false) {
   const desiredKey = currentBgmKey();
   bgmState.desiredKey = desiredKey;
-  if (!bgmState.unlocked) return;
   const nextTrack = bgmTracks[desiredKey];
   if (!nextTrack) return;
-  if (!force && bgmState.currentKey === desiredKey && !nextTrack.audio.paused) return;
+  if (bgmState.currentKey === desiredKey && !nextTrack.audio.paused) return;
   const currentTrack = bgmTracks[bgmState.currentKey];
   if (currentTrack && currentTrack !== nextTrack) {
     currentTrack.audio.pause();
     currentTrack.audio.currentTime = 0;
   }
-  bgmState.currentKey = desiredKey;
-  if (!nextTrack.audio.paused) return;
+  if (bgmState.currentKey !== desiredKey) bgmState.currentKey = desiredKey;
+  if (!nextTrack.audio.paused && !force) return;
   const playPromise = nextTrack.audio.play();
   if (playPromise?.catch) {
     playPromise.catch((error) => {
