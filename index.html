@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.41 -->
+<!-- 法兰城 v3.42 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.41</title>
+<title>法兰城 v3.42</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -714,9 +714,9 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.41</div>
+        <div class="version">v3.42</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会优先进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面，但不再自动触发全屏。</p>
     </section>
 
     <section class="layout">
@@ -1497,21 +1497,8 @@ function maybeUnlockBgm() {
   syncBgm(true);
 }
 
-async function maybeEnterMobileFullscreen() {
-  if (!refreshMobileMode()) return false;
-  if (getFullscreenElement()) return true;
-  try {
-    await requestFullscreenSafe(mapShell);
-    return true;
-  } catch (error) {
-    console.warn('mobile fullscreen blocked', error);
-    return false;
-  }
-}
-
 async function activateMobileImmersive(tryGyro = true) {
   if (!refreshMobileMode()) return;
-  await maybeEnterMobileFullscreen();
   if (tryGyro && mobileState.gyroWanted) await requestGyroControls();
 }
 
