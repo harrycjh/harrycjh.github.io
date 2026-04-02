@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.39 -->
+<!-- 法兰城 v3.40 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.39</title>
+<title>法兰城 v3.40</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -203,6 +203,27 @@ canvas {
 .map-shell:fullscreen .map-fullscreen-exit,
 .map-shell:-webkit-full-screen .map-fullscreen-exit {
   display: inline-flex;
+}
+.mobile-hud {
+  position: absolute;
+  right: max(16px, env(safe-area-inset-right));
+  top: max(16px, env(safe-area-inset-top));
+  z-index: 4;
+  display: none;
+  grid-auto-flow: row;
+  gap: 8px;
+  justify-items: end;
+}
+.mobile-hud.visible {
+  display: grid;
+}
+.mobile-hud button {
+  min-width: 98px;
+  padding: 8px 12px;
+  background: rgba(10, 16, 12, 0.66);
+  border: 1px solid rgba(232, 204, 134, 0.24);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
 }
 .mobile-joystick {
   position: absolute;
@@ -463,6 +484,54 @@ button:hover {
   padding: 18px 20px 20px;
   box-shadow: 0 22px 68px rgba(0, 0, 0, 0.46);
 }
+body.mobile-play-only {
+  background: #090d0a;
+}
+body.mobile-play-only .page-frame {
+  padding: 0;
+  align-items: stretch;
+}
+body.mobile-play-only .page {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+}
+body.mobile-play-only .hero,
+body.mobile-play-only .side,
+body.mobile-play-only .map-head,
+body.mobile-play-only .note {
+  display: none;
+}
+body.mobile-play-only .layout {
+  display: block;
+  height: 100vh;
+}
+body.mobile-play-only .map-shell {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: #090d0a;
+}
+body.mobile-play-only .canvas-wrap {
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  background: #090d0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+body.mobile-play-only .canvas-wrap::before {
+  display: none;
+}
+body.mobile-play-only canvas {
+  width: auto;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+}
 .selection-head {
   display: flex;
   justify-content: space-between;
@@ -645,9 +714,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.39</div>
+        <div class="version">v3.40</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会优先尝试进入地图全屏，并在支持的浏览器里启用陀螺仪控制上下左右；选人界面也会自动横屏并按比例适配。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会优先进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面。</p>
     </section>
 
     <section class="layout">
@@ -668,6 +737,11 @@ button:hover {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
+          <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
+            <button type="button" id="mobileSelectionBtn">选人界面</button>
+            <button type="button" id="mobileMusicBtn">关闭音乐</button>
+            <button type="button" id="mobileGyroBtn">关闭陀螺仪</button>
+          </div>
           <div class="mobile-joystick" id="mobileJoystick" hidden aria-hidden="true">
             <div class="mobile-joystick-base" id="mobileJoystickBase">
               <div class="mobile-joystick-thumb" id="mobileJoystickThumb"></div>
@@ -789,6 +863,10 @@ const teleportBtn = document.getElementById('teleportBtn');
 const teleportStatusEl = document.getElementById('teleportStatus');
 const mapShell = document.getElementById('mapShell');
 const mapFullscreenExit = document.getElementById('mapFullscreenExit');
+const mobileHud = document.getElementById('mobileHud');
+const mobileSelectionBtn = document.getElementById('mobileSelectionBtn');
+const mobileMusicBtn = document.getElementById('mobileMusicBtn');
+const mobileGyroBtn = document.getElementById('mobileGyroBtn');
 const mobileJoystick = document.getElementById('mobileJoystick');
 const mobileJoystickBase = document.getElementById('mobileJoystickBase');
 const mobileJoystickThumb = document.getElementById('mobileJoystickThumb');
@@ -1061,13 +1139,18 @@ async function requestGyroControls() {
 function syncGyroToggleButton() {
   const available = mobileState.isMobile && mobileState.gyroSupported;
   toggleGyroBtn.disabled = !available;
+  mobileGyroBtn.disabled = !available;
   if (!available) {
     toggleGyroBtn.textContent = '陀螺仪不可用';
     toggleGyroBtn.setAttribute('aria-pressed', 'false');
+    mobileGyroBtn.textContent = '陀螺不可用';
+    mobileGyroBtn.setAttribute('aria-pressed', 'false');
     return;
   }
   toggleGyroBtn.textContent = mobileState.gyroWanted ? '关闭陀螺仪' : '打开陀螺仪';
   toggleGyroBtn.setAttribute('aria-pressed', mobileState.gyroWanted ? 'true' : 'false');
+  mobileGyroBtn.textContent = mobileState.gyroWanted ? '关闭陀螺仪' : '打开陀螺仪';
+  mobileGyroBtn.setAttribute('aria-pressed', mobileState.gyroWanted ? 'true' : 'false');
 }
 
 async function setGyroEnabled(enabled) {
@@ -1129,6 +1212,14 @@ function syncMobileJoystickVisibility() {
   mobileJoystick.classList.toggle('visible', visible);
   mobileJoystick.setAttribute('aria-hidden', visible ? 'false' : 'true');
   if (!visible) resetJoystick();
+}
+
+function syncMobileHud() {
+  const visible = mobileState.isMobile && !selectionOpen;
+  document.body.classList.toggle('mobile-play-only', mobileState.isMobile);
+  mobileHud.hidden = !visible;
+  mobileHud.classList.toggle('visible', visible);
+  mobileHud.setAttribute('aria-hidden', visible ? 'false' : 'true');
 }
 
 function isPortraitViewport() {
@@ -1368,6 +1459,8 @@ function bgmLabelForKey(key) {
 function syncMusicToggleButton() {
   toggleMusicBtn.textContent = bgmState.enabled ? '关闭音乐' : '打开音乐';
   toggleMusicBtn.setAttribute('aria-pressed', bgmState.enabled ? 'true' : 'false');
+  mobileMusicBtn.textContent = bgmState.enabled ? '关闭音乐' : '打开音乐';
+  mobileMusicBtn.setAttribute('aria-pressed', bgmState.enabled ? 'true' : 'false');
 }
 
 function setBgmEnabled(enabled) {
@@ -1632,6 +1725,7 @@ function openTravelerSelection(resetPending = true) {
   selectionOverlay.classList.add('active');
   syncSelectionViewport();
   lockSelectionLandscape();
+  syncMobileHud();
   syncMobileJoystickVisibility();
   syncInfo();
   syncBgm();
@@ -1648,6 +1742,7 @@ function closeTravelerSelection(apply = true) {
   selectionOverlay.classList.remove('active');
   unlockSelectionLandscape();
   syncSelectionViewport();
+  syncMobileHud();
   syncMobileJoystickVisibility();
   syncBgm();
 }
@@ -1675,6 +1770,11 @@ function isMovementKey(key) {
 }
 
 function fitPageToViewport() {
+  if (mobileState.isMobile) {
+    pageRoot.style.transform = 'scale(1)';
+    pageFrame.style.alignItems = 'stretch';
+    return;
+  }
   pageRoot.style.transform = 'scale(1)';
   const naturalWidth = pageRoot.offsetWidth;
   const naturalHeight = pageRoot.offsetHeight;
@@ -1774,16 +1874,19 @@ window.addEventListener('pointerdown', () => {
 window.addEventListener('resize', () => {
   fitPageToViewport();
   syncSelectionViewport();
+  syncMobileHud();
 });
 window.addEventListener('fullscreenchange', () => {
   fitPageToViewport();
   syncFullscreenButton();
   syncSelectionViewport();
+  syncMobileHud();
 });
 window.addEventListener('webkitfullscreenchange', () => {
   fitPageToViewport();
   syncFullscreenButton();
   syncSelectionViewport();
+  syncMobileHud();
 });
 openSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
@@ -1794,8 +1897,17 @@ fullscreenBtn.addEventListener('click', () => {
 toggleMusicBtn.addEventListener('click', () => {
   setBgmEnabled(!bgmState.enabled);
 });
+mobileMusicBtn.addEventListener('click', () => {
+  setBgmEnabled(!bgmState.enabled);
+});
 toggleGyroBtn.addEventListener('click', async () => {
   await setGyroEnabled(!mobileState.gyroWanted);
+});
+mobileGyroBtn.addEventListener('click', async () => {
+  await setGyroEnabled(!mobileState.gyroWanted);
+});
+mobileSelectionBtn.addEventListener('click', () => {
+  openTravelerSelection(true);
 });
 teleportBtn.addEventListener('click', () => {
   teleportToDisplayCoord();
@@ -2109,6 +2221,7 @@ syncFullscreenButton();
 syncMusicToggleButton();
 syncGyroToggleButton();
 syncSelectionViewport();
+syncMobileHud();
 syncMobileJoystickVisibility();
 syncBgm();
 if (mobileState.isMobile) {
