@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.7 -->
+<!-- 法兰城 v3.8 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.7</title>
+<title>法兰城 v3.8</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -443,7 +443,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.7</div>
+        <div class="version">v3.8</div>
       </div>
       <p>这一版把首页的法兰城直接切成了《魔力宝贝》客户端里拼出来的真实主城地图。现在先保留旅人选择、移动和进入黑白棋会馆这些交互，再逐步把真实碰撞、重点建筑和更多功能一点点接回来。</p>
     </section>
@@ -487,6 +487,7 @@ button:hover {
             <button type="button" id="enterReversiBtn">进入黑白棋</button>
             <button type="button" id="viewClassicBtn">查看旧版</button>
             <button type="button" id="openSelectionBtn">选人界面</button>
+            <button type="button" id="fullscreenBtn">全屏游玩</button>
           </div>
         </section>
 
@@ -551,6 +552,7 @@ const nextTravelerBtn = document.getElementById('nextTravelerBtn');
 const enterReversiBtn = document.getElementById('enterReversiBtn');
 const viewClassicBtn = document.getElementById('viewClassicBtn');
 const openSelectionBtn = document.getElementById('openSelectionBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
 const pageFrame = document.getElementById('pageFrame');
 const pageRoot = document.getElementById('pageRoot');
 const selectionOverlay = document.getElementById('selectionOverlay');
@@ -809,6 +811,44 @@ function fitPageToViewport() {
   pageFrame.style.alignItems = naturalHeight * scale < window.innerHeight - 24 ? 'center' : 'flex-start';
 }
 
+function getFullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement || null;
+}
+
+function syncFullscreenButton() {
+  const active = !!getFullscreenElement();
+  fullscreenBtn.textContent = active ? '退出全屏' : '全屏游玩';
+  fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+}
+
+function requestFullscreenSafe(element) {
+  if (element.requestFullscreen) return element.requestFullscreen();
+  if (element.webkitRequestFullscreen) return element.webkitRequestFullscreen();
+  if (element.msRequestFullscreen) return element.msRequestFullscreen();
+  return Promise.reject(new Error('fullscreen-not-supported'));
+}
+
+function exitFullscreenSafe() {
+  if (document.exitFullscreen) return document.exitFullscreen();
+  if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+  if (document.msExitFullscreen) return document.msExitFullscreen();
+  return Promise.resolve();
+}
+
+async function toggleFullscreen() {
+  try {
+    if (getFullscreenElement()) await exitFullscreenSafe();
+    else await requestFullscreenSafe(document.documentElement);
+  } catch (error) {
+    console.warn('fullscreen toggle failed', error);
+  } finally {
+    setTimeout(() => {
+      fitPageToViewport();
+      syncFullscreenButton();
+    }, 60);
+  }
+}
+
 function updateCamera() {
   const target = mapToPreview(player.tx, player.ty);
   camera.x = clamp(target.x - canvas.width / 2, 0, Math.max(0, sceneMap.width - canvas.width));
@@ -852,6 +892,14 @@ window.addEventListener('keyup', (event) => {
   setKey(event, false);
 });
 window.addEventListener('resize', fitPageToViewport);
+window.addEventListener('fullscreenchange', () => {
+  fitPageToViewport();
+  syncFullscreenButton();
+});
+window.addEventListener('webkitfullscreenchange', () => {
+  fitPageToViewport();
+  syncFullscreenButton();
+});
 prevTravelerBtn.addEventListener('click', () => cycleTraveler(-1));
 nextTravelerBtn.addEventListener('click', () => cycleTraveler(1));
 enterReversiBtn.addEventListener('click', () => {
@@ -862,6 +910,9 @@ viewClassicBtn.addEventListener('click', () => {
 });
 openSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
+});
+fullscreenBtn.addEventListener('click', () => {
+  toggleFullscreen();
 });
 confirmSelectionBtn.addEventListener('click', () => {
   closeTravelerSelection(true);
@@ -1001,6 +1052,7 @@ if (skipSelectionOnLoad) {
   openTravelerSelection(true);
 }
 fitPageToViewport();
+syncFullscreenButton();
 requestAnimationFrame(loop);
 </script>
 </body>
