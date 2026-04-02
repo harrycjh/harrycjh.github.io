@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.36 -->
+<!-- 法兰城 v3.37 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.36</title>
+<title>法兰城 v3.37</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,9 +554,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.36</div>
+        <div class="version">v3.37</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。右侧控制区也收成更简洁的调试入口，只保留选人、全屏和音乐开关。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会优先尝试进入地图全屏，并在支持的浏览器里启用陀螺仪控制上下左右。</p>
     </section>
 
     <section class="layout">
@@ -795,6 +795,7 @@ const crossgateSheetImages = Object.fromEntries(
   )
 );
 const keyState = { up: false, down: false, left: false, right: false };
+const gyroKeyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '', bgm: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
@@ -832,6 +833,15 @@ const bgmState = {
   desiredKey: 'selection',
   enabled: localStorage.getItem(bgmEnabledStorageKey) !== 'off'
 };
+const mobileState = {
+  isMobile: window.matchMedia('(pointer: coarse)').matches || /Android|webOS|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent),
+  gyroSupported: typeof window.DeviceOrientationEvent !== 'undefined',
+  gyroEnabled: false,
+  gyroPermissionState: 'unknown',
+  gyroListenerBound: false,
+  baseline: null,
+  threshold: 8
+};
 
 sceneMap.previewImage.addEventListener('load', () => {
   mapRenderState.dirty = true;
@@ -851,6 +861,86 @@ function createBgmTracks() {
     moat: { label: '护城河内 · cgbgm_m0', audio: createLoopAudio('./assets/falan/bgm/cgbgm_m0.wav') },
     city: { label: '法兰城区域 · cgbgm_m1', audio: createLoopAudio('./assets/falan/bgm/cgbgm_m1.wav') }
   };
+}
+
+function getMovementState() {
+  return {
+    up: keyState.up || gyroKeyState.up,
+    down: keyState.down || gyroKeyState.down,
+    left: keyState.left || gyroKeyState.left,
+    right: keyState.right || gyroKeyState.right
+  };
+}
+
+function resetGyroMovement() {
+  gyroKeyState.up = false;
+  gyroKeyState.down = false;
+  gyroKeyState.left = false;
+  gyroKeyState.right = false;
+}
+
+function getScreenOrientationAngle() {
+  if (typeof window.screen?.orientation?.angle === 'number') return window.screen.orientation.angle;
+  if (typeof window.orientation === 'number') return window.orientation;
+  return 0;
+}
+
+function handleDeviceOrientation(event) {
+  if (!mobileState.gyroEnabled) return;
+  if (!Number.isFinite(event.beta) || !Number.isFinite(event.gamma)) return;
+  if (!mobileState.baseline) {
+    mobileState.baseline = { beta: event.beta, gamma: event.gamma };
+    resetGyroMovement();
+    return;
+  }
+  const rawX = event.gamma - mobileState.baseline.gamma;
+  const rawY = event.beta - mobileState.baseline.beta;
+  const angle = ((getScreenOrientationAngle() % 360) + 360) % 360;
+  let tiltX = rawX;
+  let tiltY = rawY;
+  if (angle === 90) {
+    tiltX = -rawY;
+    tiltY = rawX;
+  } else if (angle === 270) {
+    tiltX = rawY;
+    tiltY = -rawX;
+  } else if (angle === 180) {
+    tiltX = -rawX;
+    tiltY = -rawY;
+  }
+  gyroKeyState.left = tiltX < -mobileState.threshold;
+  gyroKeyState.right = tiltX > mobileState.threshold;
+  gyroKeyState.up = tiltY < -mobileState.threshold;
+  gyroKeyState.down = tiltY > mobileState.threshold;
+}
+
+function enableGyroControls() {
+  if (!mobileState.gyroSupported) return false;
+  if (!mobileState.gyroListenerBound) {
+    window.addEventListener('deviceorientation', handleDeviceOrientation);
+    mobileState.gyroListenerBound = true;
+  }
+  mobileState.gyroEnabled = true;
+  mobileState.baseline = null;
+  resetGyroMovement();
+  return true;
+}
+
+async function requestGyroControls() {
+  if (!mobileState.isMobile || !mobileState.gyroSupported) return false;
+  if (mobileState.gyroEnabled) return true;
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      const permission = await DeviceOrientationEvent.requestPermission();
+      mobileState.gyroPermissionState = permission;
+      if (permission !== 'granted') return false;
+    }
+    return enableGyroControls();
+  } catch (error) {
+    mobileState.gyroPermissionState = 'denied';
+    console.warn('gyro permission failed', error);
+    return false;
+  }
 }
 
 function mapToPreview(tx, ty) {
@@ -1061,6 +1151,24 @@ function maybeUnlockBgm() {
   syncBgm(true);
 }
 
+async function maybeEnterMobileFullscreen() {
+  if (!mobileState.isMobile) return false;
+  if (getFullscreenElement()) return true;
+  try {
+    await requestFullscreenSafe(mapShell);
+    return true;
+  } catch (error) {
+    console.warn('mobile fullscreen blocked', error);
+    return false;
+  }
+}
+
+async function activateMobileImmersive(tryGyro = true) {
+  if (!mobileState.isMobile) return;
+  await maybeEnterMobileFullscreen();
+  if (tryGyro) await requestGyroControls();
+}
+
 function syncBgm(force = false) {
   const desiredKey = currentBgmKey();
   bgmState.desiredKey = desiredKey;
@@ -1162,6 +1270,7 @@ function resetKeyState() {
   keyState.down = false;
   keyState.left = false;
   keyState.right = false;
+  resetGyroMovement();
 }
 
 function applyTraveler(index) {
@@ -1414,6 +1523,7 @@ window.addEventListener('keyup', (event) => {
 });
 window.addEventListener('pointerdown', () => {
   maybeUnlockBgm();
+  activateMobileImmersive(true);
 }, { passive: true });
 window.addEventListener('resize', fitPageToViewport);
 window.addEventListener('fullscreenchange', () => {
@@ -1451,7 +1561,8 @@ teleportYInput.addEventListener('keydown', (event) => {
 mapFullscreenExit.addEventListener('click', () => {
   toggleFullscreen();
 });
-confirmSelectionBtn.addEventListener('click', () => {
+confirmSelectionBtn.addEventListener('click', async () => {
+  await activateMobileImmersive(true);
   closeTravelerSelection(true);
 });
 cancelSelectionBtn.addEventListener('click', () => {
@@ -1463,24 +1574,25 @@ function updatePlayer() {
     player.moving = false;
     return;
   }
+  const moveState = getMovementState();
   let dtx = 0;
   let dty = 0;
-  if (keyState.up) {
+  if (moveState.up) {
     dtx -= player.speed;
     dty -= player.speed;
     player.dir = 'up';
   }
-  if (keyState.down) {
+  if (moveState.down) {
     dtx += player.speed;
     dty += player.speed;
     player.dir = 'down';
   }
-  if (keyState.left) {
+  if (moveState.left) {
     dtx -= player.speed;
     dty += player.speed;
     player.dir = 'left';
   }
-  if (keyState.right) {
+  if (moveState.right) {
     dtx += player.speed;
     dty -= player.speed;
     player.dir = 'right';
@@ -1503,10 +1615,11 @@ function updatePlayer() {
 }
 
 function resolveDir8FromKeys(fallback = 4) {
-  const up = keyState.up && !keyState.down;
-  const down = keyState.down && !keyState.up;
-  const left = keyState.left && !keyState.right;
-  const right = keyState.right && !keyState.left;
+  const moveState = getMovementState();
+  const up = moveState.up && !moveState.down;
+  const down = moveState.down && !moveState.up;
+  const left = moveState.left && !moveState.right;
+  const right = moveState.right && !moveState.left;
   if (up && left) return 0;
   if (up && right) return 2;
   if (up) return 1;
@@ -1719,6 +1832,11 @@ fitPageToViewport();
 syncFullscreenButton();
 syncMusicToggleButton();
 syncBgm();
+if (mobileState.isMobile) {
+  setTimeout(() => {
+    activateMobileImmersive(false);
+  }, 120);
+}
 requestAnimationFrame(loop);
 </script>
 </body>
