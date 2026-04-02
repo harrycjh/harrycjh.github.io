@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.38 -->
+<!-- 法兰城 v3.39 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.38</title>
+<title>法兰城 v3.39</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -439,6 +439,12 @@ button:hover {
   opacity: 1;
   pointer-events: auto;
 }
+.selection-overlay.mobile-mode {
+  padding: 0;
+  background:
+    radial-gradient(circle at top, rgba(255, 230, 161, 0.08), transparent 34%),
+    rgba(5, 10, 8, 0.8);
+}
 .selection-panel {
   width: min(1080px, calc(100vw - 40px));
   border: 2px solid rgba(232, 204, 134, 0.2);
@@ -447,6 +453,15 @@ button:hover {
     linear-gradient(180deg, rgba(32, 50, 38, 0.98), rgba(11, 18, 13, 0.98));
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
   padding: 20px 22px 22px;
+  transform-origin: center center;
+  will-change: transform;
+}
+.selection-overlay.mobile-mode .selection-panel {
+  width: min(980px, calc(max(100vw, 100vh) - 28px));
+  max-width: none;
+  margin: 0;
+  padding: 18px 20px 20px;
+  box-shadow: 0 22px 68px rgba(0, 0, 0, 0.46);
 }
 .selection-head {
   display: flex;
@@ -630,9 +645,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.38</div>
+        <div class="version">v3.39</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会优先尝试进入地图全屏，并在支持的浏览器里启用陀螺仪控制上下左右。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会优先尝试进入地图全屏，并在支持的浏览器里启用陀螺仪控制上下左右；选人界面也会自动横屏并按比例适配。</p>
     </section>
 
     <section class="layout">
@@ -781,6 +796,7 @@ const pageFrame = document.getElementById('pageFrame');
 const pageRoot = document.getElementById('pageRoot');
 const selectionOverlay = document.getElementById('selectionOverlay');
 const selectionGrid = document.getElementById('selectionGrid');
+const selectionPanel = selectionOverlay.querySelector('.selection-panel');
 const selectionPreviewCanvas = document.getElementById('selectionPreviewCanvas');
 const selectionPreviewCtx = selectionPreviewCanvas.getContext('2d');
 const selectionNameEl = document.getElementById('selectionName');
@@ -1113,6 +1129,56 @@ function syncMobileJoystickVisibility() {
   mobileJoystick.classList.toggle('visible', visible);
   mobileJoystick.setAttribute('aria-hidden', visible ? 'false' : 'true');
   if (!visible) resetJoystick();
+}
+
+function isPortraitViewport() {
+  return window.innerHeight > window.innerWidth;
+}
+
+async function lockSelectionLandscape() {
+  if (!mobileState.isMobile || !selectionOpen) return;
+  if (typeof window.screen?.orientation?.lock !== 'function') return;
+  try {
+    await window.screen.orientation.lock('landscape');
+  } catch (error) {
+    console.warn('selection landscape lock blocked', error);
+  }
+}
+
+function unlockSelectionLandscape() {
+  if (typeof window.screen?.orientation?.unlock !== 'function') return;
+  try {
+    window.screen.orientation.unlock();
+  } catch (error) {
+    console.warn('selection landscape unlock blocked', error);
+  }
+}
+
+function syncSelectionViewport() {
+  const mobileMode = mobileState.isMobile;
+  const portraitMode = mobileMode && isPortraitViewport();
+  selectionOverlay.classList.toggle('mobile-mode', mobileMode);
+  selectionOverlay.classList.toggle('mobile-portrait', portraitMode);
+  selectionPanel.style.transform = '';
+  selectionPanel.style.width = '';
+  selectionPanel.style.maxWidth = '';
+  if (!mobileMode) return;
+  const desiredWidth = Math.min(980, Math.max(window.innerWidth, window.innerHeight) - 28);
+  selectionPanel.style.width = `${desiredWidth}px`;
+  selectionPanel.style.maxWidth = 'none';
+  const baseWidth = selectionPanel.offsetWidth;
+  const baseHeight = selectionPanel.offsetHeight;
+  const safeMargin = 16;
+  const availableWidth = window.innerWidth - safeMargin * 2;
+  const availableHeight = window.innerHeight - safeMargin * 2;
+  let scale = 1;
+  if (portraitMode) {
+    scale = Math.min(availableWidth / baseHeight, availableHeight / baseWidth, 1);
+    selectionPanel.style.transform = `rotate(90deg) scale(${scale})`;
+    return;
+  }
+  scale = Math.min(availableWidth / baseWidth, availableHeight / baseHeight, 1);
+  selectionPanel.style.transform = `scale(${scale})`;
 }
 
 function mapToPreview(tx, ty) {
@@ -1564,6 +1630,8 @@ function openTravelerSelection(resetPending = true) {
   resetKeyState();
   syncSelectionPanel();
   selectionOverlay.classList.add('active');
+  syncSelectionViewport();
+  lockSelectionLandscape();
   syncMobileJoystickVisibility();
   syncInfo();
   syncBgm();
@@ -1578,6 +1646,8 @@ function closeTravelerSelection(apply = true) {
   selectionOpen = false;
   resetKeyState();
   selectionOverlay.classList.remove('active');
+  unlockSelectionLandscape();
+  syncSelectionViewport();
   syncMobileJoystickVisibility();
   syncBgm();
 }
@@ -1701,14 +1771,19 @@ window.addEventListener('pointerdown', () => {
   maybeUnlockBgm();
   activateMobileImmersive(true);
 }, { passive: true });
-window.addEventListener('resize', fitPageToViewport);
+window.addEventListener('resize', () => {
+  fitPageToViewport();
+  syncSelectionViewport();
+});
 window.addEventListener('fullscreenchange', () => {
   fitPageToViewport();
   syncFullscreenButton();
+  syncSelectionViewport();
 });
 window.addEventListener('webkitfullscreenchange', () => {
   fitPageToViewport();
   syncFullscreenButton();
+  syncSelectionViewport();
 });
 openSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
@@ -2033,11 +2108,14 @@ fitPageToViewport();
 syncFullscreenButton();
 syncMusicToggleButton();
 syncGyroToggleButton();
+syncSelectionViewport();
 syncMobileJoystickVisibility();
 syncBgm();
 if (mobileState.isMobile) {
   setTimeout(() => {
     activateMobileImmersive(false);
+    syncSelectionViewport();
+    if (selectionOpen) lockSelectionLandscape();
   }, 120);
 }
 requestAnimationFrame(loop);
