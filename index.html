@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.30 -->
+<!-- 法兰城 v3.31 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.30</title>
+<title>法兰城 v3.31</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,9 +554,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.30</div>
+        <div class="version">v3.31</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。上一轮挂进去的局部动画经复核更像角色动作资源，因此先撤下，避免继续把错误动效叠在法兰城地图上。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图也先接上原版 BGM，方便一边跑图一边校区域与氛围。</p>
     </section>
 
     <section class="layout">
@@ -578,7 +578,7 @@ button:hover {
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，上一轮临时挂入的动效也仍然先撤下。</div>
+        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM，方便边逛边校区域。</div>
       </div>
 
       <aside class="side">
@@ -588,6 +588,7 @@ button:hover {
           <div class="info-line"><span>旅人位置</span><strong id="coordLabel">09, 10</strong></div>
           <div class="info-line"><span>当前目标</span><strong id="focusLabel">黑白棋会馆</strong></div>
           <div class="info-line"><span>地图来源</span><strong>客户端 1000.dat</strong></div>
+          <div class="info-line"><span>当前BGM</span><strong id="bgmLabel">选人界面 · cgbgm_t0</strong></div>
           <div class="traveler">
             <div class="portrait"><img id="portraitImg" src="./assets/falan/avatars/dog.png" alt="旅人头像"></div>
             <div>
@@ -681,6 +682,7 @@ const coordLabelEl = document.getElementById('coordLabel');
 const focusLabelEl = document.getElementById('focusLabel');
 const travelerNameEl = document.getElementById('travelerName');
 const travelerDescEl = document.getElementById('travelerDesc');
+const bgmLabelEl = document.getElementById('bgmLabel');
 const portraitImg = document.getElementById('portraitImg');
 const prevTravelerBtn = document.getElementById('prevTravelerBtn');
 const nextTravelerBtn = document.getElementById('nextTravelerBtn');
@@ -799,12 +801,13 @@ const crossgateSheetImages = Object.fromEntries(
 );
 const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
-const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
+const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '', bgm: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
 const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 3000, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
+const moatMusicZone = { minTx: 64, maxTx: 114, minTy: 112, maxTy: 162 };
 const landmarks = [
   { id: 'castle', label: '里谢里雅城', focus: '王城前广场', area: '里谢里雅城前', tx: 88.0, ty: 136.0 },
   { id: 'cathedral', label: '西区圣堂', focus: '大圣堂周边', area: '西区圣堂与工房', tx: 64.0, ty: 156.0 },
@@ -823,10 +826,28 @@ const player = {
   moving: false,
   speed: 0.06
 };
+const bgmTracks = createBgmTracks();
+const bgmState = { unlocked: false, currentKey: '', desiredKey: 'selection' };
 
 sceneMap.previewImage.addEventListener('load', () => {
   mapRenderState.dirty = true;
 });
+
+function createLoopAudio(src) {
+  const audio = new Audio(src);
+  audio.loop = true;
+  audio.preload = 'auto';
+  audio.volume = 0.38;
+  return audio;
+}
+
+function createBgmTracks() {
+  return {
+    selection: { label: '选人界面 · cgbgm_t0', audio: createLoopAudio('./assets/falan/bgm/cgbgm_t0.wav') },
+    moat: { label: '护城河内 · cgbgm_m0', audio: createLoopAudio('./assets/falan/bgm/cgbgm_m0.wav') },
+    city: { label: '法兰城区域 · cgbgm_m1', audio: createLoopAudio('./assets/falan/bgm/cgbgm_m1.wav') }
+  };
+}
 
 function mapToPreview(tx, ty) {
   return {
@@ -994,6 +1015,50 @@ function areaName() {
   return currentFocus().area;
 }
 
+function isInsideMoatZone(displayTx, displayTy) {
+  return displayTx >= moatMusicZone.minTx
+    && displayTx <= moatMusicZone.maxTx
+    && displayTy >= moatMusicZone.minTy
+    && displayTy <= moatMusicZone.maxTy;
+}
+
+function currentBgmKey() {
+  if (selectionOpen) return 'selection';
+  const displayCoord = internalToDisplay(player.tx, player.ty);
+  return isInsideMoatZone(displayCoord.tx, displayCoord.ty) ? 'moat' : 'city';
+}
+
+function bgmLabelForKey(key) {
+  return bgmTracks[key]?.label ?? '未指定';
+}
+
+function maybeUnlockBgm() {
+  if (!bgmState.unlocked) bgmState.unlocked = true;
+  syncBgm(true);
+}
+
+function syncBgm(force = false) {
+  const desiredKey = currentBgmKey();
+  bgmState.desiredKey = desiredKey;
+  if (!bgmState.unlocked) return;
+  const nextTrack = bgmTracks[desiredKey];
+  if (!nextTrack) return;
+  if (!force && bgmState.currentKey === desiredKey && !nextTrack.audio.paused) return;
+  const currentTrack = bgmTracks[bgmState.currentKey];
+  if (currentTrack && currentTrack !== nextTrack) {
+    currentTrack.audio.pause();
+    currentTrack.audio.currentTime = 0;
+  }
+  bgmState.currentKey = desiredKey;
+  if (!nextTrack.audio.paused) return;
+  const playPromise = nextTrack.audio.play();
+  if (playPromise?.catch) {
+    playPromise.catch((error) => {
+      console.warn('bgm play blocked', error);
+    });
+  }
+}
+
 function syncInfo() {
   const traveler = travelers[travelerIndex];
   const focus = currentFocus();
@@ -1001,6 +1066,7 @@ function syncInfo() {
   const displayCoord = internalToDisplay(player.tx, player.ty);
   const coord = `${displayCoord.tx.toFixed(1)}, ${displayCoord.ty.toFixed(1)}`;
   const travelerName = `${traveler.name} ${traveler.level}`;
+  const bgmLabel = bgmLabelForKey(currentBgmKey());
   if (uiState.zone !== zone) {
     zoneNameEl.textContent = zone;
     uiState.zone = zone;
@@ -1025,6 +1091,10 @@ function syncInfo() {
     portraitImg.src = traveler.avatar;
     portraitImg.alt = `${traveler.name}头像`;
     uiState.portrait = traveler.avatar;
+  }
+  if (uiState.bgm !== bgmLabel) {
+    bgmLabelEl.textContent = bgmLabel;
+    uiState.bgm = bgmLabel;
   }
   syncTeleportInputs();
 }
@@ -1058,6 +1128,7 @@ function teleportToDisplayCoord() {
   resetKeyState();
   updateCamera();
   syncInfo();
+  syncBgm();
   syncTeleportInputs();
   setTeleportStatus(`已传送到 ${clampedDisplayX.toFixed(1)}, ${clampedDisplayY.toFixed(1)}。`);
 }
@@ -1186,6 +1257,8 @@ function openTravelerSelection(resetPending = true) {
   resetKeyState();
   syncSelectionPanel();
   selectionOverlay.classList.add('active');
+  syncInfo();
+  syncBgm();
 }
 
 function closeTravelerSelection(apply = true) {
@@ -1197,6 +1270,7 @@ function closeTravelerSelection(apply = true) {
   selectionOpen = false;
   resetKeyState();
   selectionOverlay.classList.remove('active');
+  syncBgm();
 }
 
 function cycleTraveler(step) {
@@ -1278,6 +1352,7 @@ function updateCamera() {
 }
 
 window.addEventListener('keydown', (event) => {
+  maybeUnlockBgm();
   if (isMovementKey(event.key)) event.preventDefault();
   if (selectionOpen) {
     if (event.key === 'q' || event.key === 'Q' || event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
@@ -1313,6 +1388,9 @@ window.addEventListener('keyup', (event) => {
   if (selectionOpen) return;
   setKey(event, false);
 });
+window.addEventListener('pointerdown', () => {
+  maybeUnlockBgm();
+}, { passive: true });
 window.addEventListener('resize', fitPageToViewport);
 window.addEventListener('fullscreenchange', () => {
   fitPageToViewport();
@@ -1401,6 +1479,7 @@ function updatePlayer() {
       player.ty = nextTy;
     }
     player.step += 0.22;
+    syncBgm();
   }
 }
 
@@ -1619,6 +1698,7 @@ if (skipSelectionOnLoad) {
 }
 fitPageToViewport();
 syncFullscreenButton();
+syncBgm();
 requestAnimationFrame(loop);
 </script>
 </body>
