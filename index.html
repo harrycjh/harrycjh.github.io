@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.18 -->
+<!-- 法兰城 v3.19 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.18</title>
+<title>法兰城 v3.19</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -270,6 +270,60 @@ button:hover {
   border-color: rgba(232, 204, 134, 0.32);
   background: linear-gradient(180deg, rgba(77, 99, 80, 0.96), rgba(31, 45, 33, 0.98));
 }
+.teleport-tool {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(232, 204, 134, 0.14);
+  background: linear-gradient(180deg, rgba(14, 22, 16, 0.72), rgba(10, 16, 12, 0.9));
+}
+.teleport-title {
+  color: var(--gold);
+  font-size: 0.92rem;
+  letter-spacing: 1px;
+}
+.teleport-subtitle {
+  margin: 4px 0 10px;
+  color: rgba(237, 241, 214, 0.62);
+  font-size: 0.8rem;
+  line-height: 1.55;
+}
+.teleport-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+.teleport-field {
+  display: grid;
+  gap: 5px;
+}
+.teleport-field span {
+  color: rgba(237, 241, 214, 0.72);
+  font-size: 0.76rem;
+  letter-spacing: 0.8px;
+}
+.teleport-field input {
+  width: 100%;
+  appearance: textfield;
+  border: 1px solid rgba(232, 204, 134, 0.18);
+  background: rgba(11, 17, 13, 0.92);
+  color: var(--ink);
+  padding: 10px 11px;
+  font: inherit;
+}
+.teleport-field input:focus {
+  outline: 1px solid rgba(232, 204, 134, 0.34);
+  border-color: rgba(232, 204, 134, 0.34);
+}
+.teleport-row button {
+  min-width: 104px;
+}
+.teleport-status {
+  min-height: 1.2em;
+  margin-top: 8px;
+  color: rgba(237, 241, 214, 0.62);
+  font-size: 0.78rem;
+}
 .legend {
   margin-top: 12px;
   display: grid;
@@ -495,7 +549,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.18</div>
+        <div class="version">v3.19</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并先试装一小批已经确认位置的地图局部动画。这样既能保留真实法兰城的道路和建筑关系，也能开始验证原版城内会动的小物件是否能在首页里还原出来。</p>
     </section>
@@ -544,6 +598,22 @@ button:hover {
             <button type="button" id="viewClassicBtn">查看旧版</button>
             <button type="button" id="openSelectionBtn">选人界面</button>
             <button type="button" id="fullscreenBtn">全屏游玩</button>
+          </div>
+          <div class="teleport-tool">
+            <div class="teleport-title">调试传送</div>
+            <div class="teleport-subtitle">输入右侧显示的那套坐标，按一下就瞬间传过去。当前为调试模式，不做碰撞拦截。</div>
+            <div class="teleport-row">
+              <label class="teleport-field">
+                <span>X 坐标</span>
+                <input type="number" id="teleportXInput" step="0.1" value="111.9">
+              </label>
+              <label class="teleport-field">
+                <span>Y 坐标</span>
+                <input type="number" id="teleportYInput" step="0.1" value="228.8">
+              </label>
+              <button type="button" id="teleportBtn">传送过去</button>
+            </div>
+            <div class="teleport-status" id="teleportStatus">默认会按显示坐标传送，例如 `57, 218`。</div>
           </div>
         </section>
 
@@ -609,6 +679,10 @@ const enterReversiBtn = document.getElementById('enterReversiBtn');
 const viewClassicBtn = document.getElementById('viewClassicBtn');
 const openSelectionBtn = document.getElementById('openSelectionBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
+const teleportXInput = document.getElementById('teleportXInput');
+const teleportYInput = document.getElementById('teleportYInput');
+const teleportBtn = document.getElementById('teleportBtn');
+const teleportStatusEl = document.getElementById('teleportStatus');
 const mapShell = document.getElementById('mapShell');
 const mapFullscreenExit = document.getElementById('mapFullscreenExit');
 const pageFrame = document.getElementById('pageFrame');
@@ -728,6 +802,20 @@ function mapToScreen(tx, ty) {
   return {
     x: point.x - camera.x,
     y: point.y - camera.y
+  };
+}
+
+function internalToDisplay(tx, ty) {
+  return {
+    tx,
+    ty: sceneMap.rows - 1 - ty
+  };
+}
+
+function displayToInternal(tx, ty) {
+  return {
+    tx,
+    ty: sceneMap.rows - 1 - ty
   };
 }
 
@@ -868,7 +956,8 @@ function syncInfo() {
   const traveler = travelers[travelerIndex];
   const focus = currentFocus();
   const zone = areaName();
-  const coord = `${player.tx.toFixed(1)}, ${(sceneMap.rows - 1 - player.ty).toFixed(1)}`;
+  const displayCoord = internalToDisplay(player.tx, player.ty);
+  const coord = `${displayCoord.tx.toFixed(1)}, ${displayCoord.ty.toFixed(1)}`;
   const travelerName = `${traveler.name} ${traveler.level}`;
   if (uiState.zone !== zone) {
     zoneNameEl.textContent = zone;
@@ -895,6 +984,39 @@ function syncInfo() {
     portraitImg.alt = `${traveler.name}头像`;
     uiState.portrait = traveler.avatar;
   }
+  syncTeleportInputs();
+}
+
+function setTeleportStatus(message) {
+  teleportStatusEl.textContent = message;
+}
+
+function syncTeleportInputs() {
+  if (document.activeElement === teleportXInput || document.activeElement === teleportYInput) return;
+  const displayCoord = internalToDisplay(player.tx, player.ty);
+  teleportXInput.value = displayCoord.tx.toFixed(1);
+  teleportYInput.value = displayCoord.ty.toFixed(1);
+}
+
+function teleportToDisplayCoord() {
+  const displayX = Number.parseFloat(teleportXInput.value);
+  const displayY = Number.parseFloat(teleportYInput.value);
+  if (!Number.isFinite(displayX) || !Number.isFinite(displayY)) {
+    setTeleportStatus('坐标格式不对，请输入数字，例如 57 和 218。');
+    return;
+  }
+  const clampedDisplayX = clamp(displayX, 1, sceneMap.cols - 1);
+  const clampedDisplayY = clamp(displayY, 0, sceneMap.rows - 1);
+  const internal = displayToInternal(clampedDisplayX, clampedDisplayY);
+  player.tx = internal.tx;
+  player.ty = internal.ty;
+  player.moving = false;
+  player.step = 0;
+  resetKeyState();
+  updateCamera();
+  syncInfo();
+  syncTeleportInputs();
+  setTeleportStatus(`已传送到 ${clampedDisplayX.toFixed(1)}, ${clampedDisplayY.toFixed(1)}。`);
 }
 
 function resetKeyState() {
@@ -1108,6 +1230,21 @@ openSelectionBtn.addEventListener('click', () => {
 fullscreenBtn.addEventListener('click', () => {
   toggleFullscreen();
 });
+teleportBtn.addEventListener('click', () => {
+  teleportToDisplayCoord();
+});
+teleportXInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    teleportToDisplayCoord();
+  }
+});
+teleportYInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    teleportToDisplayCoord();
+  }
+});
 mapFullscreenExit.addEventListener('click', () => {
   toggleFullscreen();
 });
@@ -1297,6 +1434,7 @@ function loop(tick) {
 
 updateCamera();
 syncInfo();
+syncTeleportInputs();
 renderSelectionGrid();
 if (skipSelectionOnLoad) {
   closeTravelerSelection(false);
