@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.35 -->
+<!-- 法兰城 v3.36 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.35</title>
+<title>法兰城 v3.36</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,9 +554,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.35</div>
+        <div class="version">v3.36</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图会主动尝试播放原版 BGM，里谢里雅堡也改成按你给的四点矩形范围切歌。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。右侧控制区也收成更简洁的调试入口，只保留选人、全屏和音乐开关。</p>
     </section>
 
     <section class="layout">
@@ -597,12 +597,9 @@ button:hover {
             </div>
           </div>
           <div class="controls">
-            <button type="button" id="prevTravelerBtn">上一个旅人</button>
-            <button type="button" id="nextTravelerBtn">下一个旅人</button>
-            <button type="button" id="enterReversiBtn">进入黑白棋</button>
-            <button type="button" id="viewClassicBtn">查看旧版</button>
             <button type="button" id="openSelectionBtn">选人界面</button>
             <button type="button" id="fullscreenBtn">全屏游玩</button>
+            <button type="button" id="toggleMusicBtn">关闭音乐</button>
           </div>
           <div class="teleport-tool">
             <div class="teleport-title">调试传送</div>
@@ -684,12 +681,9 @@ const travelerNameEl = document.getElementById('travelerName');
 const travelerDescEl = document.getElementById('travelerDesc');
 const bgmLabelEl = document.getElementById('bgmLabel');
 const portraitImg = document.getElementById('portraitImg');
-const prevTravelerBtn = document.getElementById('prevTravelerBtn');
-const nextTravelerBtn = document.getElementById('nextTravelerBtn');
-const enterReversiBtn = document.getElementById('enterReversiBtn');
-const viewClassicBtn = document.getElementById('viewClassicBtn');
 const openSelectionBtn = document.getElementById('openSelectionBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
+const toggleMusicBtn = document.getElementById('toggleMusicBtn');
 const teleportXInput = document.getElementById('teleportXInput');
 const teleportYInput = document.getElementById('teleportYInput');
 const teleportBtn = document.getElementById('teleportBtn');
@@ -711,6 +705,7 @@ const skipSelectionOnLoad = new URLSearchParams(window.location.search).has('ski
 selectionPreviewCtx.imageSmoothingEnabled = false;
 
 const travelerStorageKey = 'falan-selected-traveler';
+const bgmEnabledStorageKey = 'falan-bgm-enabled';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
@@ -832,7 +827,11 @@ const player = {
   speed: 0.06
 };
 const bgmTracks = createBgmTracks();
-const bgmState = { currentKey: '', desiredKey: 'selection' };
+const bgmState = {
+  currentKey: '',
+  desiredKey: 'selection',
+  enabled: localStorage.getItem(bgmEnabledStorageKey) !== 'off'
+};
 
 sceneMap.previewImage.addEventListener('load', () => {
   mapRenderState.dirty = true;
@@ -1034,16 +1033,38 @@ function currentBgmKey() {
 }
 
 function bgmLabelForKey(key) {
+  if (!bgmState.enabled) return '音乐已关闭';
   return bgmTracks[key]?.label ?? '未指定';
 }
 
+function syncMusicToggleButton() {
+  toggleMusicBtn.textContent = bgmState.enabled ? '关闭音乐' : '打开音乐';
+  toggleMusicBtn.setAttribute('aria-pressed', bgmState.enabled ? 'true' : 'false');
+}
+
+function setBgmEnabled(enabled) {
+  bgmState.enabled = enabled;
+  localStorage.setItem(bgmEnabledStorageKey, enabled ? 'on' : 'off');
+  syncMusicToggleButton();
+  if (!enabled) {
+    Object.values(bgmTracks).forEach((track) => {
+      track.audio.pause();
+      track.audio.currentTime = 0;
+    });
+  }
+  syncInfo();
+  if (enabled) syncBgm(true);
+}
+
 function maybeUnlockBgm() {
+  if (!bgmState.enabled) return;
   syncBgm(true);
 }
 
 function syncBgm(force = false) {
   const desiredKey = currentBgmKey();
   bgmState.desiredKey = desiredKey;
+  if (!bgmState.enabled) return;
   const nextTrack = bgmTracks[desiredKey];
   if (!nextTrack) return;
   if (bgmState.currentKey === desiredKey && !nextTrack.audio.paused) return;
@@ -1403,19 +1424,14 @@ window.addEventListener('webkitfullscreenchange', () => {
   fitPageToViewport();
   syncFullscreenButton();
 });
-prevTravelerBtn.addEventListener('click', () => cycleTraveler(-1));
-nextTravelerBtn.addEventListener('click', () => cycleTraveler(1));
-enterReversiBtn.addEventListener('click', () => {
-  window.location.href = './reversi.html';
-});
-viewClassicBtn.addEventListener('click', () => {
-  window.location.href = './falan-classic-preview.html';
-});
 openSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
 });
 fullscreenBtn.addEventListener('click', () => {
   toggleFullscreen();
+});
+toggleMusicBtn.addEventListener('click', () => {
+  setBgmEnabled(!bgmState.enabled);
 });
 teleportBtn.addEventListener('click', () => {
   teleportToDisplayCoord();
@@ -1701,6 +1717,7 @@ if (skipSelectionOnLoad) {
 }
 fitPageToViewport();
 syncFullscreenButton();
+syncMusicToggleButton();
 syncBgm();
 requestAnimationFrame(loop);
 </script>
