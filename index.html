@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.15 -->
+<!-- 法兰城 v3.16 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.15</title>
+<title>法兰城 v3.16</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -495,9 +495,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.15</div>
+        <div class="version">v3.16</div>
       </div>
-      <p>这一版把首页的法兰城直接切成了《魔力宝贝》客户端里拼出来的真实主城地图。现在先保留旅人选择、移动和进入黑白棋会馆这些交互，再逐步把真实碰撞、重点建筑和更多功能一点点接回来。</p>
+      <p>这一版先回到《魔力宝贝》客户端里拼出来的完整法兰城原图，方便我们更快核对道路、建筑和碰撞关系。旅人选择、移动和进入黑白棋会馆这些交互会继续保留。</p>
     </section>
 
     <section class="layout">
@@ -511,7 +511,7 @@ button:hover {
             <div class="badge">Cross Gate 原始地图</div>
             <div class="badge">1000.dat</div>
             <div class="badge">11128 x 8300 原图</div>
-            <div class="badge">分块动态加载</div>
+            <div class="badge">完整原图直载</div>
             <div class="badge">碰撞遮罩试装</div>
           </div>
         </div>
@@ -519,7 +519,7 @@ button:hover {
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">当前首页会先用一张轻量预览图垫底，再只加载你附近那几块法兰城原始图块。这样保留原图清晰度的同时，不需要每一帧都把整张大地图一起搬上屏幕。</div>
+        <div class="note">为了快速迭代法兰城布局，这一版先直接使用完整原图。这样修正层级和定位问题时会更直接，后面如果需要再切回更激进的性能方案。</div>
       </div>
 
       <aside class="side">
@@ -645,14 +645,10 @@ function loadImage(src) {
 }
 
 const sceneMap = {
-  previewImage: loadImage('./assets/falan/map/falan-city-1000-preview.png'),
+  mapImage: loadImage('./assets/falan/map/falan-city-1000.png'),
   collisionImage: loadImage('./assets/falan/map/falan-city-1000-occupancy.png'),
   width: 11128,
   height: 8300,
-  previewWidth: 2003,
-  previewHeight: 1494,
-  tileSize: 2048,
-  tileBase: './assets/falan/map/tiles',
   cols: 300,
   rows: 300,
   halfW: 32,
@@ -1146,16 +1142,14 @@ function drawFocusMarker(tick) {
   ctx.fillText(focus.label, point.x + 14, point.y - 16);
 }
 
-function drawPreviewSlice(sx, sy, sw, sh) {
-  if (!sceneMap.previewImage.complete || !sceneMap.previewImage.naturalWidth) return false;
-  const scaleX = sceneMap.previewWidth / sceneMap.width;
-  const scaleY = sceneMap.previewHeight / sceneMap.height;
+function drawMapSlice(sx, sy, sw, sh) {
+  if (!sceneMap.mapImage.complete || !sceneMap.mapImage.naturalWidth) return false;
   ctx.drawImage(
-    sceneMap.previewImage,
-    sx * scaleX,
-    sy * scaleY,
-    sw * scaleX,
-    sh * scaleY,
+    sceneMap.mapImage,
+    sx,
+    sy,
+    sw,
+    sh,
     0,
     0,
     sw,
@@ -1191,13 +1185,11 @@ function drawScene(tick) {
   const sy = Math.max(0, Math.floor(camera.y));
   const sw = Math.min(canvas.width, sceneMap.width - sx);
   const sh = Math.min(canvas.height, sceneMap.height - sy);
-  const bounds = updateVisibleTiles();
-  const drewPreview = drawPreviewSlice(sx, sy, sw, sh);
-  if (!drewPreview) {
+  const drewMap = drawMapSlice(sx, sy, sw, sh);
+  if (!drewMap) {
     ctx.fillStyle = '#27362d';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
-  drawLoadedTiles(bounds, sx, sy, sw, sh);
 
   drawFocusMarker(tick);
   drawPlayer();
