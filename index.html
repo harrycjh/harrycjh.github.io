@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.28 -->
+<!-- 法兰城 v3.29 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.28</title>
+<title>法兰城 v3.29</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,7 +554,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.28</div>
+        <div class="version">v3.29</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。上一轮挂进去的局部动画经复核更像角色动作资源，因此先撤下，避免继续把错误动效叠在法兰城地图上。</p>
     </section>
@@ -570,7 +570,7 @@ button:hover {
             <div class="badge">Cross Gate 原始地图</div>
             <div class="badge">1000.dat</div>
             <div class="badge">11128 x 8300 原图</div>
-            <div class="badge">完整原图直载</div>
+            <div class="badge">512 动态切块加载</div>
             <div class="badge">碰撞遮罩试装</div>
           </div>
         </div>
@@ -578,7 +578,7 @@ button:hover {
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">为了快速迭代法兰城布局，这一版继续直接使用完整原图，并把右侧调试传送工具保留好。上一轮临时挂入的动效已经先撤下，因为目前复核结果显示它们更像角色动作资源，不适合继续当作法兰城地图动画使用。</div>
+        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，上一轮临时挂入的动效也仍然先撤下。</div>
       </div>
 
       <aside class="side">
@@ -670,6 +670,11 @@ button:hover {
 const canvas = document.getElementById('isoCanvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
+const mapLayerCanvas = document.createElement('canvas');
+mapLayerCanvas.width = canvas.width;
+mapLayerCanvas.height = canvas.height;
+const mapLayerCtx = mapLayerCanvas.getContext('2d');
+mapLayerCtx.imageSmoothingEnabled = false;
 
 const zoneNameEl = document.getElementById('zoneName');
 const coordLabelEl = document.getElementById('coordLabel');
@@ -766,8 +771,10 @@ function loadImage(src) {
 }
 
 const sceneMap = {
-  mapImage: loadImage('./assets/falan/map/falan-city-1000.png'),
+  previewImage: loadImage('./assets/falan/map/falan-city-1000-preview.png'),
   collisionImage: loadImage('./assets/falan/map/falan-city-1000-occupancy.png'),
+  tileBase: './assets/falan/map/tiles-512',
+  tileSize: 512,
   width: 11128,
   height: 8300,
   cols: 300,
@@ -793,7 +800,8 @@ const crossgateSheetImages = Object.fromEntries(
 const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
-const tileState = { cache: new Map(), frame: 0, maxKeep: 14 };
+const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
+const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 3000, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
@@ -815,6 +823,10 @@ const player = {
   moving: false,
   speed: 0.16
 };
+
+sceneMap.previewImage.addEventListener('load', () => {
+  mapRenderState.dirty = true;
+});
 
 function mapToPreview(tx, ty) {
   return {
@@ -875,9 +887,13 @@ function ensureTile(col, row) {
   const entry = { image, state: 'loading', lastUsed: tileState.frame };
   image.onload = () => {
     entry.state = 'loaded';
+    tileState.version += 1;
+    mapRenderState.dirty = true;
   };
   image.onerror = () => {
     entry.state = 'error';
+    tileState.version += 1;
+    mapRenderState.dirty = true;
   };
   image.src = tileUrl(col, row);
   tileState.cache.set(key, entry);
@@ -1422,14 +1438,20 @@ function drawFocusMarker(tick) {
   ctx.fillText(focus.label, point.x + 14, point.y - 16);
 }
 
-function drawMapSlice(sx, sy, sw, sh) {
-  if (!sceneMap.mapImage.complete || !sceneMap.mapImage.naturalWidth) return false;
-  ctx.drawImage(
-    sceneMap.mapImage,
-    sx,
-    sy,
-    sw,
-    sh,
+function drawMapSlice(targetCtx, sx, sy, sw, sh) {
+  if (!sceneMap.previewImage.complete || !sceneMap.previewImage.naturalWidth) return false;
+  const scaleX = sceneMap.previewImage.naturalWidth / sceneMap.width;
+  const scaleY = sceneMap.previewImage.naturalHeight / sceneMap.height;
+  const srcX = Math.floor(sx * scaleX);
+  const srcY = Math.floor(sy * scaleY);
+  const srcW = Math.max(1, Math.min(sceneMap.previewImage.naturalWidth - srcX, Math.ceil(sw * scaleX)));
+  const srcH = Math.max(1, Math.min(sceneMap.previewImage.naturalHeight - srcY, Math.ceil(sh * scaleY)));
+  targetCtx.drawImage(
+    sceneMap.previewImage,
+    srcX,
+    srcY,
+    srcW,
+    srcH,
     0,
     0,
     sw,
@@ -1438,7 +1460,7 @@ function drawMapSlice(sx, sy, sw, sh) {
   return true;
 }
 
-function drawLoadedTiles(bounds, sx, sy, sw, sh) {
+function drawLoadedTiles(targetCtx, bounds, sx, sy, sw, sh) {
   for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
     for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
       const entry = ensureTile(col, row);
@@ -1452,24 +1474,47 @@ function drawLoadedTiles(bounds, sx, sy, sw, sh) {
       const drawW = Math.min(entry.image.naturalWidth - srcX, sw - destX);
       const drawH = Math.min(entry.image.naturalHeight - srcY, sh - destY);
       if (drawW <= 0 || drawH <= 0) continue;
-      ctx.drawImage(entry.image, srcX, srcY, drawW, drawH, destX, destY, drawW, drawH);
+      targetCtx.drawImage(entry.image, srcX, srcY, drawW, drawH, destX, destY, drawW, drawH);
     }
   }
 }
 
+function renderMapLayer(sx, sy, sw, sh) {
+  mapLayerCtx.clearRect(0, 0, mapLayerCanvas.width, mapLayerCanvas.height);
+  mapLayerCtx.fillStyle = '#11171b';
+  mapLayerCtx.fillRect(0, 0, mapLayerCanvas.width, mapLayerCanvas.height);
+  const drewPreview = drawMapSlice(mapLayerCtx, sx, sy, sw, sh);
+  if (!drewPreview) {
+    mapLayerCtx.fillStyle = '#27362d';
+    mapLayerCtx.fillRect(0, 0, sw, sh);
+  }
+  const bounds = updateVisibleTiles();
+  drawLoadedTiles(mapLayerCtx, bounds, sx, sy, sw, sh);
+  mapRenderState.dirty = false;
+  mapRenderState.sx = sx;
+  mapRenderState.sy = sy;
+  mapRenderState.sw = sw;
+  mapRenderState.sh = sh;
+  mapRenderState.tileVersion = tileState.version;
+}
+
 function drawScene(tick) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#11171b';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
   const sx = Math.max(0, Math.floor(camera.x));
   const sy = Math.max(0, Math.floor(camera.y));
   const sw = Math.min(canvas.width, sceneMap.width - sx);
   const sh = Math.min(canvas.height, sceneMap.height - sy);
-  const drewMap = drawMapSlice(sx, sy, sw, sh);
-  if (!drewMap) {
-    ctx.fillStyle = '#27362d';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (
+    mapRenderState.dirty
+    || mapRenderState.tileVersion !== tileState.version
+    || mapRenderState.sx !== sx
+    || mapRenderState.sy !== sy
+    || mapRenderState.sw !== sw
+    || mapRenderState.sh !== sh
+  ) {
+    renderMapLayer(sx, sy, sw, sh);
   }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(mapLayerCanvas, 0, 0);
 
   drawFocusMarker(tick);
   drawPlayer(tick);
