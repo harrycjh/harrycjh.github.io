@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.21 -->
+<!-- 法兰城 v3.22 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.21</title>
+<title>法兰城 v3.22</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -549,7 +549,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.21</div>
+        <div class="version">v3.22</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。上一轮挂进去的局部动画经复核更像角色动作资源，因此先撤下，避免继续把错误动效叠在法兰城地图上。</p>
     </section>
@@ -1303,7 +1303,7 @@ function updatePlayer() {
   }
 
   if (dtx !== 0 || dty !== 0) {
-    player.dir8 = resolveDir8(dtx, dty, player.dir8);
+    player.dir8 = resolveDir8FromKeys(player.dir8);
   }
   player.moving = dtx !== 0 || dty !== 0;
   if (player.moving) {
@@ -1317,18 +1317,19 @@ function updatePlayer() {
   }
 }
 
-function resolveDir8(dtx, dty, fallback = 4) {
-  const epsilon = 0.001;
-  const sx = Math.abs(dtx) < epsilon ? 0 : dtx > 0 ? 1 : -1;
-  const sy = Math.abs(dty) < epsilon ? 0 : dty > 0 ? 1 : -1;
-  if (sx === -1 && sy === -1) return 0;
-  if (sx === 0 && sy === -1) return 1;
-  if (sx === 1 && sy === -1) return 2;
-  if (sx === 1 && sy === 0) return 3;
-  if (sx === 1 && sy === 1) return 4;
-  if (sx === 0 && sy === 1) return 5;
-  if (sx === -1 && sy === 1) return 6;
-  if (sx === -1 && sy === 0) return 7;
+function resolveDir8FromKeys(fallback = 4) {
+  const up = keyState.up && !keyState.down;
+  const down = keyState.down && !keyState.up;
+  const left = keyState.left && !keyState.right;
+  const right = keyState.right && !keyState.left;
+  if (up && left) return 0;
+  if (up && right) return 2;
+  if (up) return 1;
+  if (right) return 3;
+  if (down && right) return 4;
+  if (down && left) return 6;
+  if (down) return 5;
+  if (left) return 7;
   return fallback;
 }
 
