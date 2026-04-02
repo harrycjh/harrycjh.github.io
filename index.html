@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.5 -->
+<!-- 法兰城 v3.7 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.5</title>
+<title>法兰城 v3.7</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -296,109 +296,143 @@ button:hover {
 .selection-layout {
   margin-top: 18px;
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
-  gap: 18px;
+  gap: 14px;
 }
 .selection-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 .selection-card {
   appearance: none;
   width: 100%;
-  border: 1px solid rgba(232, 204, 134, 0.14);
-  background: linear-gradient(180deg, rgba(39, 58, 44, 0.96), rgba(16, 25, 18, 0.98));
-  padding: 10px 8px;
+  border: 2px solid rgba(230, 242, 196, 0.12);
+  background: linear-gradient(180deg, rgba(19, 31, 23, 0.82), rgba(12, 20, 15, 0.96));
+  padding: 12px 10px;
   display: grid;
   gap: 8px;
-  justify-items: center;
+  justify-items: start;
   cursor: pointer;
   font: inherit;
-  text-align: center;
+  text-align: left;
   transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
 }
 .selection-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(232, 204, 134, 0.32);
-  background: linear-gradient(180deg, rgba(50, 72, 55, 0.98), rgba(18, 28, 20, 1));
+  border-color: rgba(255, 232, 150, 0.3);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
 }
 .selection-card.active {
-  border-color: rgba(232, 204, 134, 0.5);
-  box-shadow: inset 0 0 0 1px rgba(255, 233, 171, 0.16), 0 12px 28px rgba(0, 0, 0, 0.28);
-  background: linear-gradient(180deg, rgba(63, 86, 66, 0.98), rgba(22, 34, 24, 1));
+  border-color: rgba(255, 232, 150, 0.48);
+  background:
+    linear-gradient(180deg, rgba(74, 99, 71, 0.9), rgba(21, 32, 24, 0.96)),
+    radial-gradient(circle at top, rgba(255, 228, 159, 0.1), transparent 30%);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
 }
 .selection-card:focus-visible {
   outline: 2px solid rgba(248, 223, 136, 0.8);
   outline-offset: 2px;
 }
 .selection-card img {
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   object-fit: contain;
   image-rendering: pixelated;
+  display: block;
+  background: rgba(12, 20, 15, 0.84);
+  border: 2px solid rgba(255, 240, 194, 0.16);
+  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.18);
 }
 .selection-card strong {
-  color: var(--ink);
-  font-size: 0.94rem;
+  display: block;
+  color: #fbffd8;
+  font-size: 0.96rem;
 }
 .selection-card span {
-  color: var(--gold);
-  font-size: 0.78rem;
+  display: block;
+  color: #ffe79c;
+  font-size: 0.82rem;
+  margin-top: -4px;
+}
+.selection-card p {
+  margin: 0;
+  color: rgba(245, 247, 225, 0.76);
+  line-height: 1.5;
+  font-size: 0.8rem;
 }
 .selection-stage {
-  border: 1px solid rgba(232, 204, 134, 0.14);
-  background: linear-gradient(180deg, rgba(22, 34, 25, 0.96), rgba(11, 17, 12, 1));
-  padding: 16px;
   display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
   gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 2px solid rgba(255, 248, 204, 0.12);
+  background: linear-gradient(180deg, rgba(63, 95, 63, 0.24), rgba(19, 31, 24, 0.86));
 }
 .selection-preview {
-  min-height: 290px;
-  border: 1px solid rgba(219, 231, 189, 0.09);
-  background:
-    radial-gradient(circle at 50% 18%, rgba(232, 204, 134, 0.12), transparent 28%),
-    linear-gradient(180deg, rgba(36, 52, 39, 0.96), rgba(12, 18, 13, 1));
-  display: grid;
-  place-items: center;
-  padding: 20px;
+  width: 132px;
+  height: 132px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border: 2px solid rgba(255, 240, 194, 0.18);
+  background: rgba(12, 20, 15, 0.84);
+  box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.18);
 }
 .selection-preview img {
-  width: min(240px, 42vw);
-  max-height: 250px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   image-rendering: pixelated;
 }
 .selection-copy h3 {
-  margin: 0;
-  color: var(--gold);
-  font-size: 1.28rem;
+  margin: 0 0 6px;
+  color: #fbffd8;
+  font-size: 1.24rem;
 }
 .selection-copy .level {
-  margin-top: 6px;
-  color: var(--ink);
-  font-size: 0.92rem;
+  color: #ffe79c;
+  font-size: 0.88rem;
+  letter-spacing: 1px;
 }
 .selection-copy p {
   margin: 8px 0 0;
-  color: var(--muted);
+  color: rgba(245, 247, 225, 0.84);
   line-height: 1.7;
 }
 .selection-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+  grid-column: 1 / -1;
 }
 .selection-actions button {
   min-width: 160px;
 }
+.selection-head .badge {
+  min-width: 170px;
+  text-align: center;
+  line-height: 1.6;
+  color: #fff0ad;
+  border: 2px solid rgba(255, 248, 204, 0.12);
+  background: linear-gradient(180deg, rgba(70, 92, 58, 0.3), rgba(16, 25, 18, 0.7));
+}
 @media (max-width: 1080px) {
   .layout { grid-template-columns: 1fr; }
-  .selection-layout { grid-template-columns: 1fr; }
   .selection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 720px) {
+  .selection-head,
+  .selection-stage {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
   .selection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .selection-preview {
+    width: 104px;
+    height: 112px;
+  }
 }
 </style>
 </head>
@@ -406,31 +440,31 @@ button:hover {
   <div class="page-frame" id="pageFrame">
   <main class="page" id="pageRoot">
     <section class="hero">
-      <div class="eyebrow">Falan Isometric Trial</div>
+      <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.5</div>
+        <div class="version">v3.7</div>
       </div>
-      <p>这是法兰城首页的超扩图区试装版。主建筑和城镇主体继续沿用 Xilurus 的像素等角素材，树木和石构混搭 OpenGameArt；这一版补回了进城选人界面，并统一修正建筑、树木和摆件的落地阴影，让整个主城看起来更贴地、更像一座真正能逛的 JRPG 城镇。</p>
+      <p>这一版把首页的法兰城直接切成了《魔力宝贝》客户端里拼出来的真实主城地图。现在先保留旅人选择、移动和进入黑白棋会馆这些交互，再逐步把真实碰撞、重点建筑和更多功能一点点接回来。</p>
     </section>
 
     <section class="layout">
       <div class="map-shell">
         <div class="map-head">
           <div>
-            <h2>晨光法兰城</h2>
-            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这一版已经切成跟随视角，重点看放大后的建筑、宽很多的主路，以及真正扩开的四区空间是不是更像法兰城。</p>
+            <h2>真实法兰城</h2>
+            <p>按 <code>WASD</code> 或方向键移动。按 <code>Q</code> / <code>E</code> 切旅人。这一版不再是程序拼的假城镇，而是把客户端里的 <code>1000.dat</code> 法兰城真实地图接进首页，先做成可逛、可验证的 prototype。</p>
           </div>
           <div class="map-badges">
-            <div class="badge">45° 等角投影</div>
-            <div class="badge">Xilurus 主城素材</div>
-            <div class="badge">3 倍面积跟随视角</div>
+            <div class="badge">Cross Gate 原始地图</div>
+            <div class="badge">1000.dat</div>
+            <div class="badge">碰撞遮罩试装</div>
           </div>
         </div>
         <div class="canvas-wrap">
           <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">当前地图已经切到更大的跟随视角，并把里谢里雅城、圣堂、旅馆工会、工房、医院、竞技场和黑白棋会馆全部放大了。你主要看三件事：一是镜头跟着走时有没有主城感，二是建筑尺度会不会更舒服，三是扩开的法兰城有没有比上一版更像一张真正的世界地图。</div>
+        <div class="note">当前先走一条最稳的接入路线：用真实法兰城底图做主画面，再把旅人叠在上面移动，并试装一层基于源地图物件层推出来的阻挡遮罩。你主要看两件事：一是这张图本身是不是你要的法兰城，二是人物在上面逛的时候有没有“终于回到原版地图里”的感觉。</div>
       </div>
 
       <aside class="side">
@@ -439,7 +473,7 @@ button:hover {
           <div class="info-line"><span>当前区域</span><strong id="zoneName">中央广场</strong></div>
           <div class="info-line"><span>旅人位置</span><strong id="coordLabel">09, 10</strong></div>
           <div class="info-line"><span>当前目标</span><strong id="focusLabel">黑白棋会馆</strong></div>
-          <div class="info-line"><span>可行性判断</span><strong>适合先平滑迁移</strong></div>
+          <div class="info-line"><span>地图来源</span><strong>客户端 1000.dat</strong></div>
           <div class="traveler">
             <div class="portrait"><img id="portraitImg" src="./assets/falan/avatars/dog.png" alt="旅人头像"></div>
             <div>
@@ -457,14 +491,14 @@ button:hover {
         </section>
 
         <section class="side-card">
-          <h2>地块图例</h2>
+          <h2>当前说明</h2>
           <div class="legend">
-            <div class="legend-item"><span class="swatch" style="background:#7eb463;"></span>城内草地</div>
-            <div class="legend-item"><span class="swatch" style="background:#c89d68;"></span>主路与城门大道</div>
-            <div class="legend-item"><span class="swatch" style="background:#d7c6aa;"></span>王城前石砖区</div>
-            <div class="legend-item"><span class="swatch" style="background:#6db4c0;"></span>中央喷泉水面</div>
+            <div class="legend-item"><span class="swatch" style="background:#d8b48f;"></span>真实法兰城底图</div>
+            <div class="legend-item"><span class="swatch" style="background:#ffe59b;"></span>当前目标地点标记</div>
+            <div class="legend-item"><span class="swatch" style="background:#8eb0ff;"></span>旅人当前位置</div>
+            <div class="legend-item"><span class="swatch" style="background:#39463d;"></span>源图物件碰撞试装</div>
           </div>
-          <p class="foot">这版已经把法兰城做成更大的跟随视角。后续如果方向对，我就继续往四区、城门、室内和更完整的里谢里雅城外墙扩。</p>
+          <p class="foot">这版先优先把原版地图接进来。后续如果方向对，我就继续做更准的碰撞、建筑前后层级、会馆入口和更多法兰城功能点。</p>
         </section>
       </aside>
     </section>
@@ -475,10 +509,11 @@ button:hover {
     <div class="selection-panel">
       <div class="selection-head">
         <div>
-          <div class="selection-tag">Traveler Select</div>
-          <h2>进入法兰城前，先选一位旅人</h2>
-          <p>这次恢复的是法兰城入场选人界面。先挑一个看顺眼的旅人，再带他进城；之后如果你想换人，也可以随时从右侧面板重新打开。</p>
+          <div class="selection-tag">Falan City Entry</div>
+          <h2>选择旅人</h2>
+          <p>法兰城会保留在后面。先挑一位旅人完成入城登记，再沿着主路进城，往广场、竞技场或者黑白棋会馆慢慢逛过去。</p>
         </div>
+        <div class="badge">法兰城入城登记<br>选择角色后进入</div>
       </div>
       <div class="selection-layout">
         <div class="selection-grid" id="selectionGrid"></div>
@@ -489,7 +524,7 @@ button:hover {
           <div class="selection-copy">
             <h3 id="selectionName">小狗子</h3>
             <div class="level" id="selectionLevel">LV2 · 法兰城常驻旅人</div>
-            <p id="selectionDesc">人型狗狗旅人，适合作为法兰城等角版的默认看板角色。</p>
+            <p id="selectionDesc">今天先选一位旅人进城，沿着主路往右下角走，还能去黑白棋会馆继续下棋。</p>
           </div>
           <div class="selection-actions">
             <button type="button" id="confirmSelectionBtn">进入法兰城</button>
@@ -526,6 +561,7 @@ const selectionLevelEl = document.getElementById('selectionLevel');
 const selectionDescEl = document.getElementById('selectionDesc');
 const confirmSelectionBtn = document.getElementById('confirmSelectionBtn');
 const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+const skipSelectionOnLoad = new URLSearchParams(window.location.search).has('skipSelection');
 
 const travelerStorageKey = 'falan-selected-traveler';
 const spriteFrameWidth = 16;
@@ -543,121 +579,58 @@ if (travelerIndex < 0) travelerIndex = 1;
 let pendingTravelerIndex = travelerIndex;
 let selectionOpen = true;
 
-const images = {
-  castle: loadImage('./assets/falan/kitbash/buildings/castle-xil-oga.png'),
-  cathedral: loadImage('./assets/falan/kitbash/buildings/cathedral-xil-oga.png'),
-  guildInn: loadImage('./assets/falan/kitbash/buildings/guild-inn-xil-oga.png'),
-  workshop: loadImage('./assets/falan/kitbash/buildings/workshop-xil-oga.png'),
-  hospital: loadImage('./assets/falan/kitbash/buildings/hospital-xil-oga.png'),
-  arena: loadImage('./assets/falan/kitbash/buildings/arena-xil-oga.png'),
-  reversiHall: loadImage('./assets/falan/kitbash/buildings/reversi-hall-xil-oga.png'),
-  treeOak: loadImage('./assets/falan/kitbash/flora/tree-oak.png'),
-  treeRound: loadImage('./assets/falan/kitbash/flora/tree-round.png'),
-  treePine: loadImage('./assets/falan/kitbash/flora/tree-pine.png'),
-  bushWide: loadImage('./assets/falan/kitbash/flora/bush-wide.png'),
-  marketRed: loadImage('./assets/falan/kitbash/props/market-red.png'),
-  marketRedAlt: loadImage('./assets/falan/kitbash/props/market-red-alt.png'),
-  marketTable: loadImage('./assets/falan/kitbash/props/market-table.png'),
-  plankFloor: loadImage('./assets/falan/kitbash/props/plank-floor.png')
-};
-const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
-
-const keyState = { up: false, down: false, left: false, right: false };
-
-const world = {
-  cols: 38,
-  rows: 34,
-  tileW: 56,
-  tileH: 28,
-  originX: canvas.width / 2,
-  originY: 448
-};
-
-const city = {
-  centerTx: 19,
-  centerTy: 17,
-  castleTx: 19,
-  castleTy: 3.8,
-  fountainTx: 19,
-  fountainTy: 17
-};
-
-const camera = {
-  x: 0,
-  y: 0,
-  marginX: 110,
-  marginTop: 76,
-  marginBottom: 88
-};
-
-const player = {
-  tx: 19,
-  ty: 29.5,
-  dir: 'up',
-  step: 0,
-  moving: false,
-  speed: 0.08
-};
-
-const buildings = [
-  { id: 'castle', tx: 19, ty: 3.8, scale: 0.82, label: '里谢里雅城', focus: '王城中轴', footprint: { x: 15.9, y: 1.2, w: 6.4, h: 3.6 } },
-  { id: 'cathedral', tx: 9.2, ty: 8.4, scale: 0.96, label: '大圣堂', focus: '西区圣堂', footprint: { x: 7.1, y: 6.8, w: 4.0, h: 3.0 } },
-  { id: 'guildInn', tx: 29.4, ty: 8.4, scale: 0.98, label: '旅馆与公会', focus: '东区旅馆', footprint: { x: 27.1, y: 6.8, w: 4.8, h: 3.2 } },
-  { id: 'workshop', tx: 8.4, ty: 18.2, scale: 0.86, label: '工房', focus: '西区工匠街', footprint: { x: 6.9, y: 16.7, w: 3.2, h: 2.5 } },
-  { id: 'hospital', tx: 30.0, ty: 18.1, scale: 0.98, label: '医院', focus: '东区医院', footprint: { x: 28.4, y: 16.8, w: 3.3, h: 2.6 } },
-  { id: 'arena', tx: 9.0, ty: 27.5, scale: 1.08, label: '竞技场', focus: '竞技场看台', footprint: { x: 7.0, y: 25.0, w: 4.8, h: 3.2 } },
-  { id: 'reversiHall', tx: 29.2, ty: 27.8, scale: 1.02, label: '黑白棋会馆', focus: '会馆入口', footprint: { x: 27.4, y: 26.0, w: 3.6, h: 2.7 } }
-];
-
-const decorativeTrees = [
-  { tx: 3.6, ty: 6.0, asset: 'treePine', scale: 0.84, shadow: [28, 14] },
-  { tx: 4.2, ty: 11.4, asset: 'treeOak', scale: 0.78, shadow: [30, 15] },
-  { tx: 4.2, ty: 28.6, asset: 'treeRound', scale: 0.82, shadow: [30, 14] },
-  { tx: 12.0, ty: 4.4, asset: 'treePine', scale: 0.74, shadow: [26, 13] },
-  { tx: 26.6, ty: 4.6, asset: 'treePine', scale: 0.74, shadow: [26, 13] },
-  { tx: 35.0, ty: 11.0, asset: 'treeOak', scale: 0.8, shadow: [30, 15] },
-  { tx: 34.0, ty: 28.8, asset: 'treeRound', scale: 0.88, shadow: [32, 15] },
-  { tx: 15.2, ty: 31.2, asset: 'treeRound', scale: 0.78, shadow: [28, 13] },
-  { tx: 22.8, ty: 31.0, asset: 'treeRound', scale: 0.78, shadow: [28, 13] },
-  { tx: 8.2, ty: 32.0, asset: 'treePine', scale: 0.72, shadow: [26, 13] },
-  { tx: 29.8, ty: 32.0, asset: 'treeOak', scale: 0.72, shadow: [28, 14] },
-  { tx: 10.8, ty: 13.4, asset: 'treeRound', scale: 0.72, shadow: [26, 12] },
-  { tx: 27.6, ty: 13.4, asset: 'treeRound', scale: 0.72, shadow: [26, 12] }
-];
-
-const decorativeProps = [
-  { tx: 27.2, ty: 10.2, asset: 'marketRed', scale: 1.7, shadow: [13, 6] },
-  { tx: 31.0, ty: 10.5, asset: 'marketRedAlt', scale: 1.7, shadow: [13, 6] },
-  { tx: 29.2, ty: 11.4, asset: 'marketTable', scale: 1.55, shadow: [13, 6] },
-  { tx: 27.8, ty: 19.8, asset: 'bushWide', scale: 0.7, shadow: [18, 8] },
-  { tx: 31.0, ty: 20.1, asset: 'bushWide', scale: 0.68, shadow: [18, 8] },
-  { tx: 8.3, ty: 24.8, asset: 'plankFloor', scale: 1.7, shadow: [18, 8] },
-  { tx: 11.2, ty: 24.8, asset: 'plankFloor', scale: 1.7, shadow: [18, 8] },
-  { tx: 9.8, ty: 25.9, asset: 'marketTable', scale: 1.45, shadow: [13, 6] },
-  { tx: 27.8, ty: 28.7, asset: 'marketRed', scale: 1.65, shadow: [13, 6] },
-  { tx: 30.4, ty: 28.8, asset: 'marketRedAlt', scale: 1.65, shadow: [13, 6] },
-  { tx: 16.1, ty: 28.0, asset: 'bushWide', scale: 0.66, shadow: [18, 8] },
-  { tx: 22.1, ty: 27.8, asset: 'bushWide', scale: 0.66, shadow: [18, 8] }
-];
-
-function isoToWorld(tx, ty) {
-  return {
-    x: (tx - ty) * world.tileW / 2,
-    y: (tx + ty) * world.tileH / 2
-  };
-}
-
 function loadImage(src) {
   const image = new Image();
   image.src = src;
   return image;
 }
 
-function isoToScreen(tx, ty) {
-  const point = isoToWorld(tx, ty);
+const sceneMap = {
+  image: loadImage('./assets/falan/map/falan-city-1000.png'),
+  collisionImage: loadImage('./assets/falan/map/falan-city-1000-occupancy.png'),
+  width: 2003,
+  height: 1494,
+  cols: 300,
+  rows: 300,
+  halfW: 32,
+  halfH: 23,
+  baseX: 7004,
+  baseY: -1578,
+  scale: 0.18
+};
+const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
+const keyState = { up: false, down: false, left: false, right: false };
+const collisionState = { ready: false, data: null, width: 0, height: 0 };
+const landmarks = [
+  { id: 'castle', label: '里谢里雅城', focus: '王城前广场', area: '里谢里雅城前', tx: 88.0, ty: 136.0 },
+  { id: 'cathedral', label: '西区圣堂', focus: '大圣堂周边', area: '西区圣堂与工房', tx: 64.0, ty: 156.0 },
+  { id: 'plaza', label: '中央广场', focus: '法兰城中央广场', area: '中央广场', tx: 130.0, ty: 175.0 },
+  { id: 'eastInn', label: '东区旅馆', focus: '旅馆与公会街', area: '东区旅馆与医院', tx: 168.0, ty: 132.0 },
+  { id: 'arena', label: '竞技场', focus: '竞技场与剧场区', area: '西区竞技场', tx: 150.0, ty: 205.0 },
+  { id: 'reversiHall', label: '黑白棋会馆', focus: '会馆入口', area: '黑白棋会馆', tx: 196.0, ty: 168.0 }
+];
+const camera = { x: 0, y: 0 };
+const player = {
+  tx: 178.3,
+  ty: 223.6,
+  dir: 'up',
+  step: 0,
+  moving: false,
+  speed: 0.16
+};
+
+function mapToPreview(tx, ty) {
   return {
-    x: point.x - camera.x + world.originX,
-    y: point.y - camera.y + world.originY
+    x: ((tx - ty) * sceneMap.halfW + sceneMap.baseX) * sceneMap.scale,
+    y: ((tx + ty) * sceneMap.halfH + sceneMap.baseY) * sceneMap.scale
+  };
+}
+
+function mapToScreen(tx, ty) {
+  const point = mapToPreview(tx, ty);
+  return {
+    x: point.x - camera.x,
+    y: point.y - camera.y
   };
 }
 
@@ -665,225 +638,75 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function inRect(tx, ty, rect) {
-  return tx > rect.x && tx < rect.x + rect.w && ty > rect.y && ty < rect.y + rect.h;
+function prepareCollisionMask() {
+  const offscreen = document.createElement('canvas');
+  offscreen.width = sceneMap.collisionImage.naturalWidth;
+  offscreen.height = sceneMap.collisionImage.naturalHeight;
+  const offctx = offscreen.getContext('2d', { willReadFrequently: true });
+  offctx.drawImage(sceneMap.collisionImage, 0, 0);
+  collisionState.data = offctx.getImageData(0, 0, offscreen.width, offscreen.height).data;
+  collisionState.width = offscreen.width;
+  collisionState.height = offscreen.height;
+  collisionState.ready = true;
+}
+
+sceneMap.collisionImage.addEventListener('load', prepareCollisionMask);
+if (sceneMap.collisionImage.complete && sceneMap.collisionImage.naturalWidth) prepareCollisionMask();
+
+function blockedAtPixel(x, y) {
+  if (!collisionState.ready) return false;
+  const probes = [
+    [0, 0],
+    [0, 4],
+    [-4, 2],
+    [4, 2],
+    [0, -3]
+  ];
+  let hits = 0;
+  for (const [dx, dy] of probes) {
+    const px = Math.round(x + dx);
+    const py = Math.round(y + dy);
+    if (px < 0 || py < 0 || px >= collisionState.width || py >= collisionState.height) {
+      hits += 1;
+      continue;
+    }
+    const idx = (py * collisionState.width + px) * 4;
+    if (collisionState.data[idx] > 96) hits += 1;
+  }
+  return hits >= 2;
 }
 
 function collides(tx, ty) {
-  if (tx < 0.8 || ty < 0.8 || tx > world.cols - 0.8 || ty > world.rows - 0.8) return true;
-  return buildings.some((building) => inRect(tx, ty, building.footprint));
-}
-
-function tileType(tx, ty) {
-  const dx = Math.abs(tx - city.centerTx);
-  const dy = Math.abs(ty - city.centerTy);
-  const onMainNorthSouth = dx <= 1.5 && ty >= 6 && ty <= 31;
-  const onMainEastWest = dy <= 1.5 && tx >= 7 && tx <= 31;
-  const onNorthWestRoad = Math.abs(ty - 9.5) <= 1.2 && tx >= 9 && tx <= 19;
-  const onNorthEastRoad = Math.abs(ty - 9.5) <= 1.2 && tx >= 19 && tx <= 31;
-  const onSouthWestRoad = Math.abs(ty - 26.5) <= 1.2 && tx >= 8 && tx <= 19;
-  const onSouthEastRoad = Math.abs(ty - 26.5) <= 1.2 && tx >= 19 && tx <= 31;
-  const onWestLane = Math.abs(tx - 9.5) <= 1.2 && ty >= 13 && ty <= 26;
-  const onEastLane = Math.abs(tx - 29.5) <= 1.2 && ty >= 13 && ty <= 26;
-  if (tx >= 16 && tx <= 22 && ty <= 7) return 'stone';
-  if (onMainNorthSouth || onMainEastWest || onNorthWestRoad || onNorthEastRoad || onSouthWestRoad || onSouthEastRoad || onWestLane || onEastLane) return 'road';
-  if (dx <= 3.4 && dy <= 3.4) return 'plaza';
-  if (tx >= city.fountainTx - 1 && tx <= city.fountainTx + 1 && ty >= city.fountainTy - 1 && ty <= city.fountainTy + 1) return 'fountain';
-  return 'grass';
-}
-
-function tilePalette(type, tx, ty) {
-  if (type === 'road') {
-    return { top: (tx + ty) % 2 ? '#c3915c' : '#ca9d68', left: '#946b43', right: '#b88455', stroke: '#f1cd8f' };
-  }
-  if (type === 'plaza') {
-    return { top: (tx + ty) % 2 ? '#d8c6ac' : '#d0bea2', left: '#b69d7e', right: '#cab292', stroke: '#eee1cb' };
-  }
-  if (type === 'stone') {
-    return { top: (tx + ty) % 2 ? '#d9cbaf' : '#e4d7bf', left: '#baa181', right: '#cfb595', stroke: '#f3ead4' };
-  }
-  if (type === 'fountain') {
-    return { top: '#6cb1bf', left: '#4e8794', right: '#5c9ca7', stroke: '#bfeef1' };
-  }
-  return { top: (tx + ty) % 2 ? '#7bb161' : '#72a858', left: '#537f3d', right: '#679a4c', stroke: '#a5d188' };
-}
-
-function drawDiamond(tx, ty, colors, elevation = 0) {
-  const point = isoToScreen(tx, ty);
-  const topY = point.y - elevation;
-  const halfW = world.tileW / 2;
-  const halfH = world.tileH / 2;
-
-  ctx.beginPath();
-  ctx.moveTo(point.x, topY - halfH);
-  ctx.lineTo(point.x + halfW, topY);
-  ctx.lineTo(point.x, topY + halfH);
-  ctx.lineTo(point.x - halfW, topY);
-  ctx.closePath();
-  ctx.fillStyle = colors.top;
-  ctx.fill();
-  ctx.strokeStyle = colors.stroke;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.moveTo(point.x - halfW, topY);
-  ctx.lineTo(point.x, topY + halfH);
-  ctx.lineTo(point.x, topY + halfH + 7);
-  ctx.lineTo(point.x - halfW, topY + 7);
-  ctx.closePath();
-  ctx.fillStyle = colors.left;
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(point.x + halfW, topY);
-  ctx.lineTo(point.x, topY + halfH);
-  ctx.lineTo(point.x, topY + halfH + 7);
-  ctx.lineTo(point.x + halfW, topY + 7);
-  ctx.closePath();
-  ctx.fillStyle = colors.right;
-  ctx.fill();
-}
-
-function drawPlacedSprite(item, image) {
-  if (!image.complete || !image.naturalWidth) return;
-  const point = isoToScreen(item.tx, item.ty);
-  const width = Math.max(1, Math.round(image.naturalWidth * item.scale));
-  const height = Math.max(1, Math.round(image.naturalHeight * item.scale));
-  const footY = point.y + world.tileH * 0.16 + (item.groundOffset || 0);
-  const shadowY = footY + (item.shadowOffsetY || 1);
-  const x = Math.round(point.x - width / 2 + (item.offsetX || 0));
-  const y = Math.round(footY - height + (item.lift || 0));
-
-  if (item.shadow) {
-    ctx.fillStyle = 'rgba(13, 20, 14, 0.24)';
-    ctx.beginPath();
-    ctx.ellipse(point.x, shadowY, item.shadow[0], item.shadow[1], 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.drawImage(image, x, y, width, height);
-}
-
-function drawFountain(tick) {
-  for (let ty = city.fountainTy - 1; ty <= city.fountainTy + 1; ty++) {
-    for (let tx = city.fountainTx - 1; tx <= city.fountainTx + 1; tx++) {
-      drawDiamond(tx, ty, tilePalette('fountain', tx, ty), 1);
-    }
-  }
-  const point = isoToScreen(city.fountainTx, city.fountainTy);
-  ctx.fillStyle = '#e9e5d7';
-  ctx.fillRect(Math.round(point.x - 10), Math.round(point.y - 40), 20, 30);
-  ctx.fillRect(Math.round(point.x - 24), Math.round(point.y - 23), 48, 8);
-  const ripple = Math.sin(tick / 11) * 2;
-  ctx.fillStyle = '#d9fbff';
-  ctx.fillRect(Math.round(point.x - 3), Math.round(point.y - 52), 6, 16);
-  ctx.fillRect(Math.round(point.x - 13 + ripple), Math.round(point.y - 14), 26, 5);
-}
-
-function drawBuilding(building, focusId) {
-  const image = images[building.id];
-  if (!image.complete || !image.naturalWidth) return;
-  const anchor = isoToScreen(building.tx, building.ty);
-  const width = Math.round(image.naturalWidth * building.scale);
-  const height = Math.round(image.naturalHeight * building.scale);
-  const footY = anchor.y + world.tileH * 0.15;
-  const shadowY = footY + 1;
-  const shadowW = clamp(Math.round(width * 0.18), 18, 58);
-  const shadowH = clamp(Math.round(height * 0.05), 6, 14);
-  const x = Math.round(anchor.x - width / 2);
-  const y = Math.round(footY - height);
-
-  ctx.fillStyle = 'rgba(10, 16, 12, 0.22)';
-  ctx.beginPath();
-  ctx.ellipse(anchor.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (focusId === building.id) {
-    ctx.fillStyle = 'rgba(248, 223, 136, 0.12)';
-    ctx.beginPath();
-    ctx.ellipse(anchor.x, shadowY, shadowW + 8, shadowH + 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
-
-  ctx.drawImage(image, x, y, width, height);
-
-  if (focusId === building.id) {
-    ctx.strokeStyle = 'rgba(248, 223, 136, 0.72)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x - 4, y - 4, width + 8, height + 8);
-  }
-}
-
-function drawPlayer() {
-  const traveler = travelers[travelerIndex];
-  const sprite = travelerSprites[traveler.id];
-  const point = isoToScreen(player.tx, player.ty);
-  const walkPhase = player.moving ? Math.sin(player.step) : 0;
-  const bob = player.moving ? -Math.abs(walkPhase) * 3 : 0;
-  const sway = player.moving && (player.dir === 'up' || player.dir === 'down') ? walkPhase * 1.1 : 0;
-  const footY = point.y + world.tileH * 0.16;
-  const shadowY = footY + 1;
-  const shadowW = 11 + (player.moving ? Math.abs(walkPhase) * 3 : 0);
-  const shadowH = 4.5 - (player.moving ? Math.abs(walkPhase) * 0.7 : 0);
-  ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
-  ctx.beginPath();
-  ctx.ellipse(point.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (!sprite.complete || !sprite.naturalWidth) return;
-  const walk = player.moving ? (Math.floor(player.step) % 2) : 0;
-  const base = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
-  const frame = base + walk;
-  const scale = 1.45;
-  const drawW = Math.round(spriteFrameWidth * scale);
-  const drawH = Math.round(spriteFrameHeight * scale);
-  const drawX = Math.round(point.x - drawW / 2 + sway);
-  const drawY = Math.round(footY - drawH + bob);
-
-  if (player.dir === 'left') {
-    ctx.save();
-    ctx.translate(drawX + drawW, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, 0, drawY, drawW, drawH);
-    ctx.restore();
-  } else {
-    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, drawW, drawH);
-  }
-}
-
-function areaName() {
-  const { tx, ty } = player;
-  if (tx > 26.5 && ty > 24.5) return '黑白棋会馆';
-  if (ty < 7.6) return '里谢里雅城前';
-  if (tx < 12.5 && ty < 20.5) return '西区圣堂与工房';
-  if (tx > 25.0 && ty < 20.5) return '东区旅馆与医院';
-  if (tx < 12.8 && ty > 23.5) return '西区竞技场';
-  if (tx > 24.5 && ty > 16.5) return '东区市集';
-  return '中央广场';
+  if (tx < 2 || ty < 2 || tx > sceneMap.cols - 2 || ty > sceneMap.rows - 2) return true;
+  const point = mapToPreview(tx, ty);
+  return blockedAtPixel(point.x, point.y);
 }
 
 function currentFocus() {
-  let best = buildings[0];
+  let best = landmarks[0];
   let bestDist = Infinity;
-  buildings.forEach((building) => {
-    const dx = player.tx - building.tx;
-    const dy = player.ty - building.ty;
+  landmarks.forEach((landmark) => {
+    const dx = player.tx - landmark.tx;
+    const dy = player.ty - landmark.ty;
     const dist = dx * dx + dy * dy;
     if (dist < bestDist) {
+      best = landmark;
       bestDist = dist;
-      best = building;
     }
   });
   return best;
+}
+
+function areaName() {
+  return currentFocus().area;
 }
 
 function syncInfo() {
   const traveler = travelers[travelerIndex];
   const focus = currentFocus();
   zoneNameEl.textContent = areaName();
-  coordLabelEl.textContent = `${player.tx.toFixed(1)}, ${player.ty.toFixed(1)}`;
-  focusLabelEl.textContent = focus.label;
+  coordLabelEl.textContent = `${player.tx.toFixed(1)}, ${(sceneMap.rows - 1 - player.ty).toFixed(1)}`;
+  focusLabelEl.textContent = focus.focus;
   travelerNameEl.textContent = `${traveler.name} ${traveler.level}`;
   travelerDescEl.textContent = traveler.desc;
   portraitImg.src = traveler.avatar;
@@ -927,6 +750,7 @@ function renderSelectionGrid() {
       <img src="${traveler.avatar}" alt="${traveler.name}头像">
       <strong>${traveler.name}</strong>
       <span>${traveler.level}</span>
+      <p>${traveler.title}</p>
     `;
     card.addEventListener('click', () => {
       pendingTravelerIndex = index;
@@ -986,19 +810,9 @@ function fitPageToViewport() {
 }
 
 function updateCamera() {
-  const target = isoToWorld(player.tx, player.ty);
-  const minWorldX = -world.rows * world.tileW / 2;
-  const maxWorldX = world.cols * world.tileW / 2;
-  const minWorldY = 0;
-  const maxWorldY = (world.cols + world.rows) * world.tileH / 2;
-
-  const minCameraX = minWorldX + world.originX - camera.marginX;
-  const maxCameraX = maxWorldX + world.originX - (canvas.width - camera.marginX);
-  const minCameraY = minWorldY + world.originY - camera.marginTop;
-  const maxCameraY = maxWorldY + world.originY - (canvas.height - camera.marginBottom);
-
-  camera.x = clamp(target.x, Math.min(minCameraX, maxCameraX), Math.max(minCameraX, maxCameraX));
-  camera.y = clamp(target.y, Math.min(minCameraY, maxCameraY), Math.max(minCameraY, maxCameraY));
+  const target = mapToPreview(player.tx, player.ty);
+  camera.x = clamp(target.x - canvas.width / 2, 0, Math.max(0, sceneMap.width - canvas.width));
+  camera.y = clamp(target.y - canvas.height / 2, 0, Math.max(0, sceneMap.height - canvas.height));
 }
 
 window.addEventListener('keydown', (event) => {
@@ -1086,74 +900,88 @@ function updatePlayer() {
 
   player.moving = dtx !== 0 || dty !== 0;
   if (player.moving) {
-    const nextTx = clamp(player.tx + dtx, 0.8, world.cols - 0.8);
-    const nextTy = clamp(player.ty + dty, 0.8, world.rows - 0.8);
+    const nextTx = clamp(player.tx + dtx, 1, sceneMap.cols - 1);
+    const nextTy = clamp(player.ty + dty, 1, sceneMap.rows - 1);
     if (!collides(nextTx, nextTy)) {
       player.tx = nextTx;
       player.ty = nextTy;
     }
-    player.step += 0.26;
+    player.step += 0.22;
   }
 }
 
-function drawGround(tick) {
-  for (let ty = 0; ty < world.rows; ty += 1) {
-    for (let tx = 0; tx < world.cols; tx += 1) {
-      const type = tileType(tx, ty);
-      drawDiamond(tx, ty, tilePalette(type, tx, ty), type === 'stone' ? 1 : 0);
-      if (type === 'grass' && (tx + ty) % 5 === 0) {
-        const p = isoToScreen(tx, ty);
-        ctx.fillStyle = (tx + ty) % 10 === 0 ? '#a6d07c' : '#88bf67';
-        ctx.fillRect(Math.round(p.x - 1), Math.round(p.y - 2), 2, 2);
-      }
-      if (type === 'road' && (tx + ty) % 4 === 0) {
-        const p = isoToScreen(tx, ty);
-        ctx.fillStyle = '#ecc98d';
-        ctx.fillRect(Math.round(p.x - 2), Math.round(p.y - 1), 4, 2);
-      }
-    }
-  }
-
-  const skyGlow = ctx.createRadialGradient(world.originX, 14, 40, world.originX, 14, 250);
-  skyGlow.addColorStop(0, 'rgba(255, 236, 173, 0.24)');
-  skyGlow.addColorStop(1, 'rgba(255, 236, 173, 0)');
-  ctx.fillStyle = skyGlow;
-  ctx.fillRect(0, 0, canvas.width, 140);
-
-  const pulse = 0.3 + (Math.sin(tick / 14) + 1) * 0.08;
-  ctx.fillStyle = `rgba(246, 228, 164, ${pulse})`;
-  const point = isoToScreen(29.2, 27.8);
+function drawFocusMarker(tick) {
+  const focus = currentFocus();
+  const point = mapToScreen(focus.tx, focus.ty);
+  const pulse = 0.24 + (Math.sin(tick / 12) + 1) * 0.08;
+  ctx.fillStyle = `rgba(250, 227, 150, ${pulse})`;
   ctx.beginPath();
-  ctx.ellipse(point.x, point.y + 2, 22, 8, 0, 0, Math.PI * 2);
+  ctx.ellipse(point.x, point.y + 4, 18, 7, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 236, 178, 0.9)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(point.x, point.y - 12, 7, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255, 245, 214, 0.92)';
+  ctx.font = '12px "Courier New", monospace';
+  ctx.fillText(focus.label, point.x + 14, point.y - 16);
 }
 
 function drawScene(tick) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#1a261b';
+  ctx.fillStyle = '#11171b';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (sceneMap.image.complete && sceneMap.image.naturalWidth) {
+    ctx.drawImage(sceneMap.image, Math.round(-camera.x), Math.round(-camera.y));
+  } else {
+    ctx.fillStyle = '#27362d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
 
-  drawGround(tick);
-  drawFountain(tick);
-
-  const renderables = [
-    ...decorativeTrees.map((tree) => ({ type: 'tree', sort: tree.tx + tree.ty + 0.15, tree })),
-    ...decorativeProps.map((prop) => ({ type: 'prop', sort: prop.tx + prop.ty + 0.18, prop })),
-    ...buildings.map((building) => ({ type: 'building', sort: building.tx + building.ty + 0.25, building })),
-    { type: 'player', sort: player.tx + player.ty + 0.22 }
-  ].sort((a, b) => a.sort - b.sort);
-
-  const focus = currentFocus();
-  renderables.forEach((item) => {
-    if (item.type === 'tree') drawPlacedSprite(item.tree, images[item.tree.asset]);
-    if (item.type === 'prop') drawPlacedSprite(item.prop, images[item.prop.asset]);
-    if (item.type === 'building') drawBuilding(item.building, focus.id);
-    if (item.type === 'player') drawPlayer();
-  });
+  drawFocusMarker(tick);
+  drawPlayer();
 
   ctx.fillStyle = 'rgba(240, 229, 193, 0.85)';
   ctx.font = '13px "Courier New", monospace';
-  ctx.fillText('FALAN ISO PROTOTYPE', 18, 26);
+  ctx.fillText('FALAN CITY MAP 1000', 18, 26);
+}
+
+function drawPlayer() {
+  const traveler = travelers[travelerIndex];
+  const sprite = travelerSprites[traveler.id];
+  const point = mapToScreen(player.tx, player.ty);
+  const walkPhase = player.moving ? Math.sin(player.step) : 0;
+  const bob = player.moving ? -Math.abs(walkPhase) * 3 : 0;
+  const sway = player.moving && (player.dir === 'up' || player.dir === 'down') ? walkPhase * 1.1 : 0;
+  const footY = point.y + 2;
+  const shadowY = footY + 2;
+  const shadowW = 12 + (player.moving ? Math.abs(walkPhase) * 3 : 0);
+  const shadowH = 4.5 - (player.moving ? Math.abs(walkPhase) * 0.7 : 0);
+  ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
+  ctx.beginPath();
+  ctx.ellipse(point.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!sprite.complete || !sprite.naturalWidth) return;
+  const walk = player.moving ? (Math.floor(player.step) % 2) : 0;
+  const base = player.dir === 'down' ? 0 : player.dir === 'up' ? 4 : 2;
+  const frame = base + walk;
+  const scale = 1.45;
+  const drawW = Math.round(spriteFrameWidth * scale);
+  const drawH = Math.round(spriteFrameHeight * scale);
+  const drawX = Math.round(point.x - drawW / 2 + sway);
+  const drawY = Math.round(footY - drawH + bob);
+
+  if (player.dir === 'left') {
+    ctx.save();
+    ctx.translate(drawX + drawW, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, 0, drawY, drawW, drawH);
+    ctx.restore();
+  } else {
+    ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, drawW, drawH);
+  }
 }
 
 function loop(tick) {
@@ -1167,7 +995,11 @@ function loop(tick) {
 updateCamera();
 syncInfo();
 renderSelectionGrid();
-openTravelerSelection(true);
+if (skipSelectionOnLoad) {
+  closeTravelerSelection(false);
+} else {
+  openTravelerSelection(true);
+}
 fitPageToViewport();
 requestAnimationFrame(loop);
 </script>
