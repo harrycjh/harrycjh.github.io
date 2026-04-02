@@ -1,0 +1,191 @@
+{
+  "character_id": 100253,
+  "dir_labels": {
+    "0": "up_left",
+    "1": "up",
+    "2": "up_right",
+    "3": "right",
+    "4": "down_right",
+    "5": "down",
+    "6": "down_left",
+    "7": "left"
+  },
+  "actions": {
+    "0": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir0-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 62,
+        "frameHeight": 79,
+        "gap": 6,
+        "anchorX": 35,
+        "anchorY": 66
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir0-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 67,
+        "frameHeight": 82,
+        "gap": 6,
+        "anchorX": 36,
+        "anchorY": 66
+      }
+    },
+    "1": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir1-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 53,
+        "frameHeight": 77,
+        "gap": 6,
+        "anchorX": 23,
+        "anchorY": 65
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir1-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 49,
+        "frameHeight": 81,
+        "gap": 6,
+        "anchorX": 23,
+        "anchorY": 65
+      }
+    },
+    "2": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir2-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 89,
+        "frameHeight": 79,
+        "gap": 6,
+        "anchorX": 26,
+        "anchorY": 66
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir2-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 81,
+        "frameHeight": 82,
+        "gap": 6,
+        "anchorX": 30,
+        "anchorY": 66
+      }
+    },
+    "3": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir3-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 87,
+        "frameHeight": 91,
+        "gap": 6,
+        "anchorX": 23,
+        "anchorY": 73
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir3-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 93,
+        "frameHeight": 85,
+        "gap": 6,
+        "anchorX": 30,
+        "anchorY": 74
+      }
+    },
+    "4": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir4-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 69,
+        "frameHeight": 111,
+        "gap": 6,
+        "anchorX": 27,
+        "anchorY": 75
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir4-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 68,
+        "frameHeight": 107,
+        "gap": 6,
+        "anchorX": 29,
+        "anchorY": 78
+      }
+    },
+    "5": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir5-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 58,
+        "frameHeight": 109,
+        "gap": 6,
+        "anchorX": 33,
+        "anchorY": 72
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir5-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 44,
+        "frameHeight": 111,
+        "gap": 6,
+        "anchorX": 22,
+        "anchorY": 75
+      }
+    },
+    "6": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir6-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 88,
+        "frameHeight": 97,
+        "gap": 6,
+        "anchorX": 62,
+        "anchorY": 76
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir6-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 83,
+        "frameHeight": 99,
+        "gap": 6,
+        "anchorX": 52,
+        "anchorY": 78
+      }
+    },
+    "7": {
+      "idle": {
+        "src": "./assets/falan/crossgate100253/dir7-idle.png",
+        "frameCount": 4,
+        "durationMs": 1200,
+        "frameWidth": 84,
+        "frameHeight": 84,
+        "gap": 6,
+        "anchorX": 62,
+        "anchorY": 73
+      },
+      "walk": {
+        "src": "./assets/falan/crossgate100253/dir7-walk.png",
+        "frameCount": 6,
+        "durationMs": 1000,
+        "frameWidth": 92,
+        "frameHeight": 85,
+        "gap": 6,
+        "anchorX": 62,
+        "anchorY": 74
+      }
+    }
+  }
+}
