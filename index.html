@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.24 -->
+<!-- 法兰城 v3.25 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.24</title>
+<title>法兰城 v3.25</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -476,6 +476,8 @@ button:hover {
   background: linear-gradient(180deg, rgba(63, 95, 63, 0.24), rgba(19, 31, 24, 0.86));
 }
 .selection-preview {
+  position: relative;
+  overflow: hidden;
   width: 132px;
   height: 132px;
   display: flex;
@@ -485,11 +487,15 @@ button:hover {
   background: rgba(12, 20, 15, 0.84);
   box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.18);
 }
-.selection-preview img {
+.selection-preview img,
+.selection-preview canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   image-rendering: pixelated;
+  display: block;
 }
 .selection-copy h3 {
   margin: 0 0 6px;
@@ -549,7 +555,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.24</div>
+        <div class="version">v3.25</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。上一轮挂进去的局部动画经复核更像角色动作资源，因此先撤下，避免继续把错误动效叠在法兰城地图上。</p>
     </section>
@@ -646,6 +652,7 @@ button:hover {
         <div class="selection-stage">
           <div class="selection-preview">
             <img id="selectionPreviewImg" src="./assets/falan/crossgate100253/preview.png" alt="旅人预览">
+            <canvas id="selectionPreviewCanvas" width="132" height="132" hidden></canvas>
           </div>
           <div class="selection-copy">
             <h3 id="selectionName">小狗子</h3>
@@ -689,12 +696,15 @@ const pageRoot = document.getElementById('pageRoot');
 const selectionOverlay = document.getElementById('selectionOverlay');
 const selectionGrid = document.getElementById('selectionGrid');
 const selectionPreviewImg = document.getElementById('selectionPreviewImg');
+const selectionPreviewCanvas = document.getElementById('selectionPreviewCanvas');
+const selectionPreviewCtx = selectionPreviewCanvas.getContext('2d');
 const selectionNameEl = document.getElementById('selectionName');
 const selectionLevelEl = document.getElementById('selectionLevel');
 const selectionDescEl = document.getElementById('selectionDesc');
 const confirmSelectionBtn = document.getElementById('confirmSelectionBtn');
 const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
 const skipSelectionOnLoad = new URLSearchParams(window.location.search).has('skipSelection');
+selectionPreviewCtx.imageSmoothingEnabled = false;
 
 const travelerStorageKey = 'falan-selected-traveler';
 const spriteFrameWidth = 16;
@@ -786,6 +796,7 @@ const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 14 };
+const selectionPreviewState = { animationSet: null, directionDurationMs: 640, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
 const landmarks = [
@@ -1061,8 +1072,12 @@ function resetPlayerToSpawn() {
 
 function syncSelectionPanel() {
   const traveler = travelers[pendingTravelerIndex];
+  const hasAnimatedPreview = Boolean(traveler.animationSet && crossgateAnimationSets[traveler.animationSet]);
+  selectionPreviewState.animationSet = hasAnimatedPreview ? traveler.animationSet : null;
   selectionPreviewImg.src = traveler.preview;
   selectionPreviewImg.alt = `${traveler.name}全身预览`;
+  selectionPreviewImg.hidden = hasAnimatedPreview;
+  selectionPreviewCanvas.hidden = !hasAnimatedPreview;
   selectionNameEl.textContent = traveler.name;
   selectionLevelEl.textContent = `${traveler.level} · ${traveler.title}`;
   selectionDescEl.textContent = traveler.desc;
@@ -1071,6 +1086,52 @@ function syncSelectionPanel() {
     card.classList.toggle('active', index === pendingTravelerIndex);
     card.setAttribute('aria-pressed', index === pendingTravelerIndex ? 'true' : 'false');
   });
+}
+
+function drawSelectionPreview(tickMs) {
+  selectionPreviewCtx.clearRect(0, 0, selectionPreviewCanvas.width, selectionPreviewCanvas.height);
+  if (!selectionPreviewState.animationSet || selectionPreviewCanvas.hidden) return;
+  const animationSet = crossgateAnimationSets[selectionPreviewState.animationSet];
+  if (!animationSet) return;
+  const directionOrder = selectionPreviewState.directionOrder;
+  const dirIndex = Math.floor(tickMs / selectionPreviewState.directionDurationMs) % directionOrder.length;
+  const dir = String(directionOrder[dirIndex]);
+  const action = animationSet.directions[dir]?.idle;
+  const image = crossgateSheetImages[`${selectionPreviewState.animationSet}-${dir}-idle`];
+  if (!action || !image?.complete || !image.naturalWidth) return;
+
+  const frameDuration = action.durationMs / action.frameCount;
+  const frameIndex = Math.floor(tickMs / Math.max(frameDuration, 1)) % action.frameCount;
+  const frameStep = action.frameWidth + action.gap;
+  const drawScale = Math.min(
+    1,
+    (selectionPreviewCanvas.width - 12) / action.frameWidth,
+    (selectionPreviewCanvas.height - 12) / action.frameHeight
+  );
+  const drawW = Math.round(action.frameWidth * drawScale);
+  const drawH = Math.round(action.frameHeight * drawScale);
+  const footY = selectionPreviewCanvas.height - 9;
+  const drawX = Math.round((selectionPreviewCanvas.width - drawW) / 2);
+  const drawY = Math.round(footY - action.anchorY * drawScale);
+  const shadowW = Math.max(14, Math.round(18 * drawScale));
+  const shadowH = Math.max(4, Math.round(6 * drawScale));
+
+  selectionPreviewCtx.fillStyle = 'rgba(8, 12, 9, 0.3)';
+  selectionPreviewCtx.beginPath();
+  selectionPreviewCtx.ellipse(selectionPreviewCanvas.width / 2, footY + 3, shadowW, shadowH, 0, 0, Math.PI * 2);
+  selectionPreviewCtx.fill();
+
+  selectionPreviewCtx.drawImage(
+    image,
+    frameIndex * frameStep,
+    0,
+    action.frameWidth,
+    action.frameHeight,
+    drawX,
+    drawY,
+    drawW,
+    drawH
+  );
 }
 
 function renderSelectionGrid() {
@@ -1488,6 +1549,7 @@ function loop(tick) {
   updateCamera();
   syncInfo();
   drawScene(tick / 16.6);
+  drawSelectionPreview(tick);
   requestAnimationFrame(loop);
 }
 
