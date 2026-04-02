@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.12 -->
+<!-- 法兰城 v3.13 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.12</title>
+<title>法兰城 v3.13</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -495,7 +495,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.12</div>
+        <div class="version">v3.13</div>
       </div>
       <p>这一版把首页的法兰城直接切成了《魔力宝贝》客户端里拼出来的真实主城地图。现在先保留旅人选择、移动和进入黑白棋会馆这些交互，再逐步把真实碰撞、重点建筑和更多功能一点点接回来。</p>
     </section>
@@ -660,6 +660,7 @@ const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler
 const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
+const defaultSpawn = { tx: 111.9, ty: 228.8, dir: 'down' };
 const landmarks = [
   { id: 'castle', label: '里谢里雅城', focus: '王城前广场', area: '里谢里雅城前', tx: 88.0, ty: 136.0 },
   { id: 'cathedral', label: '西区圣堂', focus: '大圣堂周边', area: '西区圣堂与工房', tx: 64.0, ty: 156.0 },
@@ -670,9 +671,9 @@ const landmarks = [
 ];
 const camera = { x: 0, y: 0 };
 const player = {
-  tx: 178.3,
-  ty: 223.6,
-  dir: 'up',
+  tx: defaultSpawn.tx,
+  ty: defaultSpawn.ty,
+  dir: defaultSpawn.dir,
   step: 0,
   moving: false,
   speed: 0.16
@@ -812,6 +813,14 @@ function applyTraveler(index) {
   syncInfo();
 }
 
+function resetPlayerToSpawn() {
+  player.tx = defaultSpawn.tx;
+  player.ty = defaultSpawn.ty;
+  player.dir = defaultSpawn.dir;
+  player.step = 0;
+  player.moving = false;
+}
+
 function syncSelectionPanel() {
   const traveler = travelers[pendingTravelerIndex];
   selectionPreviewImg.src = traveler.preview;
@@ -855,7 +864,10 @@ function openTravelerSelection(resetPending = true) {
 }
 
 function closeTravelerSelection(apply = true) {
-  if (apply) applyTraveler(pendingTravelerIndex);
+  if (apply) {
+    applyTraveler(pendingTravelerIndex);
+    resetPlayerToSpawn();
+  }
   else syncInfo();
   selectionOpen = false;
   resetKeyState();
