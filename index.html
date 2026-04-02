@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.14 -->
+<!-- 法兰城 v3.15 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.14</title>
+<title>法兰城 v3.15</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -495,7 +495,7 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.14</div>
+        <div class="version">v3.15</div>
       </div>
       <p>这一版把首页的法兰城直接切成了《魔力宝贝》客户端里拼出来的真实主城地图。现在先保留旅人选择、移动和进入黑白棋会馆这些交互，再逐步把真实碰撞、重点建筑和更多功能一点点接回来。</p>
     </section>
@@ -511,6 +511,7 @@ button:hover {
             <div class="badge">Cross Gate 原始地图</div>
             <div class="badge">1000.dat</div>
             <div class="badge">11128 x 8300 原图</div>
+            <div class="badge">分块动态加载</div>
             <div class="badge">碰撞遮罩试装</div>
           </div>
         </div>
@@ -518,7 +519,7 @@ button:hover {
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
         </div>
-        <div class="note">当前首页直接使用导出的法兰城原始底图与原图坐标。现在看到的是原图上的真实视口，不再额外压成小图，所以会更接近直接站在法兰城里看的感觉。</div>
+        <div class="note">当前首页会先用一张轻量预览图垫底，再只加载你附近那几块法兰城原始图块。这样保留原图清晰度的同时，不需要每一帧都把整张大地图一起搬上屏幕。</div>
       </div>
 
       <aside class="side">
@@ -644,10 +645,14 @@ function loadImage(src) {
 }
 
 const sceneMap = {
-  image: loadImage('./assets/falan/map/falan-city-1000.png'),
+  previewImage: loadImage('./assets/falan/map/falan-city-1000-preview.png'),
   collisionImage: loadImage('./assets/falan/map/falan-city-1000-occupancy.png'),
   width: 11128,
   height: 8300,
+  previewWidth: 2003,
+  previewHeight: 1494,
+  tileSize: 2048,
+  tileBase: './assets/falan/map/tiles',
   cols: 300,
   rows: 300,
   halfW: 32,
@@ -660,6 +665,7 @@ const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler
 const keyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '' };
+const tileState = { cache: new Map(), frame: 0, maxKeep: 14 };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
 const landmarks = [
@@ -697,6 +703,66 @@ function mapToScreen(tx, ty) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function tileKey(col, row) {
+  return `${col}:${row}`;
+}
+
+function tileUrl(col, row) {
+  return `${sceneMap.tileBase}/falan-city-1000-r${row}-c${col}.webp`;
+}
+
+function visibleTileBounds() {
+  const margin = 1;
+  const startCol = clamp(Math.floor(camera.x / sceneMap.tileSize) - margin, 0, Math.ceil(sceneMap.width / sceneMap.tileSize) - 1);
+  const endCol = clamp(Math.floor((camera.x + canvas.width - 1) / sceneMap.tileSize) + margin, 0, Math.ceil(sceneMap.width / sceneMap.tileSize) - 1);
+  const startRow = clamp(Math.floor(camera.y / sceneMap.tileSize) - margin, 0, Math.ceil(sceneMap.height / sceneMap.tileSize) - 1);
+  const endRow = clamp(Math.floor((camera.y + canvas.height - 1) / sceneMap.tileSize) + margin, 0, Math.ceil(sceneMap.height / sceneMap.tileSize) - 1);
+  return { startCol, endCol, startRow, endRow };
+}
+
+function ensureTile(col, row) {
+  const key = tileKey(col, row);
+  const cached = tileState.cache.get(key);
+  if (cached) return cached;
+  const image = new Image();
+  image.decoding = 'async';
+  const entry = { image, state: 'loading', lastUsed: tileState.frame };
+  image.onload = () => {
+    entry.state = 'loaded';
+  };
+  image.onerror = () => {
+    entry.state = 'error';
+  };
+  image.src = tileUrl(col, row);
+  tileState.cache.set(key, entry);
+  return entry;
+}
+
+function updateVisibleTiles() {
+  tileState.frame += 1;
+  const needed = new Set();
+  const bounds = visibleTileBounds();
+  for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+    for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
+      const key = tileKey(col, row);
+      const entry = ensureTile(col, row);
+      entry.lastUsed = tileState.frame;
+      needed.add(key);
+    }
+  }
+
+  const removable = [];
+  tileState.cache.forEach((entry, key) => {
+    if (!needed.has(key) && tileState.frame - entry.lastUsed > 2) removable.push([key, entry.lastUsed]);
+  });
+  removable.sort((a, b) => a[1] - b[1]);
+  while (tileState.cache.size > tileState.maxKeep && removable.length) {
+    const [key] = removable.shift();
+    tileState.cache.delete(key);
+  }
+  return bounds;
 }
 
 function prepareCollisionMask() {
@@ -1080,20 +1146,58 @@ function drawFocusMarker(tick) {
   ctx.fillText(focus.label, point.x + 14, point.y - 16);
 }
 
+function drawPreviewSlice(sx, sy, sw, sh) {
+  if (!sceneMap.previewImage.complete || !sceneMap.previewImage.naturalWidth) return false;
+  const scaleX = sceneMap.previewWidth / sceneMap.width;
+  const scaleY = sceneMap.previewHeight / sceneMap.height;
+  ctx.drawImage(
+    sceneMap.previewImage,
+    sx * scaleX,
+    sy * scaleY,
+    sw * scaleX,
+    sh * scaleY,
+    0,
+    0,
+    sw,
+    sh
+  );
+  return true;
+}
+
+function drawLoadedTiles(bounds, sx, sy, sw, sh) {
+  for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+    for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
+      const entry = ensureTile(col, row);
+      if (entry.state !== 'loaded' || !entry.image.naturalWidth) continue;
+      const tileX = col * sceneMap.tileSize;
+      const tileY = row * sceneMap.tileSize;
+      const srcX = Math.max(sx - tileX, 0);
+      const srcY = Math.max(sy - tileY, 0);
+      const destX = Math.max(tileX - sx, 0);
+      const destY = Math.max(tileY - sy, 0);
+      const drawW = Math.min(entry.image.naturalWidth - srcX, sw - destX);
+      const drawH = Math.min(entry.image.naturalHeight - srcY, sh - destY);
+      if (drawW <= 0 || drawH <= 0) continue;
+      ctx.drawImage(entry.image, srcX, srcY, drawW, drawH, destX, destY, drawW, drawH);
+    }
+  }
+}
+
 function drawScene(tick) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = '#11171b';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  if (sceneMap.image.complete && sceneMap.image.naturalWidth) {
-    const sx = Math.max(0, Math.floor(camera.x));
-    const sy = Math.max(0, Math.floor(camera.y));
-    const sw = Math.min(canvas.width, sceneMap.width - sx);
-    const sh = Math.min(canvas.height, sceneMap.height - sy);
-    ctx.drawImage(sceneMap.image, sx, sy, sw, sh, 0, 0, sw, sh);
-  } else {
+  const sx = Math.max(0, Math.floor(camera.x));
+  const sy = Math.max(0, Math.floor(camera.y));
+  const sw = Math.min(canvas.width, sceneMap.width - sx);
+  const sh = Math.min(canvas.height, sceneMap.height - sy);
+  const bounds = updateVisibleTiles();
+  const drewPreview = drawPreviewSlice(sx, sy, sw, sh);
+  if (!drewPreview) {
     ctx.fillStyle = '#27362d';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
+  drawLoadedTiles(bounds, sx, sy, sw, sh);
 
   drawFocusMarker(tick);
   drawPlayer();
