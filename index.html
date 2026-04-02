@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.33 -->
+<!-- 法兰城 v3.34 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.33</title>
+<title>法兰城 v3.34</title>
 <style>
 :root {
   --bg: #0f1711;
@@ -554,9 +554,9 @@ button:hover {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.33</div>
+        <div class="version">v3.34</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图会主动尝试播放原版 BGM，里谢里雅堡也改成按你给的四点范围切歌。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。选人界面与法兰城主图会主动尝试播放原版 BGM，里谢里雅堡也改成按你给的四点菱形范围切歌。</p>
     </section>
 
     <section class="layout">
@@ -807,12 +807,12 @@ const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion:
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 3000, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
-const moatMusicPolygon = [
-  { tx: 100.6, ty: 153.3 },
-  { tx: 87.8, ty: 165.6 },
-  { tx: 61.9, ty: 153.3 },
-  { tx: 88.0, ty: 140.6 }
-];
+const moatMusicDiamond = {
+  top: { tx: 88.0, ty: 140.6 },
+  right: { tx: 100.6, ty: 153.3 },
+  bottom: { tx: 87.8, ty: 165.6 },
+  left: { tx: 61.9, ty: 153.3 }
+};
 const landmarks = [
   { id: 'castle', label: '里谢里雅城', focus: '王城前广场', area: '里谢里雅城前', tx: 88.0, ty: 136.0 },
   { id: 'cathedral', label: '西区圣堂', focus: '大圣堂周边', area: '西区圣堂与工房', tx: 64.0, ty: 156.0 },
@@ -1020,32 +1020,25 @@ function areaName() {
   return currentFocus().area;
 }
 
-function pointOnSegment(px, py, ax, ay, bx, by) {
-  const cross = (px - ax) * (by - ay) - (py - ay) * (bx - ax);
-  if (Math.abs(cross) > 0.0001) return false;
-  const dot = (px - ax) * (bx - ax) + (py - ay) * (by - ay);
-  if (dot < 0) return false;
-  const squaredLength = (bx - ax) ** 2 + (by - ay) ** 2;
-  return dot <= squaredLength;
-}
-
-function pointInPolygon(px, py, polygon) {
-  let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
-    const xi = polygon[i].tx;
-    const yi = polygon[i].ty;
-    const xj = polygon[j].tx;
-    const yj = polygon[j].ty;
-    if (pointOnSegment(px, py, xi, yi, xj, yj)) return true;
-    const intersects = ((yi > py) !== (yj > py))
-      && (px < ((xj - xi) * (py - yi)) / ((yj - yi) || Number.EPSILON) + xi);
-    if (intersects) inside = !inside;
-  }
-  return inside;
+function interpolateXOnLine(y, from, to) {
+  if (Math.abs(to.ty - from.ty) < 0.0001) return (from.tx + to.tx) / 2;
+  const ratio = (y - from.ty) / (to.ty - from.ty);
+  return from.tx + (to.tx - from.tx) * ratio;
 }
 
 function isInsideMoatZone(displayTx, displayTy) {
-  return pointInPolygon(displayTx, displayTy, moatMusicPolygon);
+  const { top, right, bottom, left } = moatMusicDiamond;
+  if (displayTy < top.ty || displayTy > bottom.ty) return false;
+  const upperHalf = displayTy <= left.ty;
+  const leftX = upperHalf
+    ? interpolateXOnLine(displayTy, top, left)
+    : interpolateXOnLine(displayTy, left, bottom);
+  const rightX = upperHalf
+    ? interpolateXOnLine(displayTy, top, right)
+    : interpolateXOnLine(displayTy, right, bottom);
+  const minX = Math.min(leftX, rightX) - 0.0001;
+  const maxX = Math.max(leftX, rightX) + 0.0001;
+  return displayTx >= minX && displayTx <= maxX;
 }
 
 function currentBgmKey() {
