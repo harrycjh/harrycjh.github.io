@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.86 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.87 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.86</title>
+<title>法兰城 v3.87</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.86</div>
+        <div class="version">v3.87</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.86</div>
+          <div class="play-version">v3.87</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1202,6 +1202,8 @@ const perfEma = {
 };
 const PERF_EMA_ALPHA = 0.12;
 const perfFpsCounter = { frames: 0, lastTime: 0, fps: 0 };
+let uiSyncFrameCounter = 0;
+const UI_SYNC_INTERVAL_FRAMES = 60;
 
 function perfTouch(key, ms) {
   const prev = perfEma[key];
@@ -1868,18 +1870,10 @@ function syncInfo() {
     bgmLabelEl.textContent = bgmLabel;
     uiState.bgm = bgmLabel;
   }
-  syncTeleportInputs();
 }
 
 function setTeleportStatus(message) {
   teleportStatusEl.textContent = message;
-}
-
-function syncTeleportInputs() {
-  if (document.activeElement === teleportXInput || document.activeElement === teleportYInput) return;
-  const displayCoord = internalToDisplay(player.tx, player.ty);
-  teleportXInput.value = displayCoord.tx.toFixed(1);
-  teleportYInput.value = displayCoord.ty.toFixed(1);
 }
 
 function teleportToDisplayCoord() {
@@ -1901,7 +1895,6 @@ function teleportToDisplayCoord() {
   updateCamera();
   syncInfo();
   syncBgm();
-  syncTeleportInputs();
   setTeleportStatus(`已传送到 ${clampedDisplayX.toFixed(1)}, ${clampedDisplayY.toFixed(1)}。`);
 }
 
@@ -2662,7 +2655,10 @@ function loop(tick) {
   if (!perfPanelState.visible) {
     updatePlayer();
     updateCamera();
-    syncInfo();
+    if (uiSyncFrameCounter % UI_SYNC_INTERVAL_FRAMES === 0) {
+      syncInfo();
+    }
+    uiSyncFrameCounter += 1;
     drawScene(tick / 16.6);
     drawSelectionPreview(tick);
     requestAnimationFrame(loop);
@@ -2677,8 +2673,14 @@ function loop(tick) {
   updateCamera();
   perfTouch('updateCamera', performance.now() - t);
   t = performance.now();
-  syncInfo();
-  perfTouch('syncInfo', performance.now() - t);
+  if (uiSyncFrameCounter % UI_SYNC_INTERVAL_FRAMES === 0) {
+    const tSync = performance.now();
+    syncInfo();
+    perfTouch('syncInfo', performance.now() - tSync);
+  } else {
+    perfTouch('syncInfo', 0);
+  }
+  uiSyncFrameCounter += 1;
   t = performance.now();
   const scene = drawScene(tick / 16.6);
   perfTouch('renderMap', scene.renderMap);
@@ -2714,7 +2716,6 @@ async function registerServiceWorker() {
 
 updateCamera();
 syncInfo();
-syncTeleportInputs();
 renderSelectionGrid();
 if (skipSelectionOnLoad) {
   closeTravelerSelection(false);
