@@ -714,7 +714,7 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.45</div>
+        <div class="version">v3.46</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面，但不再自动触发全屏。</p>
     </section>
@@ -991,7 +991,7 @@ const obstacleOverlayState = {
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '', bgm: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
 const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
-const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 3000, directionOrder: [0, 1, 2, 3, 4, 5, 6, 7] };
+const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 2000, directionOrder: [5, 6, 7, 0, 1, 2, 3, 4] };
 const joystickState = { active: false, pointerId: null, dx: 0, dy: 0, radius: 36 };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
 const defaultSpawn = { tx: defaultSpawnDisplay.tx, ty: sceneMap.rows - 1 - defaultSpawnDisplay.ty, dir: 'down' };
