@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.68 -->
+<!-- 法兰城 v3.69 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.68</title>
+<title>法兰城 v3.69</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -854,7 +854,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.68</div>
+        <div class="version">v3.69</div>
       </div>
     </section>
 
@@ -863,7 +863,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.68</div>
+          <div class="play-version">v3.69</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1976,7 +1976,13 @@ function fitPageToViewport() {
     pageFrame.style.alignItems = 'stretch';
     return;
   }
-  pageFrame.style.alignItems = 'flex-start';
+  const naturalWidth = pageRoot.offsetWidth;
+  const naturalHeight = pageRoot.offsetHeight;
+  const scaleX = (window.innerWidth - 20) / naturalWidth;
+  const scaleY = (window.innerHeight - 20) / naturalHeight;
+  const scale = Math.min(scaleX, scaleY, 1);
+  pageRoot.style.transform = `scale(${scale})`;
+  pageFrame.style.alignItems = naturalHeight * scale < window.innerHeight - 24 ? 'center' : 'flex-start';
 }
 
 function syncResponsiveViewportState() {
@@ -2518,7 +2524,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=368', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=369', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
