@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.53 -->
+<!-- 法兰城 v3.54 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.53</title>
+<title>法兰城 v3.54</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -616,6 +616,25 @@ body.mobile-play-only canvas {
   max-width: 100vw;
   max-height: 100vh;
 }
+body.mobile-play-only.mobile-portrait-runtime .map-shell {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100vh;
+  height: 100vw;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: center center;
+}
+body.mobile-play-only.mobile-portrait-runtime .canvas-wrap {
+  width: 100%;
+  height: 100%;
+}
+body.mobile-play-only.mobile-portrait-runtime canvas {
+  width: 100%;
+  height: auto;
+  max-width: none;
+  max-height: none;
+}
 .selection-head {
   display: flex;
   justify-content: space-between;
@@ -801,9 +820,9 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.53</div>
+        <div class="version">v3.54</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并继续把手机版画面显示方式调成更贴近 Pro Max 长屏设备。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并加入 iPhone 不支持真锁横屏时的旋转兜底。</p>
     </section>
 
     <section class="layout">
@@ -838,7 +857,7 @@ body.mobile-play-only canvas {
             <div class="mobile-joystick-caption">移动摇杆</div>
           </div>
         </div>
-        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并把内部画布与显示方式都调成更接近 Pro Max 横屏的 19.5:9 比例。</div>
+        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并在 iPhone 锁横屏失效时改用界面旋转兜底。</div>
       </div>
 
       <aside class="side">
@@ -1268,6 +1287,7 @@ function syncMobileHud() {
   const mobileMode = refreshMobileMode();
   const visible = mobileMode && !selectionOpen;
   document.body.classList.toggle('mobile-play-only', mobileMode);
+  document.body.classList.toggle('mobile-portrait-runtime', mobileMode && isPortraitViewport());
   mobileHud.hidden = !visible;
   mobileHud.classList.toggle('visible', visible);
   mobileHud.setAttribute('aria-hidden', visible ? 'false' : 'true');
@@ -2394,7 +2414,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=353', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=354', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
