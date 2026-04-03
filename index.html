@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.83 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.84 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.83</title>
+<title>法兰城 v3.84</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -45,7 +45,7 @@ body {
   padding: 10px;
 }
 .page {
-  width: min(1460px, calc(100vw - 28px));
+  width: min(1760px, calc(100vw - 20px));
   margin: 0;
   padding: 16px 0 18px;
   transform-origin: top center;
@@ -93,7 +93,7 @@ h1 {
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.48fr) minmax(300px, 0.58fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(380px, 0.78fr);
   gap: 16px;
 }
 .map-shell {
@@ -328,7 +328,7 @@ canvas {
 }
 .side-top-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(200px, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(200px, 1fr);
   gap: 14px;
   align-items: start;
 }
@@ -875,7 +875,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.83</div>
+        <div class="version">v3.84</div>
       </div>
     </section>
 
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.83</div>
+          <div class="play-version">v3.84</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
