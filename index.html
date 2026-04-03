@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.51 -->
+<!-- 法兰城 v3.52 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.51</title>
+<title>法兰城 v3.52</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -801,9 +801,9 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.51</div>
+        <div class="version">v3.52</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并把手机版选人面板固定到屏幕正中央。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并把手机版画面比例调成更接近 Pro Max 长屏设备。</p>
     </section>
 
     <section class="layout">
@@ -820,6 +820,7 @@ body.mobile-play-only canvas {
             <div class="badge">512 动态切块加载</div>
             <div class="badge">碰撞遮罩试装</div>
             <div class="badge">PWA 试装</div>
+            <div class="badge">手机版 19.5:9</div>
           </div>
         </div>
         <div class="canvas-wrap">
@@ -837,7 +838,7 @@ body.mobile-play-only canvas {
             <div class="mobile-joystick-caption">移动摇杆</div>
           </div>
         </div>
-        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，方便边逛边校区域。</div>
+        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并把内部画布改成更接近 Pro Max 横屏的 19.5:9 比例。</div>
       </div>
 
       <aside class="side">
@@ -951,6 +952,8 @@ mapLayerCanvas.width = canvas.width;
 mapLayerCanvas.height = canvas.height;
 const mapLayerCtx = mapLayerCanvas.getContext('2d');
 mapLayerCtx.imageSmoothingEnabled = false;
+const desktopCanvasSize = { width: 960, height: 720 };
+const mobileCanvasSize = { width: 1560, height: 720 };
 
 const zoneNameEl = document.getElementById('zoneName');
 const coordLabelEl = document.getElementById('coordLabel');
@@ -1868,6 +1871,7 @@ function isMovementKey(key) {
 }
 
 function fitPageToViewport() {
+  applyCanvasResolution();
   if (refreshMobileMode()) {
     pageRoot.style.transform = 'scale(1)';
     pageFrame.style.alignItems = 'stretch';
@@ -1881,6 +1885,20 @@ function fitPageToViewport() {
   const scale = Math.min(scaleX, scaleY, 1);
   pageRoot.style.transform = `scale(${scale})`;
   pageFrame.style.alignItems = naturalHeight * scale < window.innerHeight - 24 ? 'center' : 'flex-start';
+}
+
+function applyCanvasResolution() {
+  const mobileMode = refreshMobileMode();
+  const target = mobileMode ? mobileCanvasSize : desktopCanvasSize;
+  if (canvas.width === target.width && canvas.height === target.height) return;
+  canvas.width = target.width;
+  canvas.height = target.height;
+  mapLayerCanvas.width = target.width;
+  mapLayerCanvas.height = target.height;
+  ctx.imageSmoothingEnabled = false;
+  mapLayerCtx.imageSmoothingEnabled = false;
+  mapRenderState.dirty = true;
+  updateCamera();
 }
 
 function getFullscreenElement() {
