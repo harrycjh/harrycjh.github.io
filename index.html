@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.84 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.85 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.84</title>
+<title>法兰城 v3.85</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -332,8 +332,17 @@ canvas {
   gap: 14px;
   align-items: start;
 }
+.side-top-row.side-top-row--perf-hidden {
+  grid-template-columns: 1fr;
+}
+.side-top-row.side-top-row--perf-hidden .perf-card {
+  display: none;
+}
 @media (max-width: 1180px) {
   .side-top-row {
+    grid-template-columns: 1fr;
+  }
+  .side-top-row.side-top-row--perf-hidden {
     grid-template-columns: 1fr;
   }
 }
@@ -448,22 +457,22 @@ button:hover {
   font-size: 0.78rem;
 }
 .perf-card h2 {
-  margin-bottom: 10px;
-  font-size: 1.05rem;
+  margin-bottom: 12px;
+  font-size: 1.18rem;
 }
 .perf-rows {
   display: grid;
-  gap: 7px;
-  font-size: 0.8rem;
+  gap: 8px;
+  font-size: 0.95rem;
 }
 .perf-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 10px;
-  padding: 5px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(232, 204, 134, 0.08);
-  color: rgba(237, 241, 214, 0.78);
+  color: rgba(237, 241, 214, 0.82);
 }
 .perf-row span {
   flex-shrink: 1;
@@ -474,7 +483,7 @@ button:hover {
 }
 .perf-row strong {
   font-family: "Courier New", monospace;
-  font-size: 1.12rem;
+  font-size: 1.3rem;
   letter-spacing: 0.02em;
   color: #fff3c4;
   font-weight: 700;
@@ -483,10 +492,10 @@ button:hover {
   font-variant-numeric: tabular-nums;
 }
 .perf-hint {
-  margin: 10px 0 0;
-  font-size: 0.72rem;
-  color: rgba(237, 241, 214, 0.45);
-  line-height: 1.45;
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: rgba(237, 241, 214, 0.5);
+  line-height: 1.5;
 }
 .selection-overlay {
   position: fixed;
@@ -875,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.84</div>
+        <div class="version">v3.85</div>
       </div>
     </section>
 
@@ -884,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.84</div>
+          <div class="play-version">v3.85</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -900,7 +909,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       </div>
 
       <aside class="side">
-        <div class="side-top-row">
+        <div class="side-top-row" id="sideTopRow">
         <section class="side-card side-status-card">
           <h2>当前状态</h2>
           <div class="info-line"><span>当前区域</span><strong id="zoneName">中央广场</strong></div>
@@ -920,6 +929,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <button type="button" id="fullscreenBtn">全屏游玩</button>
             <button type="button" id="toggleMusicBtn">关闭音乐</button>
             <button type="button" id="toggleObstacleBtn">显示障碍格</button>
+            <button type="button" id="togglePerfPanelBtn" aria-pressed="true">关闭帧耗时</button>
           </div>
           <div class="teleport-tool">
             <div class="teleport-title">调试传送</div>
@@ -1032,6 +1042,8 @@ const openSelectionBtn = document.getElementById('openSelectionBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const toggleMusicBtn = document.getElementById('toggleMusicBtn');
 const toggleObstacleBtn = document.getElementById('toggleObstacleBtn');
+const togglePerfPanelBtn = document.getElementById('togglePerfPanelBtn');
+const sideTopRow = document.getElementById('sideTopRow');
 const teleportXInput = document.getElementById('teleportXInput');
 const teleportYInput = document.getElementById('teleportYInput');
 const teleportBtn = document.getElementById('teleportBtn');
@@ -1076,6 +1088,7 @@ selectionPreviewCtx.imageSmoothingEnabled = false;
 const travelerStorageKey = 'falan-selected-traveler';
 const bgmEnabledStorageKey = 'falan-bgm-enabled';
 const obstacleOverlayStorageKey = 'falan-show-obstacle-overlay';
+const perfPanelStorageKey = 'falan-show-perf-panel';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
@@ -1170,6 +1183,9 @@ const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 
 const obstacleOverlayState = {
   enabled: localStorage.getItem(obstacleOverlayStorageKey) === 'on'
 };
+const perfPanelState = {
+  visible: localStorage.getItem(perfPanelStorageKey) !== 'off'
+};
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '', bgm: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
 const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
@@ -1197,7 +1213,7 @@ function formatPerfMs(v) {
 }
 
 function syncPerfPanel() {
-  if (!perfFrameEl) return;
+  if (!perfFrameEl || !perfPanelState.visible) return;
   perfFrameEl.textContent = formatPerfMs(perfEma.frame);
   perfFpsEl.textContent = perfFpsCounter.fps > 0 ? perfFpsCounter.fps.toFixed(1) : '—';
   perfUpdatePlayerEl.textContent = formatPerfMs(perfEma.updatePlayer);
@@ -1319,6 +1335,23 @@ function syncObstacleToggleButton() {
   toggleObstacleBtn.setAttribute('aria-pressed', obstacleOverlayState.enabled ? 'true' : 'false');
   mobileObstacleBtn.textContent = label;
   mobileObstacleBtn.setAttribute('aria-pressed', obstacleOverlayState.enabled ? 'true' : 'false');
+}
+
+function syncPerfPanelToggleButton() {
+  if (!togglePerfPanelBtn) return;
+  togglePerfPanelBtn.textContent = perfPanelState.visible ? '关闭帧耗时' : '开启帧耗时';
+  togglePerfPanelBtn.setAttribute('aria-pressed', perfPanelState.visible ? 'true' : 'false');
+}
+
+function applyPerfPanelVisibility() {
+  if (sideTopRow) {
+    sideTopRow.classList.toggle('side-top-row--perf-hidden', !perfPanelState.visible);
+  }
+  const perfCard = document.querySelector('.perf-card');
+  if (perfCard) {
+    perfCard.setAttribute('aria-hidden', perfPanelState.visible ? 'false' : 'true');
+  }
+  syncPerfPanelToggleButton();
 }
 
 function setObstacleOverlayEnabled(enabled) {
@@ -2204,6 +2237,11 @@ mobileMusicBtn.addEventListener('click', () => {
 toggleObstacleBtn.addEventListener('click', () => {
   setObstacleOverlayEnabled(!obstacleOverlayState.enabled);
 });
+togglePerfPanelBtn.addEventListener('click', () => {
+  perfPanelState.visible = !perfPanelState.visible;
+  localStorage.setItem(perfPanelStorageKey, perfPanelState.visible ? 'on' : 'off');
+  applyPerfPanelVisibility();
+});
 mobileObstacleBtn.addEventListener('click', () => {
   setObstacleOverlayEnabled(!obstacleOverlayState.enabled);
 });
@@ -2662,6 +2700,7 @@ syncMusicToggleButton();
 syncMobileJoystickVisibility();
 syncBgm();
 syncObstacleToggleButton();
+applyPerfPanelVisibility();
 registerServiceWorker();
 if (mobileState.isMobile) {
   setTimeout(() => {
