@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.88 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.89 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.88</title>
+<title>法兰城 v3.89</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.88</div>
+        <div class="version">v3.89</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.88</div>
+          <div class="play-version">v3.89</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -2549,11 +2549,7 @@ function drawScene(tick) {
 
   if (perf) {
     const tBlit = performance.now();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(mapLayerCanvas, 0, 0);
-    ctx.fillStyle = 'rgba(240, 229, 193, 0.85)';
-    ctx.font = '13px "Courier New", monospace';
-    ctx.fillText('FALAN CITY MAP 1000', 18, 26);
     out.blit = performance.now() - tBlit;
 
     const tFocus = performance.now();
@@ -2564,11 +2560,7 @@ function drawScene(tick) {
     drawPlayer(tick);
     out.player = performance.now() - tPlayer;
   } else {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(mapLayerCanvas, 0, 0);
-    ctx.fillStyle = 'rgba(240, 229, 193, 0.85)';
-    ctx.font = '13px "Courier New", monospace';
-    ctx.fillText('FALAN CITY MAP 1000', 18, 26);
     drawFocusMarker(tick);
     drawPlayer(tick);
   }
