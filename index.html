@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.56 -->
+<!-- 法兰城 v3.57 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.56</title>
+<title>法兰城 v3.57</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -616,44 +616,6 @@ body.mobile-play-only canvas {
   max-width: 100vw;
   max-height: 100vh;
 }
-body.mobile-play-only.mobile-force-landscape .map-shell {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform-origin: center center;
-}
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-0 .map-shell,
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-180 .map-shell {
-  width: 100vw;
-  height: 100vh;
-}
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-90 .map-shell,
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-270 .map-shell {
-  width: 100vh;
-  height: 100vw;
-}
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-0 .map-shell {
-  transform: translate(-50%, -50%) rotate(0deg);
-}
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-90 .map-shell {
-  transform: translate(-50%, -50%) rotate(90deg);
-}
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-180 .map-shell {
-  transform: translate(-50%, -50%) rotate(180deg);
-}
-body.mobile-play-only.mobile-force-landscape.mobile-rotate-270 .map-shell {
-  transform: translate(-50%, -50%) rotate(270deg);
-}
-body.mobile-play-only.mobile-force-landscape .canvas-wrap {
-  width: 100%;
-  height: 100%;
-}
-body.mobile-play-only.mobile-force-landscape canvas {
-  width: 100%;
-  height: auto;
-  max-width: none;
-  max-height: none;
-}
 .selection-head {
   display: flex;
   justify-content: space-between;
@@ -839,9 +801,9 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.56</div>
+        <div class="version">v3.57</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并加入 iPhone 不支持真锁横屏时的固定横屏兜底。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认使用固定横屏视口和左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并尽量不再跟随设备旋转。</p>
     </section>
 
     <section class="layout">
@@ -876,7 +838,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="mobile-joystick-caption">移动摇杆</div>
           </div>
         </div>
-        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并在 iPhone 锁横屏失效时只按横屏/竖屏做固定横屏兜底，不再跟随左右横向来回补偿。</div>
+        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并改成固定横屏视口，不再根据设备朝向做旋转补偿。</div>
       </div>
 
       <aside class="side">
@@ -1306,7 +1268,7 @@ function syncMobileHud() {
   const mobileMode = refreshMobileMode();
   const visible = mobileMode && !selectionOpen;
   document.body.classList.toggle('mobile-play-only', mobileMode);
-  syncMobileOrientationFallback(mobileMode);
+  clearMobileOrientationClasses();
   mobileHud.hidden = !visible;
   mobileHud.classList.toggle('visible', visible);
   mobileHud.setAttribute('aria-hidden', visible ? 'false' : 'true');
@@ -1331,10 +1293,8 @@ async function setDeviceMode(mode) {
   syncMobileJoystickVisibility();
   fitPageToViewport();
   if (mobileState.isMobile) {
-    await lockMobileLandscape();
     if (!selectionOpen) await activateMobileImmersive();
   } else {
-    unlockMobileLandscape();
     resetJoystick();
   }
 }
@@ -1351,14 +1311,6 @@ function clearMobileOrientationClasses() {
     'mobile-rotate-180',
     'mobile-rotate-270'
   );
-}
-
-function syncMobileOrientationFallback(mobileMode = refreshMobileMode()) {
-  clearMobileOrientationClasses();
-  if (!mobileMode) return;
-  document.body.classList.add('mobile-force-landscape');
-  const compensationAngle = isPortraitViewport() ? 90 : 0;
-  document.body.classList.add(`mobile-rotate-${compensationAngle}`);
 }
 
 async function lockMobileLandscape() {
@@ -1382,9 +1334,8 @@ function unlockMobileLandscape() {
 
 function syncSelectionViewport() {
   const mobileMode = refreshMobileMode();
-  const portraitMode = mobileMode && isPortraitViewport();
   selectionOverlay.classList.toggle('mobile-mode', mobileMode);
-  selectionOverlay.classList.toggle('mobile-portrait', portraitMode);
+  selectionOverlay.classList.toggle('mobile-portrait', false);
   selectionPanel.style.transform = '';
   selectionPanel.style.width = '';
   selectionPanel.style.maxWidth = '';
@@ -1403,13 +1354,7 @@ function syncSelectionViewport() {
   const safeMargin = 16;
   const availableWidth = window.innerWidth - safeMargin * 2;
   const availableHeight = window.innerHeight - safeMargin * 2;
-  let scale = 1;
-  if (portraitMode) {
-    scale = Math.min(availableWidth / baseHeight, availableHeight / baseWidth, 1);
-    selectionPanel.style.transform = `translate(-50%, -50%) rotate(90deg) scale(${scale})`;
-    return;
-  }
-  scale = Math.min(availableWidth / baseWidth, availableHeight / baseHeight, 1);
+  const scale = Math.min(availableWidth / baseWidth, availableHeight / baseHeight, 1);
   selectionPanel.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
@@ -1657,7 +1602,6 @@ function maybeUnlockBgm() {
 
 async function activateMobileImmersive(tryGyro = true) {
   if (!refreshMobileMode()) return;
-  await lockMobileLandscape();
 }
 
 function syncBgm(force = false) {
@@ -1883,7 +1827,6 @@ function openTravelerSelection(resetPending = true) {
   syncSelectionPanel();
   selectionOverlay.classList.add('active');
   syncSelectionViewport();
-  lockMobileLandscape();
   syncMobileHud();
   syncMobileJoystickVisibility();
   syncInfo();
@@ -2449,7 +2392,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=356', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=357', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
@@ -2475,7 +2418,6 @@ if (mobileState.isMobile) {
   setTimeout(() => {
     activateMobileImmersive();
     syncSelectionViewport();
-    if (selectionOpen) lockMobileLandscape();
   }, 120);
 }
 requestAnimationFrame(loop);
