@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.67 -->
+<!-- 法兰城 v3.68 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.67</title>
+<title>法兰城 v3.68</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -854,31 +854,16 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.67</div>
+        <div class="version">v3.68</div>
       </div>
     </section>
 
     <section class="layout">
       <div class="map-shell" id="mapShell">
-        <div class="map-head">
-          <div>
-            <h2>真实法兰城</h2>
-            <p>按 <code>WASD</code> 或方向键移动。手机端现在默认横屏显示，并使用左下角摇杆来移动。这一版不再是程序拼的假城镇，而是把客户端里的 <code>1000.dat</code> 法兰城真实地图接进首页，先做成可逛、可验证的 prototype。</p>
-          </div>
-          <div class="map-badges">
-            <div class="badge">Cross Gate 原始地图</div>
-            <div class="badge">1000.dat</div>
-            <div class="badge">11128 x 8300 原图</div>
-            <div class="badge">512 动态切块加载</div>
-            <div class="badge">碰撞遮罩试装</div>
-            <div class="badge">PWA 试装</div>
-            <div class="badge">手机版 19.5:9</div>
-          </div>
-        </div>
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.67</div>
+          <div class="play-version">v3.68</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -2533,7 +2518,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=367', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=368', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
