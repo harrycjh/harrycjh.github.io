@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.82 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.83 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.82</title>
+<title>法兰城 v3.83</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -326,6 +326,17 @@ canvas {
   display: grid;
   gap: 14px;
 }
+.side-top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(200px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+@media (max-width: 1180px) {
+  .side-top-row {
+    grid-template-columns: 1fr;
+  }
+}
 .side-card {
   padding: 16px;
 }
@@ -438,29 +449,38 @@ button:hover {
 }
 .perf-card h2 {
   margin-bottom: 10px;
+  font-size: 1.05rem;
 }
 .perf-rows {
   display: grid;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 7px;
+  font-size: 0.8rem;
 }
 .perf-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
-  padding: 4px 0;
+  gap: 10px;
+  padding: 5px 0;
   border-bottom: 1px solid rgba(232, 204, 134, 0.08);
   color: rgba(237, 241, 214, 0.78);
+}
+.perf-row span {
+  flex-shrink: 1;
+  min-width: 0;
 }
 .perf-row:last-child {
   border-bottom: 0;
 }
 .perf-row strong {
   font-family: "Courier New", monospace;
-  font-size: 0.84rem;
+  font-size: 1.12rem;
+  letter-spacing: 0.02em;
   color: #fff3c4;
-  font-weight: 600;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .perf-hint {
   margin: 10px 0 0;
@@ -855,7 +875,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.82</div>
+        <div class="version">v3.83</div>
       </div>
     </section>
 
@@ -864,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.82</div>
+          <div class="play-version">v3.83</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -880,7 +900,8 @@ body.mobile-play-only.mobile-force-landscape canvas {
       </div>
 
       <aside class="side">
-        <section class="side-card">
+        <div class="side-top-row">
+        <section class="side-card side-status-card">
           <h2>当前状态</h2>
           <div class="info-line"><span>当前区域</span><strong id="zoneName">中央广场</strong></div>
           <div class="info-line"><span>旅人位置</span><strong id="coordLabel">09, 10</strong></div>
@@ -918,7 +939,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
           </div>
         </section>
 
-        <section class="side-card perf-card">
+        <section class="side-card perf-card" aria-label="帧耗时">
           <h2>帧耗时（ms）</h2>
           <div class="perf-rows" id="perfRows" aria-live="polite">
             <div class="perf-row"><span>整帧</span><strong id="perfFrame">—</strong></div>
@@ -934,6 +955,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
           </div>
           <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。</p>
         </section>
+        </div>
       </aside>
     </section>
   </main>
