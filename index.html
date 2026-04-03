@@ -714,7 +714,7 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.42</div>
+        <div class="version">v3.43</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面，但不再自动触发全屏。</p>
     </section>
@@ -741,6 +741,7 @@ body.mobile-play-only canvas {
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
             <button type="button" id="mobileGyroBtn">关闭陀螺仪</button>
+            <button type="button" id="mobileObstacleBtn">显示障碍格</button>
           </div>
           <div class="mobile-joystick" id="mobileJoystick" hidden aria-hidden="true">
             <div class="mobile-joystick-base" id="mobileJoystickBase">
@@ -772,6 +773,7 @@ body.mobile-play-only canvas {
             <button type="button" id="fullscreenBtn">全屏游玩</button>
             <button type="button" id="toggleMusicBtn">关闭音乐</button>
             <button type="button" id="toggleGyroBtn">关闭陀螺仪</button>
+            <button type="button" id="toggleObstacleBtn">显示障碍格</button>
           </div>
           <div class="teleport-tool">
             <div class="teleport-title">调试传送</div>
@@ -857,6 +859,7 @@ const openSelectionBtn = document.getElementById('openSelectionBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const toggleMusicBtn = document.getElementById('toggleMusicBtn');
 const toggleGyroBtn = document.getElementById('toggleGyroBtn');
+const toggleObstacleBtn = document.getElementById('toggleObstacleBtn');
 const teleportXInput = document.getElementById('teleportXInput');
 const teleportYInput = document.getElementById('teleportYInput');
 const teleportBtn = document.getElementById('teleportBtn');
@@ -867,6 +870,7 @@ const mobileHud = document.getElementById('mobileHud');
 const mobileSelectionBtn = document.getElementById('mobileSelectionBtn');
 const mobileMusicBtn = document.getElementById('mobileMusicBtn');
 const mobileGyroBtn = document.getElementById('mobileGyroBtn');
+const mobileObstacleBtn = document.getElementById('mobileObstacleBtn');
 const mobileJoystick = document.getElementById('mobileJoystick');
 const mobileJoystickBase = document.getElementById('mobileJoystickBase');
 const mobileJoystickThumb = document.getElementById('mobileJoystickThumb');
@@ -888,6 +892,7 @@ selectionPreviewCtx.imageSmoothingEnabled = false;
 const travelerStorageKey = 'falan-selected-traveler';
 const bgmEnabledStorageKey = 'falan-bgm-enabled';
 const gyroEnabledStorageKey = 'falan-gyro-enabled';
+const obstacleOverlayStorageKey = 'falan-show-obstacle-overlay';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
 const travelers = [
@@ -980,6 +985,9 @@ const keyState = { up: false, down: false, left: false, right: false };
 const touchKeyState = { up: false, down: false, left: false, right: false };
 const gyroKeyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
+const obstacleOverlayState = {
+  enabled: localStorage.getItem(obstacleOverlayStorageKey) === 'on'
+};
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '', bgm: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
 const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
@@ -1167,6 +1175,21 @@ function syncGyroToggleButton() {
   mobileGyroBtn.setAttribute('aria-pressed', mobileState.gyroWanted ? 'true' : 'false');
 }
 
+function syncObstacleToggleButton() {
+  const label = obstacleOverlayState.enabled ? '隐藏障碍格' : '显示障碍格';
+  toggleObstacleBtn.textContent = label;
+  toggleObstacleBtn.setAttribute('aria-pressed', obstacleOverlayState.enabled ? 'true' : 'false');
+  mobileObstacleBtn.textContent = label;
+  mobileObstacleBtn.setAttribute('aria-pressed', obstacleOverlayState.enabled ? 'true' : 'false');
+}
+
+function setObstacleOverlayEnabled(enabled) {
+  obstacleOverlayState.enabled = enabled;
+  localStorage.setItem(obstacleOverlayStorageKey, enabled ? 'on' : 'off');
+  mapRenderState.dirty = true;
+  syncObstacleToggleButton();
+}
+
 async function setGyroEnabled(enabled) {
   mobileState.gyroWanted = enabled;
   localStorage.setItem(gyroEnabledStorageKey, enabled ? 'on' : 'off');
@@ -1302,6 +1325,17 @@ function mapToScreen(tx, ty) {
   };
 }
 
+function previewToMap(px, py) {
+  const unscaledX = px / sceneMap.scale;
+  const unscaledY = py / sceneMap.scale;
+  const a = (unscaledX - sceneMap.baseX) / sceneMap.halfW;
+  const b = (unscaledY - sceneMap.baseY) / sceneMap.halfH;
+  return {
+    tx: (a + b) / 2,
+    ty: (b - a) / 2
+  };
+}
+
 function internalToDisplay(tx, ty) {
   return {
     tx,
@@ -1335,6 +1369,24 @@ function visibleTileBounds() {
   const startRow = clamp(Math.floor(camera.y / sceneMap.tileSize) - margin, 0, Math.ceil(sceneMap.height / sceneMap.tileSize) - 1);
   const endRow = clamp(Math.floor((camera.y + canvas.height - 1) / sceneMap.tileSize) + margin, 0, Math.ceil(sceneMap.height / sceneMap.tileSize) - 1);
   return { startCol, endCol, startRow, endRow };
+}
+
+function visibleGridBounds(sx, sy, sw, sh) {
+  const margin = 3;
+  const corners = [
+    previewToMap(sx - sceneMap.halfW * 2, sy - sceneMap.halfH * 2),
+    previewToMap(sx + sw + sceneMap.halfW * 2, sy - sceneMap.halfH * 2),
+    previewToMap(sx - sceneMap.halfW * 2, sy + sh + sceneMap.halfH * 2),
+    previewToMap(sx + sw + sceneMap.halfW * 2, sy + sh + sceneMap.halfH * 2)
+  ];
+  const txValues = corners.map((corner) => corner.tx);
+  const tyValues = corners.map((corner) => corner.ty);
+  return {
+    minTx: clamp(Math.floor(Math.min(...txValues)) - margin, 0, sceneMap.cols - 1),
+    maxTx: clamp(Math.ceil(Math.max(...txValues)) + margin, 0, sceneMap.cols - 1),
+    minTy: clamp(Math.floor(Math.min(...tyValues)) - margin, 0, sceneMap.rows - 1),
+    maxTy: clamp(Math.ceil(Math.max(...tyValues)) + margin, 0, sceneMap.rows - 1)
+  };
 }
 
 function ensureTile(col, row) {
@@ -1902,6 +1954,12 @@ toggleMusicBtn.addEventListener('click', () => {
 mobileMusicBtn.addEventListener('click', () => {
   setBgmEnabled(!bgmState.enabled);
 });
+toggleObstacleBtn.addEventListener('click', () => {
+  setObstacleOverlayEnabled(!obstacleOverlayState.enabled);
+});
+mobileObstacleBtn.addEventListener('click', () => {
+  setObstacleOverlayEnabled(!obstacleOverlayState.enabled);
+});
 toggleGyroBtn.addEventListener('click', async () => {
   await setGyroEnabled(!mobileState.gyroWanted);
 });
@@ -2091,12 +2149,47 @@ function renderMapLayer(sx, sy, sw, sh) {
   }
   const bounds = updateVisibleTiles();
   drawLoadedTiles(mapLayerCtx, bounds, sx, sy, sw, sh);
+  drawCollisionOverlay(mapLayerCtx, sx, sy, sw, sh);
   mapRenderState.dirty = false;
   mapRenderState.sx = sx;
   mapRenderState.sy = sy;
   mapRenderState.sw = sw;
   mapRenderState.sh = sh;
   mapRenderState.tileVersion = tileState.version;
+}
+
+function drawCollisionOverlay(targetCtx, sx, sy, sw, sh) {
+  if (!obstacleOverlayState.enabled || !collisionState.ready) return;
+  const bounds = visibleGridBounds(sx, sy, sw, sh);
+  targetCtx.save();
+  targetCtx.fillStyle = 'rgba(204, 82, 72, 0.28)';
+  targetCtx.strokeStyle = 'rgba(255, 233, 184, 0.12)';
+  targetCtx.lineWidth = 1;
+  for (let ty = bounds.minTy; ty <= bounds.maxTy; ty += 1) {
+    for (let tx = bounds.minTx; tx <= bounds.maxTx; tx += 1) {
+      if (!collides(tx, ty)) continue;
+      const point = mapToPreview(tx, ty);
+      const screenX = point.x - sx;
+      const screenY = point.y - sy;
+      if (
+        screenX < -sceneMap.halfW
+        || screenX > sw + sceneMap.halfW
+        || screenY < -sceneMap.halfH
+        || screenY > sh + sceneMap.halfH
+      ) {
+        continue;
+      }
+      targetCtx.beginPath();
+      targetCtx.moveTo(screenX, screenY - sceneMap.halfH);
+      targetCtx.lineTo(screenX + sceneMap.halfW, screenY);
+      targetCtx.lineTo(screenX, screenY + sceneMap.halfH);
+      targetCtx.lineTo(screenX - sceneMap.halfW, screenY);
+      targetCtx.closePath();
+      targetCtx.fill();
+      targetCtx.stroke();
+    }
+  }
+  targetCtx.restore();
 }
 
 function drawScene(tick) {
@@ -2226,6 +2319,7 @@ syncSelectionViewport();
 syncMobileHud();
 syncMobileJoystickVisibility();
 syncBgm();
+syncObstacleToggleButton();
 if (mobileState.isMobile) {
   setTimeout(() => {
     activateMobileImmersive(false);
