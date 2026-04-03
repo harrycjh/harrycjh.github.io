@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.96 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.97 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.96</title>
+<title>法兰城 v3.97</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.96</div>
+        <div class="version">v3.97</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.96</div>
+          <div class="play-version">v3.97</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1028,6 +1028,11 @@ mapLayerCanvas.width = canvas.width;
 mapLayerCanvas.height = canvas.height;
 const mapLayerCtx = mapLayerCanvas.getContext('2d', { alpha: false });
 mapLayerCtx.imageSmoothingEnabled = false;
+const mapSkyLayerCanvas = document.createElement('canvas');
+mapSkyLayerCanvas.width = canvas.width;
+mapSkyLayerCanvas.height = canvas.height;
+const mapSkyLayerCtx = mapSkyLayerCanvas.getContext('2d', { alpha: true });
+mapSkyLayerCtx.imageSmoothingEnabled = false;
 const desktopCanvasSize = { width: 960, height: 720 };
 const mobileCanvasSize = { width: 1560, height: 720 };
 
@@ -1186,7 +1191,7 @@ const perfPanelState = {
   visible: localStorage.getItem(perfPanelStorageKey) !== 'off'
 };
 const uiState = { zone: '', coord: '', traveler: '', desc: '', portrait: '', bgm: '' };
-const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
+const tileState = { cache: new Map(), frame: 0, maxKeep: 56, version: 0 };
 const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
 const perfEma = {
   frame: 0,
@@ -1596,11 +1601,19 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function tileKey(col, row) {
-  return `${col}:${row}`;
+function tileKey(layer, col, row) {
+  return `${layer}:${col}:${row}`;
 }
 
-function tileUrl(col, row) {
+function tileUrlGroundSplit(col, row) {
+  return `${sceneMap.tileBase}/falan-city-1000-ground-r${row}-c${col}.webp`;
+}
+
+function tileUrlSkySplit(col, row) {
+  return `${sceneMap.tileBase}/falan-city-1000-sky-r${row}-c${col}.webp`;
+}
+
+function tileUrlLegacyCombined(col, row) {
   return `${sceneMap.tileBase}/falan-city-1000-r${row}-c${col}.webp`;
 }
 
@@ -1631,24 +1644,60 @@ function visibleGridBounds(sx, sy, sw, sh) {
   };
 }
 
-function ensureTile(col, row) {
-  const key = tileKey(col, row);
+function ensureTile(layer, col, row) {
+  const key = tileKey(layer, col, row);
   const cached = tileState.cache.get(key);
   if (cached) return cached;
+
+  if (layer === 'sky') {
+    const gk = tileKey('ground', col, row);
+    const ge = tileState.cache.get(gk);
+    if (ge && ge.state === 'loaded' && ge.isLegacyCombined) {
+      const emptyEntry = { image: null, state: 'empty', lastUsed: tileState.frame };
+      tileState.cache.set(key, emptyEntry);
+      return emptyEntry;
+    }
+    const image = new Image();
+    image.decoding = 'async';
+    const entry = { image, state: 'loading', lastUsed: tileState.frame, isLegacyCombined: false };
+    image.onload = () => {
+      entry.state = 'loaded';
+      tileState.version += 1;
+      mapRenderState.dirty = true;
+    };
+    image.onerror = () => {
+      entry.state = 'empty';
+      tileState.version += 1;
+      mapRenderState.dirty = true;
+    };
+    image.src = tileUrlSkySplit(col, row);
+    tileState.cache.set(key, entry);
+    return entry;
+  }
+
   const image = new Image();
   image.decoding = 'async';
-  const entry = { image, state: 'loading', lastUsed: tileState.frame };
+  const entry = { image, state: 'loading', lastUsed: tileState.frame, isLegacyCombined: false };
   image.onload = () => {
     entry.state = 'loaded';
+    entry.isLegacyCombined = !String(image.src).includes('falan-city-1000-ground');
+    if (entry.isLegacyCombined) {
+      tileState.cache.delete(tileKey('sky', col, row));
+    }
     tileState.version += 1;
     mapRenderState.dirty = true;
   };
   image.onerror = () => {
+    if (!entry._fallbackToLegacy) {
+      entry._fallbackToLegacy = true;
+      image.src = tileUrlLegacyCombined(col, row);
+      return;
+    }
     entry.state = 'error';
     tileState.version += 1;
     mapRenderState.dirty = true;
   };
-  image.src = tileUrl(col, row);
+  image.src = tileUrlGroundSplit(col, row);
   tileState.cache.set(key, entry);
   return entry;
 }
@@ -1659,10 +1708,12 @@ function updateVisibleTiles() {
   const bounds = visibleTileBounds();
   for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
     for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
-      const key = tileKey(col, row);
-      const entry = ensureTile(col, row);
-      entry.lastUsed = tileState.frame;
-      needed.add(key);
+      const entryG = ensureTile('ground', col, row);
+      entryG.lastUsed = tileState.frame;
+      needed.add(tileKey('ground', col, row));
+      const entryS = ensureTile('sky', col, row);
+      entryS.lastUsed = tileState.frame;
+      needed.add(tileKey('sky', col, row));
     }
   }
 
@@ -2095,8 +2146,11 @@ function applyCanvasResolution() {
   canvas.height = target.height;
   mapLayerCanvas.width = target.width;
   mapLayerCanvas.height = target.height;
+  mapSkyLayerCanvas.width = target.width;
+  mapSkyLayerCanvas.height = target.height;
   ctx.imageSmoothingEnabled = false;
   mapLayerCtx.imageSmoothingEnabled = false;
+  mapSkyLayerCtx.imageSmoothingEnabled = false;
   mapRenderState.dirty = true;
   updateCamera();
 }
@@ -2355,11 +2409,12 @@ function resolveDir8FromKeys(fallback = 4) {
   return fallback;
 }
 
-function drawLoadedTiles(targetCtx, bounds, sx, sy, sw, sh) {
+function drawLoadedTiles(targetCtx, layer, bounds, sx, sy, sw, sh) {
   let drew = false;
   for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
     for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
-      const entry = ensureTile(col, row);
+      const entry = ensureTile(layer, col, row);
+      if (entry.state === 'empty') continue;
       if (entry.state !== 'loaded' || !entry.image.naturalWidth) continue;
       const tileX = col * sceneMap.tileSize;
       const tileY = row * sceneMap.tileSize;
@@ -2380,9 +2435,11 @@ function drawLoadedTiles(targetCtx, bounds, sx, sy, sw, sh) {
 function renderMapLayer(sx, sy, sw, sh) {
   mapLayerCtx.fillStyle = '#11171b';
   mapLayerCtx.fillRect(0, 0, mapLayerCanvas.width, mapLayerCanvas.height);
+  mapSkyLayerCtx.clearRect(0, 0, mapSkyLayerCanvas.width, mapSkyLayerCanvas.height);
   const bounds = updateVisibleTiles();
-  drawLoadedTiles(mapLayerCtx, bounds, sx, sy, sw, sh);
+  drawLoadedTiles(mapLayerCtx, 'ground', bounds, sx, sy, sw, sh);
   drawCollisionOverlay(mapLayerCtx, sx, sy, sw, sh);
+  drawLoadedTiles(mapSkyLayerCtx, 'sky', bounds, sx, sy, sw, sh);
   mapRenderState.dirty = false;
   mapRenderState.sx = sx;
   mapRenderState.sy = sy;
@@ -2531,10 +2588,12 @@ function drawScene(tick) {
     const tPlayer = performance.now();
     drawPlayer(tick);
     out.player = performance.now() - tPlayer;
+    ctx.drawImage(mapSkyLayerCanvas, 0, 0);
   } else {
     ctx.drawImage(mapLayerCanvas, 0, 0);
     ctx.globalCompositeOperation = prevComposite;
     drawPlayer(tick);
+    ctx.drawImage(mapSkyLayerCanvas, 0, 0);
   }
 
   return out;
@@ -2671,7 +2730,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=374', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=375', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }

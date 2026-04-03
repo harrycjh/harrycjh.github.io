@@ -4,8 +4,10 @@
 
 输出：
   - assets/falan/object-map/falan-city-1000-manifest.json + atlases + summary
-  - assets/falan/map/falan-city-1000-preview.png  （整图预览）
-  - assets/falan/map/tiles-512/falan-city-1000-r{row}-c{col}.webp  （512 切片）
+  - assets/falan/map/falan-city-1000-preview.png  （地砖+物件合并预览）
+  - assets/falan/map/tiles-512/falan-city-1000-ground-r{row}-c{col}.webp  （地砖层）
+  - assets/falan/map/tiles-512/falan-city-1000-sky-r{row}-c{col}.webp  （物件/上层，盖在角色头上）
+  - 兼容：仍生成合并切片 falan-city-1000-r{row}-c{col}.webp（网页 ground 失败时回退）
 
 依赖：
   - 游戏根目录下 map/0/1000.dat、bin/ 下 Graphic*.bin
@@ -56,7 +58,19 @@ def _map_to_preview(tx: int, ty: int, half_w: int, half_h: int, base_x: int, bas
     return x, y
 
 
-def composite_preview(
+def _open_atlases(manifest: dict, atlas_dir: Path) -> dict:
+    from PIL import Image
+
+    atlases: dict[str, Image.Image] = {}
+    for name in manifest["atlases"]:
+        p = atlas_dir / name
+        if not p.exists():
+            raise FileNotFoundError(f"atlas missing: {p}")
+        atlases[name] = Image.open(p).convert("RGBA")
+    return atlases
+
+
+def composite_tiles_only(
     manifest: dict,
     atlas_dir: Path,
     world_w: int,
@@ -72,18 +86,10 @@ def composite_preview(
     base_y = float(manifest["baseY"])
     assets = manifest["assets"]
     tile_layer = manifest["tileLayer"]
-    object_items = manifest["objectItems"]
-
-    atlases: dict[str, Image.Image] = {}
-    for name in manifest["atlases"]:
-        p = atlas_dir / name
-        if not p.exists():
-            raise FileNotFoundError(f"atlas missing: {p}")
-        atlases[name] = Image.open(p).convert("RGBA")
+    atlases = _open_atlases(manifest, atlas_dir)
 
     img = Image.new("RGBA", (world_w, world_h), (0, 0, 0, 0))
 
-    # tiles: diagonal order (same as index.html drawObjectAssembledTiles)
     for diag in range(0, (cols - 1) + (rows - 1) + 1):
         start_tx = max(0, diag - (rows - 1))
         end_tx = min(cols - 1, diag)
@@ -111,7 +117,27 @@ def composite_preview(
             dy = int(round(py + meta["ofsY"]))
             img.alpha_composite(crop, (dx, dy))
 
-    # objects
+    return img
+
+
+def composite_objects_only(
+    manifest: dict,
+    atlas_dir: Path,
+    world_w: int,
+    world_h: int,
+) -> "Image.Image":
+    from PIL import Image
+
+    half_w = int(manifest["halfW"])
+    half_h = int(manifest["halfH"])
+    base_x = float(manifest["baseX"])
+    base_y = float(manifest["baseY"])
+    assets = manifest["assets"]
+    object_items = manifest["objectItems"]
+    atlases = _open_atlases(manifest, atlas_dir)
+
+    img = Image.new("RGBA", (world_w, world_h), (0, 0, 0, 0))
+
     for item in object_items:
         tx, ty, oid = int(item[0]), int(item[1]), int(item[2])
         meta = assets.get(str(oid))
@@ -134,6 +160,21 @@ def composite_preview(
         img.alpha_composite(crop, (dx, dy))
 
     return img
+
+
+def composite_preview(
+    manifest: dict,
+    atlas_dir: Path,
+    world_w: int,
+    world_h: int,
+) -> "Image.Image":
+    from PIL import Image
+
+    ground = composite_tiles_only(manifest, atlas_dir, world_w, world_h)
+    sky = composite_objects_only(manifest, atlas_dir, world_w, world_h)
+    out = ground.copy()
+    out.alpha_composite(sky)
+    return out
 
 
 def slice_tiles(img, tile_size: int, out_dir: Path, prefix: str) -> None:
@@ -208,17 +249,22 @@ def main() -> None:
     world_w = int(manifest["worldWidth"])
     world_h = int(manifest["worldHeight"])
 
-    print(f"Compositing preview {world_w}x{world_h}...")
-    preview = composite_preview(manifest, atlas_dir, world_w, world_h)
+    print(f"Compositing layers {world_w}x{world_h}...")
+    ground_img = composite_tiles_only(manifest, atlas_dir, world_w, world_h)
+    sky_img = composite_objects_only(manifest, atlas_dir, world_w, world_h)
     map_dir = repo_root / "assets" / "falan" / "map"
     map_dir.mkdir(parents=True, exist_ok=True)
     preview_path = map_dir / "falan-city-1000-preview.png"
-    preview.save(preview_path, "PNG", optimize=True)
+    merged = ground_img.copy()
+    merged.alpha_composite(sky_img)
+    merged.save(preview_path, "PNG", optimize=True)
     print(f"saved: {preview_path}")
 
     tiles_dir = map_dir / "tiles-512"
-    print("Slicing 512 webp tiles...")
-    slice_tiles(preview, 512, tiles_dir, "falan-city-1000")
+    print("Slicing 512 webp tiles (ground + sky + merged fallback)...")
+    slice_tiles(ground_img, 512, tiles_dir, "falan-city-1000-ground")
+    slice_tiles(sky_img, 512, tiles_dir, "falan-city-1000-sky")
+    slice_tiles(merged, 512, tiles_dir, "falan-city-1000")
 
     # 碰撞可走格由 crossgate-h5/tools/map_parser.py 解析 1000.dat → map-1000.json（flags），与网页共用。
 
