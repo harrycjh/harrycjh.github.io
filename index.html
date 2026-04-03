@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.58 -->
+<!-- 法兰城 v3.59 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.58</title>
+<title>法兰城 v3.59</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -308,6 +308,21 @@ canvas {
   font-size: 0.72rem;
   letter-spacing: 0.5px;
   white-space: nowrap;
+}
+.play-version {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 4;
+  padding: 5px 10px;
+  border: 1px solid rgba(232, 204, 134, 0.18);
+  background: rgba(9, 14, 10, 0.72);
+  color: rgba(242, 237, 201, 0.86);
+  font-size: 0.72rem;
+  letter-spacing: 0.8px;
+  border-radius: 999px;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
 }
 .note {
   margin-top: 12px;
@@ -801,7 +816,7 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.58</div>
+        <div class="version">v3.59</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认使用固定横屏视口和左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并尽量不再跟随设备旋转。</p>
     </section>
@@ -826,6 +841,7 @@ body.mobile-play-only canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
+          <div class="play-version">v3.59</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -2419,7 +2435,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=358', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=359', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
