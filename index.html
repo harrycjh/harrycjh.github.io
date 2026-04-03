@@ -714,7 +714,7 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.43</div>
+        <div class="version">v3.44</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面，但不再自动触发全屏。</p>
     </section>
@@ -984,7 +984,7 @@ const crossgateSheetImages = Object.fromEntries(
 const keyState = { up: false, down: false, left: false, right: false };
 const touchKeyState = { up: false, down: false, left: false, right: false };
 const gyroKeyState = { up: false, down: false, left: false, right: false };
-const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1 };
+const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1, grid: null, blockedCount: 0 };
 const obstacleOverlayState = {
   enabled: localStorage.getItem(obstacleOverlayStorageKey) === 'on'
 };
@@ -1447,14 +1447,27 @@ function prepareCollisionMask() {
   collisionState.height = offscreen.height;
   collisionState.scaleX = collisionState.width / sceneMap.width;
   collisionState.scaleY = collisionState.height / sceneMap.height;
+  const grid = new Uint8Array(sceneMap.cols * sceneMap.rows);
+  let blockedCount = 0;
+  for (let ty = 0; ty < sceneMap.rows; ty += 1) {
+    for (let tx = 0; tx < sceneMap.cols; tx += 1) {
+      const point = mapToPreview(tx, ty);
+      if (!blockedAtPixel(point.x, point.y)) continue;
+      grid[ty * sceneMap.cols + tx] = 1;
+      blockedCount += 1;
+    }
+  }
+  collisionState.grid = grid;
+  collisionState.blockedCount = blockedCount;
   collisionState.ready = true;
+  mapRenderState.dirty = true;
 }
 
 sceneMap.collisionImage.addEventListener('load', prepareCollisionMask);
 if (sceneMap.collisionImage.complete && sceneMap.collisionImage.naturalWidth) prepareCollisionMask();
 
 function blockedAtPixel(x, y) {
-  if (!collisionState.ready) return false;
+  if (!collisionState.data) return false;
   const sampleX = x * collisionState.scaleX;
   const sampleY = y * collisionState.scaleY;
   const dx = Math.max(1, Math.round(4 * collisionState.scaleX));
@@ -1480,10 +1493,26 @@ function blockedAtPixel(x, y) {
   return hits >= 2;
 }
 
+function isBlockedGridCell(tx, ty) {
+  if (!collisionState.grid) return false;
+  if (tx < 0 || ty < 0 || tx >= sceneMap.cols || ty >= sceneMap.rows) return true;
+  return collisionState.grid[ty * sceneMap.cols + tx] === 1;
+}
+
 function collides(tx, ty) {
-  if (tx < 2 || ty < 2 || tx > sceneMap.cols - 2 || ty > sceneMap.rows - 2) return true;
-  const point = mapToPreview(tx, ty);
-  return blockedAtPixel(point.x, point.y);
+  const probes = [
+    [0, 0],
+    [-0.28, 0.18],
+    [0.28, 0.18],
+    [0, -0.26]
+  ];
+  for (const [ox, oy] of probes) {
+    const cellX = Math.round(tx + ox);
+    const cellY = Math.round(ty + oy);
+    if (cellX < 2 || cellY < 2 || cellX > sceneMap.cols - 2 || cellY > sceneMap.rows - 2) return true;
+    if (isBlockedGridCell(cellX, cellY)) return true;
+  }
+  return false;
 }
 
 function currentFocus() {
@@ -2163,7 +2192,7 @@ function drawCollisionOverlay(targetCtx, sx, sy, sw, sh) {
   targetCtx.lineWidth = 1.4;
   for (let ty = bounds.minTy; ty <= bounds.maxTy; ty += 1) {
     for (let tx = bounds.minTx; tx <= bounds.maxTx; tx += 1) {
-      if (!collides(tx, ty)) continue;
+      if (!isBlockedGridCell(tx, ty)) continue;
       const point = mapToPreview(tx, ty);
       const screenX = point.x - sx;
       const screenY = point.y - sy;
