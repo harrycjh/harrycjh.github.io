@@ -220,12 +220,7 @@ def main() -> None:
     print("Slicing 512 webp tiles...")
     slice_tiles(preview, 512, tiles_dir, "falan-city-1000")
 
-    occ = map_dir / "falan-city-1000-occupancy.png"
-    if not occ.exists():
-        print(
-            f"NOTE: 未生成占用图 {occ}；若需要碰撞遮罩请从旧备份复制或单独管线生成。",
-            file=sys.stderr,
-        )
+    # 碰撞可走格由 crossgate-h5/tools/map_parser.py 解析 1000.dat → map-1000.json（flags），与网页共用。
 
     print("Done.")
 
