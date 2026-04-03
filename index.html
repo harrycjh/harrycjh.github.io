@@ -714,7 +714,7 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.44</div>
+        <div class="version">v3.45</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面，但不再自动触发全屏。</p>
     </section>
@@ -956,7 +956,7 @@ function loadImage(src) {
 
 const sceneMap = {
   previewImage: loadImage('./assets/falan/map/falan-city-1000-preview.png'),
-  collisionImage: loadImage('./assets/falan/map/falan-city-1000-occupancy.png'),
+  collisionImage: loadImage('./assets/falan/map/falan-city-1000-collision.png'),
   tileBase: './assets/falan/map/tiles-512',
   tileSize: 512,
   width: 11128,
@@ -1442,19 +1442,20 @@ function prepareCollisionMask() {
   offscreen.height = sceneMap.collisionImage.naturalHeight;
   const offctx = offscreen.getContext('2d', { willReadFrequently: true });
   offctx.drawImage(sceneMap.collisionImage, 0, 0);
-  collisionState.data = offctx.getImageData(0, 0, offscreen.width, offscreen.height).data;
+  const imageData = offctx.getImageData(0, 0, offscreen.width, offscreen.height).data;
+  collisionState.data = imageData;
   collisionState.width = offscreen.width;
   collisionState.height = offscreen.height;
-  collisionState.scaleX = collisionState.width / sceneMap.width;
-  collisionState.scaleY = collisionState.height / sceneMap.height;
+  collisionState.scaleX = 1;
+  collisionState.scaleY = 1;
   const grid = new Uint8Array(sceneMap.cols * sceneMap.rows);
   let blockedCount = 0;
-  for (let ty = 0; ty < sceneMap.rows; ty += 1) {
-    for (let tx = 0; tx < sceneMap.cols; tx += 1) {
-      const point = mapToPreview(tx, ty);
-      if (!blockedAtPixel(point.x, point.y)) continue;
-      grid[ty * sceneMap.cols + tx] = 1;
-      blockedCount += 1;
+  for (let ty = 0; ty < Math.min(sceneMap.rows, collisionState.height); ty += 1) {
+    for (let tx = 0; tx < Math.min(sceneMap.cols, collisionState.width); tx += 1) {
+      const idx = (ty * collisionState.width + tx) * 4;
+      const blocked = imageData[idx] > 127;
+      grid[ty * sceneMap.cols + tx] = blocked ? 1 : 0;
+      if (blocked) blockedCount += 1;
     }
   }
   collisionState.grid = grid;
@@ -1465,33 +1466,6 @@ function prepareCollisionMask() {
 
 sceneMap.collisionImage.addEventListener('load', prepareCollisionMask);
 if (sceneMap.collisionImage.complete && sceneMap.collisionImage.naturalWidth) prepareCollisionMask();
-
-function blockedAtPixel(x, y) {
-  if (!collisionState.data) return false;
-  const sampleX = x * collisionState.scaleX;
-  const sampleY = y * collisionState.scaleY;
-  const dx = Math.max(1, Math.round(4 * collisionState.scaleX));
-  const dy = Math.max(1, Math.round(4 * collisionState.scaleY));
-  const probes = [
-    [0, 0],
-    [0, dy],
-    [-dx, Math.max(1, Math.round(2 * collisionState.scaleY))],
-    [dx, Math.max(1, Math.round(2 * collisionState.scaleY))],
-    [0, -Math.max(1, Math.round(3 * collisionState.scaleY))]
-  ];
-  let hits = 0;
-  for (const [dx, dy] of probes) {
-    const px = Math.round(sampleX + dx);
-    const py = Math.round(sampleY + dy);
-    if (px < 0 || py < 0 || px >= collisionState.width || py >= collisionState.height) {
-      hits += 1;
-      continue;
-    }
-    const idx = (py * collisionState.width + px) * 4;
-    if (collisionState.data[idx] > 96) hits += 1;
-  }
-  return hits >= 2;
-}
 
 function isBlockedGridCell(tx, ty) {
   if (!collisionState.grid) return false;
