@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.95 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.96 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.95</title>
+<title>法兰城 v3.96</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.95</div>
+        <div class="version">v3.96</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.95</div>
+          <div class="play-version">v3.96</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -915,7 +915,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
           <h2>当前状态</h2>
           <div class="info-line"><span>当前区域</span><strong id="zoneName">中央广场</strong></div>
           <div class="info-line"><span>旅人位置</span><strong id="coordLabel">09, 10</strong></div>
-          <div class="info-line"><span>地图 / 碰撞</span><strong>1000.dat · 中间 100 列 flags 平铺</strong></div>
+          <div class="info-line"><span>地图 / 碰撞</span><strong>1000.dat · map-1000.json 全幅 flags</strong></div>
           <div class="info-line"><span>当前BGM</span><strong id="bgmLabel">选人界面 · cgbgm_t0</strong></div>
           <div class="traveler">
             <div class="portrait"><img id="portraitImg" src="./assets/falan/avatars/dog.png" alt="旅人头像"></div>
@@ -1679,26 +1679,19 @@ function updateVisibleTiles() {
 }
 
 const MAP_COLLISION_JSON = './assets/falan/map/map-1000.json';
-const COLLISION_FLAG_COL_START = 100;
-const COLLISION_FLAG_COL_WIDTH = 100;
 
 function applyCollisionFromDatFlags(flags) {
   const expected = sceneMap.cols * sceneMap.rows;
-  const w = sceneMap.cols;
   if (!flags || flags.length !== expected) {
     console.warn('map-1000.json flags length mismatch', flags?.length, expected);
     return;
   }
   const grid = new Uint8Array(expected);
   let blockedCount = 0;
-  for (let ty = 0; ty < sceneMap.rows; ty += 1) {
-    const rowBase = ty * w;
-    for (let tx = 0; tx < w; tx += 1) {
-      const srcTx = COLLISION_FLAG_COL_START + (tx % COLLISION_FLAG_COL_WIDTH);
-      const blocked = flags[rowBase + srcTx] ? 1 : 0;
-      grid[rowBase + tx] = blocked;
-      if (blocked) blockedCount += 1;
-    }
+  for (let i = 0; i < expected; i += 1) {
+    const blocked = flags[i] ? 1 : 0;
+    grid[i] = blocked;
+    if (blocked) blockedCount += 1;
   }
   collisionState.grid = grid;
   collisionState.blockedCount = blockedCount;
@@ -2678,7 +2671,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=373', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=374', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
