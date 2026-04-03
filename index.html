@@ -2049,14 +2049,10 @@ function updatePlayer() {
   if (dtx !== 0 || dty !== 0) {
     player.dir8 = resolveDir8FromKeys(player.dir8);
   }
-  player.moving = dtx !== 0 || dty !== 0;
-  if (player.moving) {
-    const nextTx = clamp(player.tx + dtx, 1, sceneMap.cols - 1);
-    const nextTy = clamp(player.ty + dty, 1, sceneMap.rows - 1);
-    if (!collides(nextTx, nextTy)) {
-      player.tx = nextTx;
-      player.ty = nextTy;
-    }
+  const wantsMove = dtx !== 0 || dty !== 0;
+  player.moving = false;
+  if (wantsMove) {
+    player.moving = tryMoveWithCollision(dtx, dty);
     player.step += 0.22;
     syncBgm();
   }
@@ -2162,9 +2158,9 @@ function drawCollisionOverlay(targetCtx, sx, sy, sw, sh) {
   if (!obstacleOverlayState.enabled || !collisionState.ready) return;
   const bounds = visibleGridBounds(sx, sy, sw, sh);
   targetCtx.save();
-  targetCtx.fillStyle = 'rgba(204, 82, 72, 0.28)';
-  targetCtx.strokeStyle = 'rgba(255, 233, 184, 0.12)';
-  targetCtx.lineWidth = 1;
+  targetCtx.fillStyle = 'rgba(214, 58, 52, 0.42)';
+  targetCtx.strokeStyle = 'rgba(255, 241, 202, 0.52)';
+  targetCtx.lineWidth = 1.4;
   for (let ty = bounds.minTy; ty <= bounds.maxTy; ty += 1) {
     for (let tx = bounds.minTx; tx <= bounds.maxTx; tx += 1) {
       if (!collides(tx, ty)) continue;
@@ -2187,9 +2183,33 @@ function drawCollisionOverlay(targetCtx, sx, sy, sw, sh) {
       targetCtx.closePath();
       targetCtx.fill();
       targetCtx.stroke();
+      targetCtx.beginPath();
+      targetCtx.moveTo(screenX - sceneMap.halfW * 0.52, screenY - sceneMap.halfH * 0.08);
+      targetCtx.lineTo(screenX - sceneMap.halfW * 0.08, screenY + sceneMap.halfH * 0.34);
+      targetCtx.moveTo(screenX - sceneMap.halfW * 0.12, screenY - sceneMap.halfH * 0.38);
+      targetCtx.lineTo(screenX + sceneMap.halfW * 0.34, screenY + sceneMap.halfH * 0.02);
+      targetCtx.stroke();
     }
   }
   targetCtx.restore();
+}
+
+function tryMoveWithCollision(dtx, dty) {
+  if (dtx === 0 && dty === 0) return false;
+  const distance = Math.max(Math.abs(dtx), Math.abs(dty));
+  const steps = Math.max(1, Math.ceil(distance / 0.02));
+  const stepTx = dtx / steps;
+  const stepTy = dty / steps;
+  let moved = false;
+  for (let i = 0; i < steps; i += 1) {
+    const nextTx = clamp(player.tx + stepTx, 1, sceneMap.cols - 1);
+    const nextTy = clamp(player.ty + stepTy, 1, sceneMap.rows - 1);
+    if (collides(nextTx, nextTy)) break;
+    player.tx = nextTx;
+    player.ty = nextTy;
+    moved = true;
+  }
+  return moved;
 }
 
 function drawScene(tick) {
