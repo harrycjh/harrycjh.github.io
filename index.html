@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.81 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v3.82 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.81</title>
+<title>法兰城 v3.82</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -113,9 +113,7 @@ h1 {
   box-shadow: none;
 }
 .map-shell:fullscreen .map-head,
-.map-shell:fullscreen .note,
-.map-shell:-webkit-full-screen .map-head,
-.map-shell:-webkit-full-screen .note {
+.map-shell:-webkit-full-screen .map-head {
   display: none;
 }
 .map-head {
@@ -324,12 +322,6 @@ canvas {
   pointer-events: none;
   backdrop-filter: blur(4px);
 }
-.note {
-  margin-top: 12px;
-  color: rgba(237, 241, 214, 0.66);
-  line-height: 1.65;
-  font-size: 0.92rem;
-}
 .side {
   display: grid;
   gap: 14px;
@@ -444,27 +436,37 @@ button:hover {
   color: rgba(237, 241, 214, 0.62);
   font-size: 0.78rem;
 }
-.legend {
-  margin-top: 12px;
+.perf-card h2 {
+  margin-bottom: 10px;
+}
+.perf-rows {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  font-size: 0.82rem;
 }
-.legend-item {
+.perf-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--muted);
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(232, 204, 134, 0.08);
+  color: rgba(237, 241, 214, 0.78);
 }
-.swatch {
-  width: 14px;
-  height: 14px;
-  transform: rotate(45deg);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+.perf-row:last-child {
+  border-bottom: 0;
 }
-.foot {
-  margin-top: 12px;
-  color: rgba(237, 241, 214, 0.56);
-  font-size: 0.88rem;
+.perf-row strong {
+  font-family: "Courier New", monospace;
+  font-size: 0.84rem;
+  color: #fff3c4;
+  font-weight: 600;
+}
+.perf-hint {
+  margin: 10px 0 0;
+  font-size: 0.72rem;
+  color: rgba(237, 241, 214, 0.45);
+  line-height: 1.45;
 }
 .selection-overlay {
   position: fixed;
@@ -597,8 +599,7 @@ body.mobile-play-only .page {
 }
 body.mobile-play-only .hero,
 body.mobile-play-only .side,
-body.mobile-play-only .map-head,
-body.mobile-play-only .note {
+body.mobile-play-only .map-head {
   display: none;
 }
 body.mobile-play-only .layout {
@@ -854,7 +855,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.81</div>
+        <div class="version">v3.82</div>
       </div>
     </section>
 
@@ -863,7 +864,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.81</div>
+          <div class="play-version">v3.82</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -876,7 +877,6 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="mobile-joystick-caption">移动摇杆</div>
           </div>
         </div>
-        <div class="note">地图由 `tiles-512` webp 切块按视口加载，未就绪时回退到整图预览裁切；障碍格沿用 `occupancy` 遮罩采样，撞墙时沿可行方向滑动。</div>
       </div>
 
       <aside class="side">
@@ -918,15 +918,21 @@ body.mobile-play-only.mobile-force-landscape canvas {
           </div>
         </section>
 
-        <section class="side-card">
-          <h2>当前说明</h2>
-          <div class="legend">
-            <div class="legend-item"><span class="swatch" style="background:#d8b48f;"></span>真实法兰城底图</div>
-            <div class="legend-item"><span class="swatch" style="background:#ffe59b;"></span>当前目标地点标记</div>
-            <div class="legend-item"><span class="swatch" style="background:#8eb0ff;"></span>旅人当前位置</div>
-            <div class="legend-item"><span class="swatch" style="background:#39463d;"></span>源图物件碰撞试装</div>
+        <section class="side-card perf-card">
+          <h2>帧耗时（ms）</h2>
+          <div class="perf-rows" id="perfRows" aria-live="polite">
+            <div class="perf-row"><span>整帧</span><strong id="perfFrame">—</strong></div>
+            <div class="perf-row"><span>FPS</span><strong id="perfFps">—</strong></div>
+            <div class="perf-row"><span>更新角色</span><strong id="perfUpdatePlayer">—</strong></div>
+            <div class="perf-row"><span>更新镜头</span><strong id="perfUpdateCamera">—</strong></div>
+            <div class="perf-row"><span>同步侧栏 UI</span><strong id="perfSyncInfo">—</strong></div>
+            <div class="perf-row"><span>渲染地图层</span><strong id="perfRenderMap">—</strong></div>
+            <div class="perf-row"><span>贴图到主画布</span><strong id="perfBlit">—</strong></div>
+            <div class="perf-row"><span>目标标记</span><strong id="perfFocus">—</strong></div>
+            <div class="perf-row"><span>旅人绘制</span><strong id="perfPlayer">—</strong></div>
+            <div class="perf-row"><span>选人预览</span><strong id="perfSelection">—</strong></div>
           </div>
-          <p class="foot">这版先优先把原版地图和调试工具稳定下来。后续如果方向对，我就继续做更准的碰撞、建筑前后层级、会馆入口，并重新追真正属于法兰城地图本身的动画资源。</p>
+          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。</p>
         </section>
       </aside>
     </section>
@@ -1032,6 +1038,16 @@ const selectionLevelEl = document.getElementById('selectionLevel');
 const selectionDescEl = document.getElementById('selectionDesc');
 const confirmSelectionBtn = document.getElementById('confirmSelectionBtn');
 const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+const perfFrameEl = document.getElementById('perfFrame');
+const perfFpsEl = document.getElementById('perfFps');
+const perfUpdatePlayerEl = document.getElementById('perfUpdatePlayer');
+const perfUpdateCameraEl = document.getElementById('perfUpdateCamera');
+const perfSyncInfoEl = document.getElementById('perfSyncInfo');
+const perfRenderMapEl = document.getElementById('perfRenderMap');
+const perfBlitEl = document.getElementById('perfBlit');
+const perfFocusEl = document.getElementById('perfFocus');
+const perfPlayerEl = document.getElementById('perfPlayer');
+const perfSelectionEl = document.getElementById('perfSelection');
 const skipSelectionOnLoad = new URLSearchParams(window.location.search).has('skipSelection');
 selectionPreviewCtx.imageSmoothingEnabled = false;
 
@@ -1135,6 +1151,42 @@ const obstacleOverlayState = {
 const uiState = { zone: '', coord: '', focus: '', traveler: '', desc: '', portrait: '', bgm: '' };
 const tileState = { cache: new Map(), frame: 0, maxKeep: 28, version: 0 };
 const mapRenderState = { dirty: true, sx: -1, sy: -1, sw: 0, sh: 0, tileVersion: -1 };
+const perfEma = {
+  frame: 0,
+  updatePlayer: 0,
+  updateCamera: 0,
+  syncInfo: 0,
+  renderMap: 0,
+  blit: 0,
+  focus: 0,
+  player: 0,
+  selection: 0
+};
+const PERF_EMA_ALPHA = 0.12;
+const perfFpsCounter = { frames: 0, lastTime: 0, fps: 0 };
+
+function perfTouch(key, ms) {
+  const prev = perfEma[key];
+  perfEma[key] = prev === 0 ? ms : prev * (1 - PERF_EMA_ALPHA) + ms * PERF_EMA_ALPHA;
+}
+
+function formatPerfMs(v) {
+  return v === 0 ? '0.00' : v.toFixed(2);
+}
+
+function syncPerfPanel() {
+  if (!perfFrameEl) return;
+  perfFrameEl.textContent = formatPerfMs(perfEma.frame);
+  perfFpsEl.textContent = perfFpsCounter.fps > 0 ? perfFpsCounter.fps.toFixed(1) : '—';
+  perfUpdatePlayerEl.textContent = formatPerfMs(perfEma.updatePlayer);
+  perfUpdateCameraEl.textContent = formatPerfMs(perfEma.updateCamera);
+  perfSyncInfoEl.textContent = formatPerfMs(perfEma.syncInfo);
+  perfRenderMapEl.textContent = formatPerfMs(perfEma.renderMap);
+  perfBlitEl.textContent = formatPerfMs(perfEma.blit);
+  perfFocusEl.textContent = formatPerfMs(perfEma.focus);
+  perfPlayerEl.textContent = formatPerfMs(perfEma.player);
+  perfSelectionEl.textContent = formatPerfMs(perfEma.selection);
+}
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 2000, directionOrder: [5, 6, 7, 0, 1, 2, 3, 4] };
 const joystickState = { active: false, pointerId: null, dx: 0, dy: 0, radius: 36 };
 const defaultSpawnDisplay = { tx: 111.9, ty: 228.8 };
@@ -2418,6 +2470,7 @@ function tryMoveWithCollision(dtx, dty) {
 }
 
 function drawScene(tick) {
+  const out = { renderMap: 0, blit: 0, focus: 0, player: 0 };
   const sx = Math.max(0, Math.floor(camera.x));
   const sy = Math.max(0, Math.floor(camera.y));
   const sw = Math.min(canvas.width, sceneMap.width - sx);
@@ -2430,17 +2483,27 @@ function drawScene(tick) {
     || mapRenderState.sw !== sw
     || mapRenderState.sh !== sh
   ) {
+    const tMap = performance.now();
     renderMapLayer(sx, sy, sw, sh);
+    out.renderMap = performance.now() - tMap;
   }
+  const tBlit = performance.now();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(mapLayerCanvas, 0, 0);
-
-  drawFocusMarker(tick);
-  drawPlayer(tick);
-
   ctx.fillStyle = 'rgba(240, 229, 193, 0.85)';
   ctx.font = '13px "Courier New", monospace';
   ctx.fillText('FALAN CITY MAP 1000', 18, 26);
+  out.blit = performance.now() - tBlit;
+
+  const tFocus = performance.now();
+  drawFocusMarker(tick);
+  out.focus = performance.now() - tFocus;
+
+  const tPlayer = performance.now();
+  drawPlayer(tick);
+  out.player = performance.now() - tPlayer;
+
+  return out;
 }
 
 function drawPlayer(tick = 0) {
@@ -2519,11 +2582,37 @@ function drawCrossgateTraveler(traveler, point, footY, tick) {
 }
 
 function loop(tick) {
+  const tFrame0 = performance.now();
+  let t = tFrame0;
   updatePlayer();
+  perfTouch('updatePlayer', performance.now() - t);
+  t = performance.now();
   updateCamera();
+  perfTouch('updateCamera', performance.now() - t);
+  t = performance.now();
   syncInfo();
-  drawScene(tick / 16.6);
+  perfTouch('syncInfo', performance.now() - t);
+  t = performance.now();
+  const scene = drawScene(tick / 16.6);
+  perfTouch('renderMap', scene.renderMap);
+  perfTouch('blit', scene.blit);
+  perfTouch('focus', scene.focus);
+  perfTouch('player', scene.player);
+  t = performance.now();
   drawSelectionPreview(tick);
+  perfTouch('selection', performance.now() - t);
+  perfTouch('frame', performance.now() - tFrame0);
+
+  perfFpsCounter.frames += 1;
+  const now = performance.now();
+  if (perfFpsCounter.lastTime === 0) {
+    perfFpsCounter.lastTime = now;
+  } else if (now - perfFpsCounter.lastTime >= 500) {
+    perfFpsCounter.fps = (perfFpsCounter.frames * 1000) / (now - perfFpsCounter.lastTime);
+    perfFpsCounter.frames = 0;
+    perfFpsCounter.lastTime = now;
+  }
+  syncPerfPanel();
   requestAnimationFrame(loop);
 }
 
