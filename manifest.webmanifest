@@ -1,0 +1,39 @@
+{
+  "name": "法兰城",
+  "short_name": "法兰城",
+  "description": "基于《魔力宝贝》客户端地图重建的法兰城网页试玩版，支持移动端模式、摇杆与陀螺仪控制。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#090d0a",
+  "theme_color": "#18251b",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "./assets/falan/pwa/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/falan/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "进入法兰城",
+      "short_name": "法兰城",
+      "url": "./"
+    },
+    {
+      "name": "进入黑白棋",
+      "short_name": "黑白棋",
+      "url": "./reversi.html"
+    }
+  ]
+}
