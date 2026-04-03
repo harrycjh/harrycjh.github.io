@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'falan-shell-v370';
-const RUNTIME_CACHE = 'falan-runtime-v370';
+const SHELL_CACHE = 'falan-shell-v371';
+const RUNTIME_CACHE = 'falan-runtime-v371';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -7,7 +7,6 @@ const PRECACHE_URLS = [
   './assets/falan/pwa/icon-192.png',
   './assets/falan/pwa/icon-512.png',
   './assets/falan/pwa/apple-touch-icon.png',
-  './assets/falan/map/falan-city-1000-preview.jpg',
   './assets/falan/map/falan-city-1000-occupancy.png',
   './assets/falan/crossgate100253/avatar.png',
   './assets/falan/object-map/falan-city-1000-manifest.json',
