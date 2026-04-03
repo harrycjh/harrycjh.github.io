@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.55 -->
+<!-- 法兰城 v3.56 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.55</title>
+<title>法兰城 v3.56</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -839,9 +839,9 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.55</div>
+        <div class="version">v3.56</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并加入 iPhone 不支持真锁横屏时的固定横向补偿。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并加入 iPhone 不支持真锁横屏时的固定横屏兜底。</p>
     </section>
 
     <section class="layout">
@@ -876,7 +876,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="mobile-joystick-caption">移动摇杆</div>
           </div>
         </div>
-        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并在 iPhone 锁横屏失效时用反向旋转把游玩区固定在同一个横向。</div>
+        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并在 iPhone 锁横屏失效时只按横屏/竖屏做固定横屏兜底，不再跟随左右横向来回补偿。</div>
       </div>
 
       <aside class="side">
@@ -1353,27 +1353,11 @@ function clearMobileOrientationClasses() {
   );
 }
 
-function normalizeOrientationAngle(angle) {
-  const normalized = ((Math.round(angle / 90) * 90) % 360 + 360) % 360;
-  return normalized;
-}
-
-function getViewportOrientationAngle() {
-  if (typeof window.orientation === 'number' && Number.isFinite(window.orientation)) {
-    return normalizeOrientationAngle(window.orientation);
-  }
-  if (typeof window.screen?.orientation?.angle === 'number' && Number.isFinite(window.screen.orientation.angle)) {
-    return normalizeOrientationAngle(window.screen.orientation.angle);
-  }
-  return window.innerWidth >= window.innerHeight ? 90 : 0;
-}
-
 function syncMobileOrientationFallback(mobileMode = refreshMobileMode()) {
   clearMobileOrientationClasses();
   if (!mobileMode) return;
   document.body.classList.add('mobile-force-landscape');
-  const actualAngle = getViewportOrientationAngle();
-  const compensationAngle = normalizeOrientationAngle(90 - actualAngle);
+  const compensationAngle = isPortraitViewport() ? 90 : 0;
   document.body.classList.add(`mobile-rotate-${compensationAngle}`);
 }
 
@@ -2082,14 +2066,6 @@ window.addEventListener('webkitfullscreenchange', () => {
   syncResponsiveViewportState();
   syncFullscreenButton();
 });
-window.addEventListener('orientationchange', () => {
-  syncResponsiveViewportState();
-});
-if (window.screen?.orientation?.addEventListener) {
-  window.screen.orientation.addEventListener('change', () => {
-    syncResponsiveViewportState();
-  });
-}
 openSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
 });
@@ -2473,7 +2449,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=355', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=356', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
