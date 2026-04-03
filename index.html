@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.48 -->
+<!-- 法兰城 v3.49 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.48</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>法兰城 v3.49</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -798,9 +798,9 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.48</div>
+        <div class="version">v3.49</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面；另外已经接入 PWA 试装，可加到主屏幕后再体验更接近 App 的打开方式。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面；另外已经接入 PWA 试装，并默认禁用双指缩放，方便更像 App 一样游玩。</p>
     </section>
 
     <section class="layout">
@@ -835,7 +835,7 @@ body.mobile-play-only canvas {
             <div class="mobile-joystick-caption">移动摇杆</div>
           </div>
         </div>
-        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM，方便边逛边校区域。</div>
+        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，方便边逛边校区域。</div>
       </div>
 
       <aside class="side">
@@ -1144,6 +1144,17 @@ const mobileState = {
   baseline: null,
   threshold: 8
 };
+
+function preventMobileZoom(event) {
+  if (!refreshMobileMode()) return;
+  if (event.touches && event.touches.length > 1) {
+    event.preventDefault();
+    return;
+  }
+  if (event.scale && event.scale !== 1) {
+    event.preventDefault();
+  }
+}
 
 function detectMobileCapable() {
   const uaMobile = /Android|webOS|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -2075,6 +2086,10 @@ window.addEventListener('pointerdown', () => {
   maybeUnlockBgm();
   activateMobileImmersive(true);
 }, { passive: true });
+document.addEventListener('touchmove', preventMobileZoom, { passive: false });
+document.addEventListener('gesturestart', preventMobileZoom, { passive: false });
+document.addEventListener('gesturechange', preventMobileZoom, { passive: false });
+document.addEventListener('gestureend', preventMobileZoom, { passive: false });
 window.addEventListener('resize', () => {
   fitPageToViewport();
   syncSelectionViewport();
