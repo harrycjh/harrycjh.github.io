@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'falan-shell-v369';
-const RUNTIME_CACHE = 'falan-runtime-v369';
+const SHELL_CACHE = 'falan-shell-v370';
+const RUNTIME_CACHE = 'falan-runtime-v370';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -8,8 +8,11 @@ const PRECACHE_URLS = [
   './assets/falan/pwa/icon-512.png',
   './assets/falan/pwa/apple-touch-icon.png',
   './assets/falan/map/falan-city-1000-preview.png',
-  './assets/falan/map/falan-city-1000-collision.png',
-  './assets/falan/crossgate100253/avatar.png'
+  './assets/falan/map/falan-city-1000-occupancy.png',
+  './assets/falan/crossgate100253/avatar.png',
+  './assets/falan/object-map/falan-city-1000-manifest.json',
+  './assets/falan/object-map/atlases/falan-atlas-00.png',
+  './assets/falan/object-map/atlases/falan-atlas-01.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.69 -->
+<!-- 法兰城 v3.70 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.69</title>
+<title>法兰城 v3.70</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -854,7 +854,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.69</div>
+        <div class="version">v3.70</div>
       </div>
     </section>
 
@@ -863,7 +863,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.69</div>
+          <div class="play-version">v3.70</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -876,7 +876,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="mobile-joystick-caption">移动摇杆</div>
           </div>
         </div>
-        <div class="note">这一版改为“预览图 + 512 动态切块”来加载法兰城，只保留人物层持续刷新，地图层会按镜头和图块状态缓存更新。右侧调试传送工具继续保留，并先接入选人/主城/护城河内三段 BGM；移动端同时禁用双指缩放，并恢复为按设备朝向角度做横屏补正的方案。障碍格恢复为基于 `occupancy` 遮罩的世界坐标采样；人物撞墙时会自动沿可行方向滑动；桌面端维持原始页面比例，不再自动缩放整页。</div>
+        <div class="note">这一版改为“法兰城专用 manifest + 视野范围物件拼装”来渲染地图，人物移动时会按当前视野逐格绘制地表和物件；障碍格暂时仍沿用 `occupancy` 遮罩采样，人物撞墙时会自动沿可行方向滑动。</div>
       </div>
 
       <aside class="side">
@@ -1099,9 +1099,21 @@ function loadImage(src) {
   return image;
 }
 
+function loadImageAsync(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`image load failed: ${src}`));
+    image.src = src;
+  });
+}
+
 const sceneMap = {
   previewImage: loadImage('./assets/falan/map/falan-city-1000-preview.png'),
   collisionImage: loadImage('./assets/falan/map/falan-city-1000-occupancy.png'),
+  manifestUrl: './assets/falan/object-map/falan-city-1000-manifest.json',
+  atlasBase: './assets/falan/object-map/atlases',
   tileBase: './assets/falan/map/tiles-512',
   tileSize: 512,
   width: 11128,
@@ -1129,6 +1141,17 @@ const crossgateSheetImages = Object.fromEntries(
 const keyState = { up: false, down: false, left: false, right: false };
 const touchKeyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1, grid: null, blockedCount: 0 };
+const objectMapState = {
+  ready: false,
+  error: '',
+  assets: null,
+  atlases: {},
+  tileLayer: null,
+  objectItems: null,
+  assetVersion: 0,
+  objectMarginCellsX: 12,
+  objectMarginCellsY: 18
+};
 const obstacleOverlayState = {
   enabled: localStorage.getItem(obstacleOverlayStorageKey) === 'on'
 };
@@ -1175,6 +1198,34 @@ const mobileState = {
   mode: initialMobileCapable ? null : 'desktop',
   isMobile: false
 };
+
+function layerIndex(tx, ty) {
+  return tx * sceneMap.cols + (sceneMap.cols - ty - 1);
+}
+
+async function loadObjectMapManifest() {
+  try {
+    const response = await fetch(sceneMap.manifestUrl, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`manifest ${response.status}`);
+    const manifest = await response.json();
+    const atlasPairs = await Promise.all(
+      manifest.atlases.map(async (name) => [name, await loadImageAsync(`${sceneMap.atlasBase}/${name}`)])
+    );
+    objectMapState.assets = manifest.assets;
+    objectMapState.atlases = Object.fromEntries(atlasPairs);
+    objectMapState.tileLayer = manifest.tileLayer;
+    objectMapState.objectItems = manifest.objectItems;
+    objectMapState.objectMarginCellsX = manifest.viewportHint?.objectMarginCellsX ?? 12;
+    objectMapState.objectMarginCellsY = manifest.viewportHint?.objectMarginCellsY ?? 18;
+    objectMapState.assetVersion += 1;
+    objectMapState.ready = true;
+    objectMapState.error = '';
+    mapRenderState.dirty = true;
+  } catch (error) {
+    objectMapState.error = String(error);
+    console.warn('object map manifest load failed', error);
+  }
+}
 
 function preventMobileZoom(event) {
   if (!refreshMobileMode()) return;
@@ -2266,6 +2317,81 @@ function drawFocusMarker(tick) {
   ctx.fillText(focus.label, point.x + 14, point.y - 16);
 }
 
+function drawObjectMapSprite(targetCtx, asset, atlasImage, point, sx, sy, sw, sh) {
+  if (!atlasImage?.naturalWidth) return;
+  const drawX = Math.round(point.x + asset.ofsX - sx);
+  const drawY = Math.round(point.y + asset.ofsY - sy);
+  if (
+    drawX > sw
+    || drawY > sh
+    || drawX + asset.atlasW < 0
+    || drawY + asset.atlasH < 0
+  ) {
+    return;
+  }
+  targetCtx.drawImage(
+    atlasImage,
+    asset.atlasX,
+    asset.atlasY,
+    asset.atlasW,
+    asset.atlasH,
+    drawX,
+    drawY,
+    asset.atlasW,
+    asset.atlasH
+  );
+}
+
+function drawObjectAssembledTiles(targetCtx, sx, sy, sw, sh) {
+  if (!objectMapState.ready || !objectMapState.tileLayer || !objectMapState.assets) return;
+  const bounds = visibleGridBounds(sx, sy, sw, sh);
+  const margin = 2;
+  const minTx = clamp(bounds.minTx - margin, 0, sceneMap.cols - 1);
+  const maxTx = clamp(bounds.maxTx + margin, 0, sceneMap.cols - 1);
+  const minTy = clamp(bounds.minTy - margin, 0, sceneMap.rows - 1);
+  const maxTy = clamp(bounds.maxTy + margin, 0, sceneMap.rows - 1);
+  for (let diag = minTx + minTy; diag <= maxTx + maxTy; diag += 1) {
+    const startTx = Math.max(minTx, diag - maxTy);
+    const endTx = Math.min(maxTx, diag - minTy);
+    for (let tx = startTx; tx <= endTx; tx += 1) {
+      const ty = diag - tx;
+      const tileId = objectMapState.tileLayer[layerIndex(tx, ty)];
+      if (!tileId) continue;
+      const asset = objectMapState.assets[String(tileId)];
+      if (!asset) continue;
+      const atlasImage = objectMapState.atlases[asset.atlas];
+      if (!atlasImage) continue;
+      const point = mapToPreview(tx, ty);
+      drawObjectMapSprite(targetCtx, asset, atlasImage, point, sx, sy, sw, sh);
+    }
+  }
+}
+
+function drawObjectAssembledObjects(targetCtx, sx, sy, sw, sh) {
+  if (!objectMapState.ready || !objectMapState.objectItems || !objectMapState.assets) return;
+  const bounds = visibleGridBounds(sx, sy, sw, sh);
+  const minTx = clamp(bounds.minTx - objectMapState.objectMarginCellsX, 0, sceneMap.cols - 1);
+  const maxTx = clamp(bounds.maxTx + objectMapState.objectMarginCellsX, 0, sceneMap.cols - 1);
+  const minTy = clamp(bounds.minTy - objectMapState.objectMarginCellsY, 0, sceneMap.rows - 1);
+  const maxTy = clamp(bounds.maxTy + objectMapState.objectMarginCellsY, 0, sceneMap.rows - 1);
+  for (const [tx, ty, objectId] of objectMapState.objectItems) {
+    if (tx < minTx || tx > maxTx || ty < minTy || ty > maxTy) continue;
+    const asset = objectMapState.assets[String(objectId)];
+    if (!asset) continue;
+    const atlasImage = objectMapState.atlases[asset.atlas];
+    if (!atlasImage) continue;
+    const point = mapToPreview(tx, ty);
+    drawObjectMapSprite(targetCtx, asset, atlasImage, point, sx, sy, sw, sh);
+  }
+}
+
+function drawObjectAssembledMap(targetCtx, sx, sy, sw, sh) {
+  if (!objectMapState.ready) return false;
+  drawObjectAssembledTiles(targetCtx, sx, sy, sw, sh);
+  drawObjectAssembledObjects(targetCtx, sx, sy, sw, sh);
+  return true;
+}
+
 function drawMapSlice(targetCtx, sx, sy, sw, sh) {
   if (!sceneMap.previewImage.complete || !sceneMap.previewImage.naturalWidth) return false;
   const scaleX = sceneMap.previewImage.naturalWidth / sceneMap.width;
@@ -2311,20 +2437,23 @@ function renderMapLayer(sx, sy, sw, sh) {
   mapLayerCtx.clearRect(0, 0, mapLayerCanvas.width, mapLayerCanvas.height);
   mapLayerCtx.fillStyle = '#11171b';
   mapLayerCtx.fillRect(0, 0, mapLayerCanvas.width, mapLayerCanvas.height);
-  const drewPreview = drawMapSlice(mapLayerCtx, sx, sy, sw, sh);
-  if (!drewPreview) {
-    mapLayerCtx.fillStyle = '#27362d';
-    mapLayerCtx.fillRect(0, 0, sw, sh);
+  const drewObjectMap = drawObjectAssembledMap(mapLayerCtx, sx, sy, sw, sh);
+  if (!drewObjectMap) {
+    const drewPreview = drawMapSlice(mapLayerCtx, sx, sy, sw, sh);
+    if (!drewPreview) {
+      mapLayerCtx.fillStyle = '#27362d';
+      mapLayerCtx.fillRect(0, 0, sw, sh);
+    }
+    const bounds = updateVisibleTiles();
+    drawLoadedTiles(mapLayerCtx, bounds, sx, sy, sw, sh);
   }
-  const bounds = updateVisibleTiles();
-  drawLoadedTiles(mapLayerCtx, bounds, sx, sy, sw, sh);
   drawCollisionOverlay(mapLayerCtx, sx, sy, sw, sh);
   mapRenderState.dirty = false;
   mapRenderState.sx = sx;
   mapRenderState.sy = sy;
   mapRenderState.sw = sw;
   mapRenderState.sh = sh;
-  mapRenderState.tileVersion = tileState.version;
+  mapRenderState.tileVersion = objectMapState.ready ? objectMapState.assetVersion : tileState.version;
 }
 
 function drawCollisionOverlay(targetCtx, sx, sy, sw, sh) {
@@ -2418,7 +2547,7 @@ function drawScene(tick) {
   const sh = Math.min(canvas.height, sceneMap.height - sy);
   if (
     mapRenderState.dirty
-    || mapRenderState.tileVersion !== tileState.version
+    || mapRenderState.tileVersion !== (objectMapState.ready ? objectMapState.assetVersion : tileState.version)
     || mapRenderState.sx !== sx
     || mapRenderState.sy !== sy
     || mapRenderState.sw !== sw
@@ -2524,7 +2653,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=369', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=370', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
@@ -2545,6 +2674,7 @@ syncMusicToggleButton();
 syncMobileJoystickVisibility();
 syncBgm();
 syncObstacleToggleButton();
+loadObjectMapManifest();
 registerServiceWorker();
 if (mobileState.isMobile) {
   setTimeout(() => {
