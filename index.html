@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.42 -->
+<!-- 法兰城 v3.48 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>法兰城 v3.42</title>
+<title>法兰城 v3.48</title>
+<meta name="theme-color" content="#18251b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="法兰城">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./assets/falan/pwa/icon-192.png">
+<link rel="apple-touch-icon" href="./assets/falan/pwa/apple-touch-icon.png">
 <style>
 :root {
   --bg: #0f1711;
@@ -790,9 +798,9 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.47</div>
+        <div class="version">v3.48</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面，但不再自动触发全屏。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面；另外已经接入 PWA 试装，可加到主屏幕后再体验更接近 App 的打开方式。</p>
     </section>
 
     <section class="layout">
@@ -808,6 +816,7 @@ body.mobile-play-only canvas {
             <div class="badge">11128 x 8300 原图</div>
             <div class="badge">512 动态切块加载</div>
             <div class="badge">碰撞遮罩试装</div>
+            <div class="badge">PWA 试装</div>
           </div>
         </div>
         <div class="canvas-wrap">
@@ -2472,6 +2481,15 @@ function loop(tick) {
   requestAnimationFrame(loop);
 }
 
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    await navigator.serviceWorker.register('./sw.js', { scope: './' });
+  } catch (error) {
+    console.warn('service worker register failed', error);
+  }
+}
+
 updateCamera();
 syncInfo();
 syncTeleportInputs();
@@ -2491,6 +2509,7 @@ syncMobileJoystickVisibility();
 syncBgm();
 syncObstacleToggleButton();
 syncDeviceModeOverlay();
+registerServiceWorker();
 if (mobileState.isMobile) {
   setTimeout(() => {
     activateMobileImmersive(false);
