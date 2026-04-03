@@ -484,6 +484,79 @@ button:hover {
   padding: 18px 20px 20px;
   box-shadow: 0 22px 68px rgba(0, 0, 0, 0.46);
 }
+.device-mode-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 10, 8, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+.device-mode-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.device-mode-panel {
+  width: min(680px, calc(100vw - 32px));
+  border: 2px solid rgba(232, 204, 134, 0.24);
+  background:
+    radial-gradient(circle at top, rgba(255, 229, 161, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(33, 51, 39, 0.98), rgba(10, 16, 12, 0.98));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+  padding: 20px 22px 22px;
+}
+.device-mode-panel h2 {
+  margin: 10px 0 0;
+  color: var(--gold);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+.device-mode-panel p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.device-mode-actions {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.device-mode-option {
+  appearance: none;
+  width: 100%;
+  border: 2px solid rgba(230, 242, 196, 0.12);
+  background: linear-gradient(180deg, rgba(19, 31, 23, 0.84), rgba(12, 20, 15, 0.98));
+  color: inherit;
+  padding: 14px 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+.device-mode-option:hover,
+.device-mode-option:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 232, 150, 0.34);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  outline: none;
+}
+.device-mode-option strong {
+  display: block;
+  color: #fbffd8;
+  font-size: 1rem;
+}
+.device-mode-option span {
+  display: block;
+  margin-top: 6px;
+  color: rgba(245, 247, 225, 0.76);
+  line-height: 1.6;
+  font-size: 0.84rem;
+}
 body.mobile-play-only {
   background: #090d0a;
 }
@@ -704,6 +777,9 @@ body.mobile-play-only canvas {
     width: 104px;
     height: 112px;
   }
+  .device-mode-actions {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
@@ -714,7 +790,7 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.46</div>
+        <div class="version">v3.47</div>
       </div>
       <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面，但不再自动触发全屏。</p>
     </section>
@@ -838,6 +914,24 @@ body.mobile-play-only canvas {
     </div>
   </div>
 
+  <div class="device-mode-overlay" id="deviceModeOverlay">
+    <div class="device-mode-panel" role="dialog" aria-modal="true" aria-labelledby="deviceModeTitle">
+      <div class="selection-tag">Device Mode</div>
+      <h2 id="deviceModeTitle">选择游玩模式</h2>
+      <p>这台设备支持手机版和桌面版两种呈现。手机版会启用摇杆、陀螺仪和沉浸布局；桌面版会保留完整界面和右侧调试区。</p>
+      <div class="device-mode-actions">
+        <button type="button" class="device-mode-option" id="chooseMobileModeBtn">
+          <strong>手机版</strong>
+          <span>进入沉浸式游玩区，显示摇杆与移动端控制。</span>
+        </button>
+        <button type="button" class="device-mode-option" id="chooseDesktopModeBtn">
+          <strong>桌面版</strong>
+          <span>保留完整页面布局和右侧调试信息，像电脑上一样操作。</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
 <script>
 const canvas = document.getElementById('isoCanvas');
 const ctx = canvas.getContext('2d');
@@ -877,8 +971,11 @@ const mobileJoystickThumb = document.getElementById('mobileJoystickThumb');
 const pageFrame = document.getElementById('pageFrame');
 const pageRoot = document.getElementById('pageRoot');
 const selectionOverlay = document.getElementById('selectionOverlay');
+const deviceModeOverlay = document.getElementById('deviceModeOverlay');
 const selectionGrid = document.getElementById('selectionGrid');
 const selectionPanel = selectionOverlay.querySelector('.selection-panel');
+const chooseMobileModeBtn = document.getElementById('chooseMobileModeBtn');
+const chooseDesktopModeBtn = document.getElementById('chooseDesktopModeBtn');
 const selectionPreviewCanvas = document.getElementById('selectionPreviewCanvas');
 const selectionPreviewCtx = selectionPreviewCanvas.getContext('2d');
 const selectionNameEl = document.getElementById('selectionName');
@@ -1025,8 +1122,11 @@ const bgmState = {
   desiredKey: 'selection',
   enabled: localStorage.getItem(bgmEnabledStorageKey) !== 'off'
 };
+const initialMobileCapable = detectMobileCapable();
 const mobileState = {
-  isMobile: detectMobileMode(),
+  deviceCapable: initialMobileCapable,
+  mode: initialMobileCapable ? null : 'desktop',
+  isMobile: false,
   gyroSupported: typeof window.DeviceOrientationEvent !== 'undefined',
   gyroWanted: localStorage.getItem(gyroEnabledStorageKey) !== 'off',
   gyroEnabled: false,
@@ -1036,7 +1136,7 @@ const mobileState = {
   threshold: 8
 };
 
-function detectMobileMode() {
+function detectMobileCapable() {
   const uaMobile = /Android|webOS|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
   const noHover = window.matchMedia('(hover: none)').matches;
@@ -1046,7 +1146,14 @@ function detectMobileMode() {
 }
 
 function refreshMobileMode() {
-  mobileState.isMobile = detectMobileMode();
+  mobileState.deviceCapable = detectMobileCapable();
+  if (!mobileState.deviceCapable) mobileState.mode = 'desktop';
+  mobileState.isMobile = mobileState.deviceCapable && mobileState.mode === 'mobile';
+  if (!mobileState.isMobile) {
+    mobileState.gyroEnabled = false;
+    mobileState.baseline = null;
+    resetGyroMovement();
+  }
   return mobileState.isMobile;
 }
 
@@ -1258,6 +1365,37 @@ function syncMobileHud() {
   mobileHud.hidden = !visible;
   mobileHud.classList.toggle('visible', visible);
   mobileHud.setAttribute('aria-hidden', visible ? 'false' : 'true');
+}
+
+function syncDeviceModeOverlay() {
+  const visible = mobileState.deviceCapable && !mobileState.mode;
+  deviceModeOverlay.classList.toggle('active', visible);
+  deviceModeOverlay.setAttribute('aria-hidden', visible ? 'false' : 'true');
+}
+
+async function setDeviceMode(mode) {
+  if (!mobileState.deviceCapable) {
+    mobileState.mode = 'desktop';
+  } else {
+    mobileState.mode = mode;
+  }
+  refreshMobileMode();
+  syncDeviceModeOverlay();
+  syncGyroToggleButton();
+  syncSelectionViewport();
+  syncMobileHud();
+  syncMobileJoystickVisibility();
+  fitPageToViewport();
+  if (mobileState.isMobile) {
+    if (selectionOpen) {
+      await lockSelectionLandscape();
+    } else {
+      await activateMobileImmersive(false);
+    }
+  } else {
+    unlockSelectionLandscape();
+    resetJoystick();
+  }
 }
 
 function isPortraitViewport() {
@@ -1932,18 +2070,21 @@ window.addEventListener('resize', () => {
   fitPageToViewport();
   syncSelectionViewport();
   syncMobileHud();
+  syncDeviceModeOverlay();
 });
 window.addEventListener('fullscreenchange', () => {
   fitPageToViewport();
   syncFullscreenButton();
   syncSelectionViewport();
   syncMobileHud();
+  syncDeviceModeOverlay();
 });
 window.addEventListener('webkitfullscreenchange', () => {
   fitPageToViewport();
   syncFullscreenButton();
   syncSelectionViewport();
   syncMobileHud();
+  syncDeviceModeOverlay();
 });
 openSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
@@ -1971,6 +2112,12 @@ mobileGyroBtn.addEventListener('click', async () => {
 });
 mobileSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
+});
+chooseMobileModeBtn.addEventListener('click', async () => {
+  await setDeviceMode('mobile');
+});
+chooseDesktopModeBtn.addEventListener('click', async () => {
+  await setDeviceMode('desktop');
 });
 teleportBtn.addEventListener('click', () => {
   teleportToDisplayCoord();
@@ -2343,6 +2490,7 @@ syncMobileHud();
 syncMobileJoystickVisibility();
 syncBgm();
 syncObstacleToggleButton();
+syncDeviceModeOverlay();
 if (mobileState.isMobile) {
   setTimeout(() => {
     activateMobileImmersive(false);
