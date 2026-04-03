@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.50 -->
+<!-- 法兰城 v3.51 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.50</title>
+<title>法兰城 v3.51</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -801,9 +801,9 @@ body.mobile-play-only canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.50</div>
+        <div class="version">v3.51</div>
       </div>
-      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，并在支持的浏览器里启用陀螺仪、摇杆和自动横屏选人界面；另外已经接入 PWA 试装、默认禁用双指缩放，并把手机版选人面板固定到屏幕正中央。</p>
+      <p>这一版继续使用《魔力宝贝》客户端里拼出来的完整法兰城原图，并优先保证地图、碰撞与调试工具稳定可用。移动端会进入只保留游玩区的沉浸模式，默认横屏显示并使用左下角摇杆；另外已经接入 PWA 试装、默认禁用双指缩放，并把手机版选人面板固定到屏幕正中央。</p>
     </section>
 
     <section class="layout">
@@ -811,7 +811,7 @@ body.mobile-play-only canvas {
         <div class="map-head">
           <div>
             <h2>真实法兰城</h2>
-            <p>按 <code>WASD</code> 或方向键移动。手机端现在同时支持陀螺仪和左下角摇杆，右侧可以单独开关陀螺仪。这一版不再是程序拼的假城镇，而是把客户端里的 <code>1000.dat</code> 法兰城真实地图接进首页，先做成可逛、可验证的 prototype。</p>
+            <p>按 <code>WASD</code> 或方向键移动。手机端现在默认横屏显示，并使用左下角摇杆来移动。这一版不再是程序拼的假城镇，而是把客户端里的 <code>1000.dat</code> 法兰城真实地图接进首页，先做成可逛、可验证的 prototype。</p>
           </div>
           <div class="map-badges">
             <div class="badge">Cross Gate 原始地图</div>
@@ -828,7 +828,6 @@ body.mobile-play-only canvas {
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
-            <button type="button" id="mobileGyroBtn">关闭陀螺仪</button>
             <button type="button" id="mobileObstacleBtn">显示障碍格</button>
           </div>
           <div class="mobile-joystick" id="mobileJoystick" hidden aria-hidden="true">
@@ -860,7 +859,6 @@ body.mobile-play-only canvas {
             <button type="button" id="openSelectionBtn">选人界面</button>
             <button type="button" id="fullscreenBtn">全屏游玩</button>
             <button type="button" id="toggleMusicBtn">关闭音乐</button>
-            <button type="button" id="toggleGyroBtn">关闭陀螺仪</button>
             <button type="button" id="toggleObstacleBtn">显示障碍格</button>
           </div>
           <div class="teleport-tool">
@@ -930,7 +928,7 @@ body.mobile-play-only canvas {
     <div class="device-mode-panel" role="dialog" aria-modal="true" aria-labelledby="deviceModeTitle">
       <div class="selection-tag">Device Mode</div>
       <h2 id="deviceModeTitle">选择游玩模式</h2>
-      <p>这台设备支持手机版和桌面版两种呈现。手机版会启用摇杆、陀螺仪和沉浸布局；桌面版会保留完整界面和右侧调试区。</p>
+      <p>这台设备支持手机版和桌面版两种呈现。手机版会启用摇杆、默认横屏和沉浸布局；桌面版会保留完整界面和右侧调试区。</p>
       <div class="device-mode-actions">
         <button type="button" class="device-mode-option" id="chooseMobileModeBtn">
           <strong>手机版</strong>
@@ -964,7 +962,6 @@ const portraitImg = document.getElementById('portraitImg');
 const openSelectionBtn = document.getElementById('openSelectionBtn');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
 const toggleMusicBtn = document.getElementById('toggleMusicBtn');
-const toggleGyroBtn = document.getElementById('toggleGyroBtn');
 const toggleObstacleBtn = document.getElementById('toggleObstacleBtn');
 const teleportXInput = document.getElementById('teleportXInput');
 const teleportYInput = document.getElementById('teleportYInput');
@@ -975,7 +972,6 @@ const mapFullscreenExit = document.getElementById('mapFullscreenExit');
 const mobileHud = document.getElementById('mobileHud');
 const mobileSelectionBtn = document.getElementById('mobileSelectionBtn');
 const mobileMusicBtn = document.getElementById('mobileMusicBtn');
-const mobileGyroBtn = document.getElementById('mobileGyroBtn');
 const mobileObstacleBtn = document.getElementById('mobileObstacleBtn');
 const mobileJoystick = document.getElementById('mobileJoystick');
 const mobileJoystickBase = document.getElementById('mobileJoystickBase');
@@ -1000,7 +996,6 @@ selectionPreviewCtx.imageSmoothingEnabled = false;
 
 const travelerStorageKey = 'falan-selected-traveler';
 const bgmEnabledStorageKey = 'falan-bgm-enabled';
-const gyroEnabledStorageKey = 'falan-gyro-enabled';
 const obstacleOverlayStorageKey = 'falan-show-obstacle-overlay';
 const spriteFrameWidth = 16;
 const spriteFrameHeight = 20;
@@ -1092,7 +1087,6 @@ const crossgateSheetImages = Object.fromEntries(
 );
 const keyState = { up: false, down: false, left: false, right: false };
 const touchKeyState = { up: false, down: false, left: false, right: false };
-const gyroKeyState = { up: false, down: false, left: false, right: false };
 const collisionState = { ready: false, data: null, width: 0, height: 0, scaleX: 1, scaleY: 1, grid: null, blockedCount: 0 };
 const obstacleOverlayState = {
   enabled: localStorage.getItem(obstacleOverlayStorageKey) === 'on'
@@ -1138,14 +1132,7 @@ const initialMobileCapable = detectMobileCapable();
 const mobileState = {
   deviceCapable: initialMobileCapable,
   mode: initialMobileCapable ? null : 'desktop',
-  isMobile: false,
-  gyroSupported: typeof window.DeviceOrientationEvent !== 'undefined',
-  gyroWanted: localStorage.getItem(gyroEnabledStorageKey) !== 'off',
-  gyroEnabled: false,
-  gyroPermissionState: 'unknown',
-  gyroListenerBound: false,
-  baseline: null,
-  threshold: 8
+  isMobile: false
 };
 
 function preventMobileZoom(event) {
@@ -1172,11 +1159,6 @@ function refreshMobileMode() {
   mobileState.deviceCapable = detectMobileCapable();
   if (!mobileState.deviceCapable) mobileState.mode = 'desktop';
   mobileState.isMobile = mobileState.deviceCapable && mobileState.mode === 'mobile';
-  if (!mobileState.isMobile) {
-    mobileState.gyroEnabled = false;
-    mobileState.baseline = null;
-    resetGyroMovement();
-  }
   return mobileState.isMobile;
 }
 
@@ -1201,12 +1183,11 @@ function createBgmTracks() {
 }
 
 function getMovementState() {
-  const useGyro = mobileState.gyroEnabled && !joystickState.active;
   return {
-    up: keyState.up || touchKeyState.up || (useGyro && gyroKeyState.up),
-    down: keyState.down || touchKeyState.down || (useGyro && gyroKeyState.down),
-    left: keyState.left || touchKeyState.left || (useGyro && gyroKeyState.left),
-    right: keyState.right || touchKeyState.right || (useGyro && gyroKeyState.right)
+    up: keyState.up || touchKeyState.up,
+    down: keyState.down || touchKeyState.down,
+    left: keyState.left || touchKeyState.left,
+    right: keyState.right || touchKeyState.right
   };
 }
 
@@ -1215,94 +1196,6 @@ function resetTouchMovement() {
   touchKeyState.down = false;
   touchKeyState.left = false;
   touchKeyState.right = false;
-}
-
-function resetGyroMovement() {
-  gyroKeyState.up = false;
-  gyroKeyState.down = false;
-  gyroKeyState.left = false;
-  gyroKeyState.right = false;
-}
-
-function getScreenOrientationAngle() {
-  if (typeof window.screen?.orientation?.angle === 'number') return window.screen.orientation.angle;
-  if (typeof window.orientation === 'number') return window.orientation;
-  return 0;
-}
-
-function handleDeviceOrientation(event) {
-  if (!mobileState.gyroEnabled) return;
-  if (!Number.isFinite(event.beta) || !Number.isFinite(event.gamma)) return;
-  if (!mobileState.baseline) {
-    mobileState.baseline = { beta: event.beta, gamma: event.gamma };
-    resetGyroMovement();
-    return;
-  }
-  const rawX = event.gamma - mobileState.baseline.gamma;
-  const rawY = event.beta - mobileState.baseline.beta;
-  const angle = ((getScreenOrientationAngle() % 360) + 360) % 360;
-  let tiltX = rawX;
-  let tiltY = rawY;
-  if (angle === 90) {
-    tiltX = -rawY;
-    tiltY = rawX;
-  } else if (angle === 270) {
-    tiltX = rawY;
-    tiltY = -rawX;
-  } else if (angle === 180) {
-    tiltX = -rawX;
-    tiltY = -rawY;
-  }
-  gyroKeyState.left = tiltX < -mobileState.threshold;
-  gyroKeyState.right = tiltX > mobileState.threshold;
-  gyroKeyState.up = tiltY < -mobileState.threshold;
-  gyroKeyState.down = tiltY > mobileState.threshold;
-}
-
-function enableGyroControls() {
-  if (!mobileState.gyroSupported) return false;
-  if (!mobileState.gyroListenerBound) {
-    window.addEventListener('deviceorientation', handleDeviceOrientation);
-    mobileState.gyroListenerBound = true;
-  }
-  mobileState.gyroEnabled = true;
-  mobileState.baseline = null;
-  resetGyroMovement();
-  return true;
-}
-
-async function requestGyroControls() {
-  if (!mobileState.isMobile || !mobileState.gyroSupported) return false;
-  if (mobileState.gyroEnabled) return true;
-  try {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      const permission = await DeviceOrientationEvent.requestPermission();
-      mobileState.gyroPermissionState = permission;
-      if (permission !== 'granted') return false;
-    }
-    return enableGyroControls();
-  } catch (error) {
-    mobileState.gyroPermissionState = 'denied';
-    console.warn('gyro permission failed', error);
-    return false;
-  }
-}
-
-function syncGyroToggleButton() {
-  const available = refreshMobileMode() && mobileState.gyroSupported;
-  toggleGyroBtn.disabled = !available;
-  mobileGyroBtn.disabled = !available;
-  if (!available) {
-    toggleGyroBtn.textContent = '陀螺仪不可用';
-    toggleGyroBtn.setAttribute('aria-pressed', 'false');
-    mobileGyroBtn.textContent = '陀螺不可用';
-    mobileGyroBtn.setAttribute('aria-pressed', 'false');
-    return;
-  }
-  toggleGyroBtn.textContent = mobileState.gyroWanted ? '关闭陀螺仪' : '打开陀螺仪';
-  toggleGyroBtn.setAttribute('aria-pressed', mobileState.gyroWanted ? 'true' : 'false');
-  mobileGyroBtn.textContent = mobileState.gyroWanted ? '关闭陀螺仪' : '打开陀螺仪';
-  mobileGyroBtn.setAttribute('aria-pressed', mobileState.gyroWanted ? 'true' : 'false');
 }
 
 function syncObstacleToggleButton() {
@@ -1318,19 +1211,6 @@ function setObstacleOverlayEnabled(enabled) {
   localStorage.setItem(obstacleOverlayStorageKey, enabled ? 'on' : 'off');
   mapRenderState.dirty = true;
   syncObstacleToggleButton();
-}
-
-async function setGyroEnabled(enabled) {
-  mobileState.gyroWanted = enabled;
-  localStorage.setItem(gyroEnabledStorageKey, enabled ? 'on' : 'off');
-  if (!enabled) {
-    mobileState.gyroEnabled = false;
-    mobileState.baseline = null;
-    resetGyroMovement();
-  } else if (mobileState.isMobile) {
-    await requestGyroControls();
-  }
-  syncGyroToggleButton();
 }
 
 function syncJoystickThumb() {
@@ -1404,19 +1284,15 @@ async function setDeviceMode(mode) {
   }
   refreshMobileMode();
   syncDeviceModeOverlay();
-  syncGyroToggleButton();
   syncSelectionViewport();
   syncMobileHud();
   syncMobileJoystickVisibility();
   fitPageToViewport();
   if (mobileState.isMobile) {
-    if (selectionOpen) {
-      await lockSelectionLandscape();
-    } else {
-      await activateMobileImmersive(false);
-    }
+    await lockMobileLandscape();
+    if (!selectionOpen) await activateMobileImmersive();
   } else {
-    unlockSelectionLandscape();
+    unlockMobileLandscape();
     resetJoystick();
   }
 }
@@ -1425,22 +1301,22 @@ function isPortraitViewport() {
   return window.innerHeight > window.innerWidth;
 }
 
-async function lockSelectionLandscape() {
-  if (!mobileState.isMobile || !selectionOpen) return;
+async function lockMobileLandscape() {
+  if (!mobileState.isMobile) return;
   if (typeof window.screen?.orientation?.lock !== 'function') return;
   try {
     await window.screen.orientation.lock('landscape');
   } catch (error) {
-    console.warn('selection landscape lock blocked', error);
+    console.warn('mobile landscape lock blocked', error);
   }
 }
 
-function unlockSelectionLandscape() {
+function unlockMobileLandscape() {
   if (typeof window.screen?.orientation?.unlock !== 'function') return;
   try {
     window.screen.orientation.unlock();
   } catch (error) {
-    console.warn('selection landscape unlock blocked', error);
+    console.warn('mobile landscape unlock blocked', error);
   }
 }
 
@@ -1721,7 +1597,7 @@ function maybeUnlockBgm() {
 
 async function activateMobileImmersive(tryGyro = true) {
   if (!refreshMobileMode()) return;
-  if (tryGyro && mobileState.gyroWanted) await requestGyroControls();
+  await lockMobileLandscape();
 }
 
 function syncBgm(force = false) {
@@ -1826,7 +1702,6 @@ function resetKeyState() {
   keyState.left = false;
   keyState.right = false;
   resetTouchMovement();
-  resetGyroMovement();
   resetJoystick();
 }
 
@@ -1948,7 +1823,7 @@ function openTravelerSelection(resetPending = true) {
   syncSelectionPanel();
   selectionOverlay.classList.add('active');
   syncSelectionViewport();
-  lockSelectionLandscape();
+  lockMobileLandscape();
   syncMobileHud();
   syncMobileJoystickVisibility();
   syncInfo();
@@ -1964,7 +1839,6 @@ function closeTravelerSelection(apply = true) {
   selectionOpen = false;
   resetKeyState();
   selectionOverlay.classList.remove('active');
-  unlockSelectionLandscape();
   syncSelectionViewport();
   syncMobileHud();
   syncMobileJoystickVisibility();
@@ -2136,12 +2010,6 @@ toggleObstacleBtn.addEventListener('click', () => {
 });
 mobileObstacleBtn.addEventListener('click', () => {
   setObstacleOverlayEnabled(!obstacleOverlayState.enabled);
-});
-toggleGyroBtn.addEventListener('click', async () => {
-  await setGyroEnabled(!mobileState.gyroWanted);
-});
-mobileGyroBtn.addEventListener('click', async () => {
-  await setGyroEnabled(!mobileState.gyroWanted);
 });
 mobileSelectionBtn.addEventListener('click', () => {
   openTravelerSelection(true);
@@ -2526,7 +2394,6 @@ if (skipSelectionOnLoad) {
 fitPageToViewport();
 syncFullscreenButton();
 syncMusicToggleButton();
-syncGyroToggleButton();
 syncSelectionViewport();
 syncMobileHud();
 syncMobileJoystickVisibility();
@@ -2536,9 +2403,9 @@ syncDeviceModeOverlay();
 registerServiceWorker();
 if (mobileState.isMobile) {
   setTimeout(() => {
-    activateMobileImmersive(false);
+    activateMobileImmersive();
     syncSelectionViewport();
-    if (selectionOpen) lockSelectionLandscape();
+    if (selectionOpen) lockMobileLandscape();
   }, 120);
 }
 requestAnimationFrame(loop);
