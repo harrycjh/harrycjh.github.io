@@ -258,7 +258,12 @@ def main() -> None:
     merged = ground_img.copy()
     merged.alpha_composite(sky_img)
     merged.save(preview_path, "PNG", optimize=True)
-    print(f"saved: {preview_path}")
+    ground_only = map_dir / "falan-city-1000-layer-ground.png"
+    sky_only = map_dir / "falan-city-1000-layer-sky.png"
+    ground_img.save(ground_only, "PNG", optimize=True)
+    sky_img.save(sky_only, "PNG", optimize=True)
+    for p in (preview_path, ground_only, sky_only):
+        print("saved:", p.as_posix().encode("ascii", "backslashreplace").decode("ascii"))
 
     tiles_dir = map_dir / "tiles-512"
     print("Slicing 512 webp tiles (ground + sky + merged fallback)...")
