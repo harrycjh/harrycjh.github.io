@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v3.99 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.00 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v3.99</title>
+<title>法兰城 v4.00</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v3.99</div>
+        <div class="version">v4.00</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v3.99</div>
+          <div class="play-version">v4.00</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1188,6 +1188,8 @@ const ENABLE_OBSTACLE_OVERLAY_LAYER = false;
 const obstacleOverlayState = {
   enabled: localStorage.getItem(obstacleOverlayStorageKey) === 'on'
 };
+/** 脚底椭圆阴影（帧动画内已含影子时关掉）。设为 true 可恢复。 */
+const ENABLE_PLAYER_FOOT_ELLIPSE_SHADOW = false;
 const speedBoostState = { enabled: false };
 const perfPanelState = {
   visible: localStorage.getItem(perfPanelStorageKey) !== 'off'
@@ -2024,13 +2026,14 @@ function drawSelectionPreview(tickMs) {
   const footY = Math.round(selectionPreviewCanvas.height * 0.7);
   const drawX = Math.round(footX - action.anchorX * drawScale);
   const drawY = Math.round(footY - action.anchorY * drawScale);
-  const shadowW = Math.max(14, Math.round(18 * drawScale));
-  const shadowH = Math.max(4, Math.round(6 * drawScale));
-
-  selectionPreviewCtx.fillStyle = 'rgba(8, 12, 9, 0.3)';
-  selectionPreviewCtx.beginPath();
-  selectionPreviewCtx.ellipse(footX, footY + 3, shadowW, shadowH, 0, 0, Math.PI * 2);
-  selectionPreviewCtx.fill();
+  if (ENABLE_PLAYER_FOOT_ELLIPSE_SHADOW) {
+    const shadowW = Math.max(14, Math.round(18 * drawScale));
+    const shadowH = Math.max(4, Math.round(6 * drawScale));
+    selectionPreviewCtx.fillStyle = 'rgba(8, 12, 9, 0.3)';
+    selectionPreviewCtx.beginPath();
+    selectionPreviewCtx.ellipse(footX, footY + 3, shadowW, shadowH, 0, 0, Math.PI * 2);
+    selectionPreviewCtx.fill();
+  }
 
   selectionPreviewCtx.drawImage(
     image,
@@ -2609,15 +2612,17 @@ function drawPlayer(tick = 0) {
   const bob = player.moving ? -Math.abs(walkPhase) * 3 : 0;
   const sway = player.moving && (player.dir === 'up' || player.dir === 'down') ? walkPhase * 1.1 : 0;
   const footY = point.y + 2;
-  const shadowY = footY + 2;
   const isCrossgateTraveler = Boolean(traveler.animationSet && crossgateAnimationSets[traveler.animationSet]);
-  const travelerScale = isCrossgateTraveler ? crossgateAnimationSets[traveler.animationSet].scale : 1;
-  const shadowW = (isCrossgateTraveler ? 28 * travelerScale : 12) + (player.moving ? Math.abs(walkPhase) * 3 : 0);
-  const shadowH = (isCrossgateTraveler ? 8 * travelerScale : 4.5) - (player.moving ? Math.abs(walkPhase) * 0.7 : 0);
-  ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
-  ctx.beginPath();
-  ctx.ellipse(point.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
-  ctx.fill();
+  if (ENABLE_PLAYER_FOOT_ELLIPSE_SHADOW) {
+    const shadowY = footY + 2;
+    const travelerScale = isCrossgateTraveler ? crossgateAnimationSets[traveler.animationSet].scale : 1;
+    const shadowW = (isCrossgateTraveler ? 28 * travelerScale : 12) + (player.moving ? Math.abs(walkPhase) * 3 : 0);
+    const shadowH = (isCrossgateTraveler ? 8 * travelerScale : 4.5) - (player.moving ? Math.abs(walkPhase) * 0.7 : 0);
+    ctx.fillStyle = 'rgba(12, 19, 14, 0.28)';
+    ctx.beginPath();
+    ctx.ellipse(point.x, shadowY, shadowW, shadowH, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   if (isCrossgateTraveler) {
     drawCrossgateTraveler(traveler, point, footY, tick);
@@ -2733,7 +2738,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=377', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=378', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
