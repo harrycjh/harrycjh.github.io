@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.00 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.01 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.00</title>
+<title>法兰城 v4.01</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.00</div>
+        <div class="version">v4.01</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.00</div>
+          <div class="play-version">v4.01</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1168,6 +1168,108 @@ const sceneMap = {
   baseY: -1578,
   scale: 1
 };
+
+const OBJECT_MAP_MANIFEST_URL = './assets/falan/object-map/falan-city-1000-manifest.json';
+/**
+ * true：按 manifest.objectItems 与人物共用等距排序键 (tx+ty, ty, tx)，逐物件绘制并穿插角色（走过去会在前/后遮挡）。
+ * false：整块 sky webp 叠在人物之上（旧行为）。manifest 未加载完成时自动回退为 webp。
+ */
+const USE_DEPTH_SORTED_OBJECTS = true;
+const objectMapState = {
+  ready: false,
+  assets: null,
+  objectItems: null,
+  atlasImages: null
+};
+
+function useSkyWebpTiles() {
+  return !USE_DEPTH_SORTED_OBJECTS || !objectMapState.ready;
+}
+
+function isoKey(tx, ty) {
+  return [tx + ty, ty, tx];
+}
+
+function compareIsoKey(a, b) {
+  for (let k = 0; k < 3; k += 1) {
+    if (a[k] < b[k]) return -1;
+    if (a[k] > b[k]) return 1;
+  }
+  return 0;
+}
+
+function drawOneMapObject(tx, ty, oid) {
+  if (!objectMapState.ready || !objectMapState.assets || !objectMapState.atlasImages) return;
+  const meta = objectMapState.assets[String(oid)];
+  if (!meta) return;
+  const atlas = objectMapState.atlasImages[meta.atlas];
+  if (!atlas || !atlas.complete || !atlas.naturalWidth) return;
+  const base = mapToPreview(tx, ty);
+  const drawX = Math.round(base.x + meta.ofsX - camera.x);
+  const drawY = Math.round(base.y + meta.ofsY - camera.y);
+  const rw = meta.atlasW;
+  const rh = meta.atlasH;
+  if (drawX + rw < 0 || drawY + rh < 0 || drawX > canvas.width || drawY > canvas.height) return;
+  ctx.drawImage(atlas, meta.atlasX, meta.atlasY, rw, rh, drawX, drawY, rw, rh);
+}
+
+function drawDepthSortedObjectsAndPlayer(tick) {
+  const items = objectMapState.objectItems;
+  if (!items || !items.length) {
+    drawPlayer(tick);
+    return;
+  }
+  const pKey = isoKey(player.tx, player.ty);
+  let i = 0;
+  let playerDrawn = false;
+  while (i < items.length) {
+    const [otx, oty, oid] = items[i];
+    const oKey = isoKey(otx, oty);
+    if (!playerDrawn && compareIsoKey(pKey, oKey) < 0) {
+      drawPlayer(tick);
+      playerDrawn = true;
+    }
+    drawOneMapObject(otx, oty, oid);
+    i += 1;
+  }
+  if (!playerDrawn) drawPlayer(tick);
+}
+
+async function loadObjectMapForDepth() {
+  if (!USE_DEPTH_SORTED_OBJECTS) return;
+  try {
+    const res = await fetch(OBJECT_MAP_MANIFEST_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const manifest = await res.json();
+    objectMapState.assets = manifest.assets;
+    objectMapState.objectItems = manifest.objectItems;
+    const names = manifest.atlases || [];
+    const imgs = {};
+    await Promise.all(
+      names.map(
+        (name) =>
+          new Promise((resolve, reject) => {
+            const img = new Image();
+            img.decoding = 'async';
+            img.onload = () => {
+              imgs[name] = img;
+              resolve();
+            };
+            img.onerror = () => reject(new Error(`atlas ${name}`));
+            img.src = `./assets/falan/object-map/atlases/${name}`;
+          })
+      )
+    );
+    objectMapState.atlasImages = imgs;
+    objectMapState.ready = true;
+    tileState.version += 1;
+    mapRenderState.dirty = true;
+  } catch (error) {
+    console.warn('object map manifest / atlas load failed, using sky webp tiles', error);
+    objectMapState.ready = false;
+  }
+}
+
 const travelerSprites = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.sprite)]));
 const selectionPreviewImages = Object.fromEntries(travelers.map((traveler) => [traveler.id, loadImage(traveler.preview)]));
 const crossgateSheetImages = Object.fromEntries(
@@ -1715,9 +1817,11 @@ function updateVisibleTiles() {
       const entryG = ensureTile('ground', col, row);
       entryG.lastUsed = tileState.frame;
       needed.add(tileKey('ground', col, row));
-      const entryS = ensureTile('sky', col, row);
-      entryS.lastUsed = tileState.frame;
-      needed.add(tileKey('sky', col, row));
+      if (useSkyWebpTiles()) {
+        const entryS = ensureTile('sky', col, row);
+        entryS.lastUsed = tileState.frame;
+        needed.add(tileKey('sky', col, row));
+      }
     }
   }
 
@@ -2444,7 +2548,9 @@ function renderMapLayer(sx, sy, sw, sh) {
   const bounds = updateVisibleTiles();
   drawLoadedTiles(mapLayerCtx, 'ground', bounds, sx, sy, sw, sh);
   drawCollisionOverlay(mapLayerCtx, sx, sy, sw, sh);
-  drawLoadedTiles(mapSkyLayerCtx, 'sky', bounds, sx, sy, sw, sh);
+  if (useSkyWebpTiles()) {
+    drawLoadedTiles(mapSkyLayerCtx, 'sky', bounds, sx, sy, sw, sh);
+  }
   mapRenderState.dirty = false;
   mapRenderState.sx = sx;
   mapRenderState.sy = sy;
@@ -2583,6 +2689,7 @@ function drawScene(tick) {
     }
   }
 
+  const depthObjects = USE_DEPTH_SORTED_OBJECTS && objectMapState.ready;
   const prevComposite = ctx.globalCompositeOperation;
   ctx.globalCompositeOperation = 'copy';
   if (perf) {
@@ -2592,14 +2699,22 @@ function drawScene(tick) {
     ctx.globalCompositeOperation = prevComposite;
 
     const tPlayer = performance.now();
-    drawPlayer(tick);
+    if (depthObjects) {
+      drawDepthSortedObjectsAndPlayer(tick);
+    } else {
+      drawPlayer(tick);
+      ctx.drawImage(mapSkyLayerCanvas, 0, 0);
+    }
     out.player = performance.now() - tPlayer;
-    ctx.drawImage(mapSkyLayerCanvas, 0, 0);
   } else {
     ctx.drawImage(mapLayerCanvas, 0, 0);
     ctx.globalCompositeOperation = prevComposite;
-    drawPlayer(tick);
-    ctx.drawImage(mapSkyLayerCanvas, 0, 0);
+    if (depthObjects) {
+      drawDepthSortedObjectsAndPlayer(tick);
+    } else {
+      drawPlayer(tick);
+      ctx.drawImage(mapSkyLayerCanvas, 0, 0);
+    }
   }
 
   return out;
@@ -2738,7 +2853,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=378', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=379', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
@@ -2781,6 +2896,7 @@ applyPerfPanelVisibility();
 registerServiceWorker().then(() => {
   if (skipSelectionOnLoad) void clearServiceWorkerCachesOncePerSession();
 });
+void loadObjectMapForDepth();
 if (mobileState.isMobile) {
   setTimeout(() => {
     activateMobileImmersive();
