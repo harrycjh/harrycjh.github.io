@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.02 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.03 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.02</title>
+<title>法兰城 v4.03</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.02</div>
+        <div class="version">v4.03</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.02</div>
+          <div class="play-version">v4.03</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1171,14 +1171,18 @@ const sceneMap = {
 
 const OBJECT_MAP_MANIFEST_URL = './assets/falan/object-map/falan-city-1000-manifest.json';
 /**
- * true：按 manifest.objectItems 与人物共用等距排序键 (tx+ty, ty, tx)，逐物件绘制并穿插角色（走过去会在前/后遮挡）。
- * false：整块 sky webp 叠在人物之上（旧行为）。manifest 未加载完成时自动回退为 webp。
+ * true：地面 webp + 图集物件分两层：中间层与人物穿插，天空层始终盖在人物上；未就绪时回退整块 sky webp。
+ * false：整块 sky webp 叠在人物之上（旧行为）。
  */
 const USE_DEPTH_SORTED_OBJECTS = true;
+/** GraphicInfo.flag 归入「天空层」（始终画在人物之上）；可按客户端再调，见 manifest 统计 */
+const OBJECT_SKY_FLAG_VALUES = new Set([45]);
 const objectMapState = {
   ready: false,
   assets: null,
   objectItems: null,
+  objectItemsMid: null,
+  objectItemsSky: null,
   atlasImages: null
 };
 
@@ -1213,8 +1217,28 @@ function drawOneMapObject(tx, ty, oid) {
   ctx.drawImage(atlas, meta.atlasX, meta.atlasY, rw, rh, drawX, drawY, rw, rh);
 }
 
-function drawDepthSortedObjectsAndPlayer(tick) {
-  const items = objectMapState.objectItems;
+function partitionObjectItemsMidSky(assets, items) {
+  const mid = [];
+  const sky = [];
+  if (!items || !assets) return { mid, sky };
+  for (let j = 0; j < items.length; j += 1) {
+    const row = items[j];
+    const oid = row[2];
+    const meta = assets[String(oid)];
+    const isSky = meta && OBJECT_SKY_FLAG_VALUES.has(meta.flag);
+    (isSky ? sky : mid).push(row);
+  }
+  return { mid, sky };
+}
+
+function sortItemsByIsoKey(items) {
+  if (!items || items.length <= 1) return items || [];
+  return [...items].sort((a, b) => compareIsoKey(isoKey(a[0], a[1]), isoKey(b[0], b[1])));
+}
+
+/** 中间层：与人物按等距键穿插（背后/身前） */
+function drawDepthSortedMiddleAndPlayer(tick) {
+  const items = objectMapState.objectItemsMid;
   if (!items || !items.length) {
     drawPlayer(tick);
     return;
@@ -1235,6 +1259,17 @@ function drawDepthSortedObjectsAndPlayer(tick) {
   if (!playerDrawn) drawPlayer(tick);
 }
 
+/** 天空层：始终在人物之上，组内仍按等距键排序 */
+function drawSkyObjectsLayer() {
+  const raw = objectMapState.objectItemsSky;
+  if (!raw || !raw.length) return;
+  const items = sortItemsByIsoKey(raw);
+  for (let i = 0; i < items.length; i += 1) {
+    const [otx, oty, oid] = items[i];
+    drawOneMapObject(otx, oty, oid);
+  }
+}
+
 async function loadObjectMapForDepth() {
   if (!USE_DEPTH_SORTED_OBJECTS) return;
   try {
@@ -1243,6 +1278,9 @@ async function loadObjectMapForDepth() {
     const manifest = await res.json();
     objectMapState.assets = manifest.assets;
     objectMapState.objectItems = manifest.objectItems;
+    const part = partitionObjectItemsMidSky(manifest.assets, manifest.objectItems);
+    objectMapState.objectItemsMid = part.mid;
+    objectMapState.objectItemsSky = part.sky;
     const names = manifest.atlases || [];
     const imgs = {};
     await Promise.all(
@@ -1267,6 +1305,8 @@ async function loadObjectMapForDepth() {
   } catch (error) {
     console.warn('object map manifest / atlas load failed, using sky webp tiles', error);
     objectMapState.ready = false;
+    objectMapState.objectItemsMid = null;
+    objectMapState.objectItemsSky = null;
   }
 }
 
@@ -2706,7 +2746,8 @@ function drawScene(tick) {
 
     const tPlayer = performance.now();
     if (depthObjects) {
-      drawDepthSortedObjectsAndPlayer(tick);
+      drawDepthSortedMiddleAndPlayer(tick);
+      drawSkyObjectsLayer();
     } else {
       drawPlayer(tick);
       ctx.drawImage(mapSkyLayerCanvas, 0, 0);
@@ -2716,7 +2757,8 @@ function drawScene(tick) {
     ctx.drawImage(mapLayerCanvas, 0, 0);
     ctx.globalCompositeOperation = prevComposite;
     if (depthObjects) {
-      drawDepthSortedObjectsAndPlayer(tick);
+      drawDepthSortedMiddleAndPlayer(tick);
+      drawSkyObjectsLayer();
     } else {
       drawPlayer(tick);
       ctx.drawImage(mapSkyLayerCanvas, 0, 0);
@@ -2776,9 +2818,14 @@ function drawCrossgateTraveler(traveler, point, footY, tick) {
   const animationSet = crossgateAnimationSets[traveler.animationSet];
   if (!animationSet) return;
   const dir = String(player.dir8 ?? 4);
-  const actionName = player.moving ? 'walk' : 'idle';
-  const action = animationSet.directions[dir]?.[actionName];
-  const image = crossgateSheetImages[`${traveler.animationSet}-${dir}-${actionName}`];
+  let actionName = player.moving ? 'walk' : 'idle';
+  let action = animationSet.directions[dir]?.[actionName];
+  let image = crossgateSheetImages[`${traveler.animationSet}-${dir}-${actionName}`];
+  if (player.moving && (!image?.complete || !image.naturalWidth)) {
+    actionName = 'idle';
+    action = animationSet.directions[dir]?.idle;
+    image = crossgateSheetImages[`${traveler.animationSet}-${dir}-idle`];
+  }
   if (!action || !image?.complete || !image.naturalWidth) return;
 
   const frameSpan = (action.durationMs / 16.6) / action.frameCount;
@@ -2859,7 +2906,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=380', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=381', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
