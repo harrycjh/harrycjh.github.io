@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.16 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.17 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.16</title>
+<title>法兰城 v4.17</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -47,7 +47,7 @@ body {
   padding: 10px;
 }
 .page {
-  width: min(1760px, calc(100vw - 20px));
+  width: min(2200px, calc(100vw - 20px));
   margin: 0;
   padding: 16px 0 18px;
   transform-origin: top center;
@@ -95,7 +95,7 @@ h1 {
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(380px, 0.78fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(760px, 1.56fr);
   gap: 16px;
 }
 .map-shell {
@@ -330,7 +330,7 @@ canvas {
 }
 .side-top-row {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(200px, 1fr);
+  grid-template-columns: minmax(0, 2fr) minmax(400px, 2fr);
   gap: 14px;
   align-items: start;
 }
@@ -890,7 +890,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.16</div>
+        <div class="version">v4.17</div>
       </div>
     </section>
 
@@ -899,7 +899,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.16</div>
+          <div class="play-version">v4.17</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -976,7 +976,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="perf-row"><span>深度·本帧件数</span><strong id="perfDepthCounts">—</strong></div>
             <div class="perf-row"><span>选人预览</span><strong id="perfSelection">—</strong></div>
           </div>
-          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。深度排序模式下「旅人」仅含角色精灵；「地图物件深度」为中间层+天空层合计（与下列细分之和一致）。中间层：整段穿插绘制；「图集 draw」为每张物件 <code>drawImage</code> 累计；「其它」为遍历、等距键比较、裁剪判断等。天空层：仅视口附近锚点格（与地面 <code>visibleGridBounds</code> 一致并加边距），再按等距键排序绘制。</p>
+          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。深度排序模式下「旅人」仅含角色精灵；「地图物件深度」为中间层+天空层合计（与下列细分之和一致）。中间层：整段穿插绘制；「图集 draw」为每张物件 <code>drawImage</code> 累计；「其它」为遍历、等距键比较、裁剪判断等。天空层：仅视口附近锚点格（与地面 <code>visibleGridBounds</code> 一致并加边距），再按等距键排序绘制；无 <code>spatialSky</code> 时不绘制天空图集。「深度·本帧件数」中 mid 为 <code>实际绘制数/中间层总数</code>。</p>
         </section>
         </div>
       </aside>
@@ -1258,6 +1258,7 @@ function drawOneMapObject(tx, ty, oid) {
     const rh = meta.atlasH;
     if (drawX + rw < 0 || drawY + rh < 0 || drawX > canvas.width || drawY > canvas.height) return;
     ctx.drawImage(atlas, meta.atlasX, meta.atlasY, rw, rh, drawX, drawY, rw, rh);
+    if (objectDepthDrawContext === 'mid') perfLastDepthMidDrawnCount += 1;
   } finally {
     if (t0 !== null && objectDepthDrawContext) {
       const dt = performance.now() - t0;
@@ -1316,6 +1317,7 @@ function sortItemsByIsoKey(items) {
 /** 中间层：与人物按等距键穿插（背后/身前） */
 function drawDepthSortedMiddleAndPlayer(tick) {
   const tWall = perfPanelState.visible ? performance.now() : null;
+  perfLastDepthMidDrawnCount = 0;
   const items = objectMapState.objectItemsMid;
   if (!items || !items.length) {
     perfLastDepthMidCount = 0;
@@ -1370,25 +1372,21 @@ function drawSkyObjectsLayer() {
   let items;
   let sortMs = 0;
   const cellMap = objectMapState.spatialSky;
-  if (cellMap && cellMap.size) {
-    const visibleSet = collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy);
-    const skyRows = [];
-    visibleSet.forEach((idx) => skyRows.push(raw[idx]));
-    if (perfPanelState.visible) {
-      const ts = performance.now();
-      items = sortItemsByIsoKey(skyRows);
-      sortMs = performance.now() - ts;
-    } else {
-      items = sortItemsByIsoKey(skyRows);
-    }
+  if (!cellMap || !cellMap.size) {
+    perfLastDepthSkyTotal = 0;
+    perfLastDepthSkySort = 0;
+    perfLastDepthSkyCount = 0;
+    return;
+  }
+  const visibleSet = collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy);
+  const skyRows = [];
+  visibleSet.forEach((idx) => skyRows.push(raw[idx]));
+  if (perfPanelState.visible) {
+    const ts = performance.now();
+    items = sortItemsByIsoKey(skyRows);
+    sortMs = performance.now() - ts;
   } else {
-    if (perfPanelState.visible) {
-      const ts = performance.now();
-      items = sortItemsByIsoKey(raw);
-      sortMs = performance.now() - ts;
-    } else {
-      items = sortItemsByIsoKey(raw);
-    }
+    items = sortItemsByIsoKey(skyRows);
   }
   perfLastDepthSkyCount = items.length;
   perfLastDepthSkySort = perfPanelState.visible ? sortMs : 0;
@@ -1502,6 +1500,8 @@ let perfLastDepthMidTotal = 0;
 let perfLastDepthSkyTotal = 0;
 let perfLastDepthSkySort = 0;
 let perfLastDepthMidCount = 0;
+/** 本帧中间层实际执行图集 drawImage 的次数（屏外裁剪不计入） */
+let perfLastDepthMidDrawnCount = 0;
 let perfLastDepthSkyCount = 0;
 const PERF_EMA_ALPHA = 0.12;
 const perfFpsCounter = { frames: 0, lastTime: 0, fps: 0 };
@@ -1535,7 +1535,7 @@ function syncPerfPanel() {
   perfDepthSkyDrawEl.textContent = formatPerfMs(perfEma.depthSkyDraw);
   perfDepthCountsEl.textContent =
     perfLastDepthMidCount > 0 || perfLastDepthSkyCount > 0
-      ? `mid ${perfLastDepthMidCount} · sky ${perfLastDepthSkyCount}`
+      ? `mid ${perfLastDepthMidDrawnCount}/${perfLastDepthMidCount} · sky ${perfLastDepthSkyCount}`
       : '—';
   perfSelectionEl.textContent = formatPerfMs(perfEma.selection);
 }
@@ -3108,7 +3108,7 @@ function loop(tick) {
 }
 
 /** 与根目录 VERSION 同步；变更后老用户会自动清空 SW + Cache Storage 并刷新一次 */
-const FALAN_BUILD_VERSION = '4.16';
+const FALAN_BUILD_VERSION = '4.17';
 const FALAN_CACHE_BUST_KEY = 'falan-build-version';
 
 /**
@@ -3183,7 +3183,7 @@ async function ensureCacheMatchesBuildVersion() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=396', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=397', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
