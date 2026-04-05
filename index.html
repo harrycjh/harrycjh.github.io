@@ -2948,10 +2948,83 @@ function loop(tick) {
   requestAnimationFrame(loop);
 }
 
+/** 与根目录 VERSION 同步；变更后老用户会自动清空 SW + Cache Storage 并刷新一次 */
+const FALAN_BUILD_VERSION = '4.13';
+const FALAN_CACHE_BUST_KEY = 'falan-build-version';
+
+/**
+ * 发布新版本时自动清缓存；也可手动打开 ?falan_nocache=1 强制清空（会去掉该参数并刷新）。
+ * 首次访问不整页刷新，仅写入版本号。
+ */
+async function ensureCacheMatchesBuildVersion() {
+  let params;
+  try {
+    params = new URLSearchParams(location.search);
+  } catch {
+    params = new URLSearchParams();
+  }
+  const forceNoCache = params.has('falan_nocache') || params.get('cache') === 'clear';
+  let prev = null;
+  try {
+    prev = localStorage.getItem(FALAN_CACHE_BUST_KEY);
+  } catch {
+    /* 隐私模式等 */
+  }
+  const needBust = forceNoCache || prev !== FALAN_BUILD_VERSION;
+  if (!needBust) return false;
+
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((name) => caches.delete(name)));
+    }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+  } catch (err) {
+    console.warn('falan: cache bust failed', err);
+  }
+
+  try {
+    tileState.cache.clear();
+    tileState.version += 1;
+    mapRenderState.dirty = true;
+  } catch {
+    /* bootstrap 早于 tileState 时不会执行到此处 */
+  }
+
+  try {
+    localStorage.setItem(FALAN_CACHE_BUST_KEY, FALAN_BUILD_VERSION);
+  } catch {
+    /* ignore */
+  }
+
+  const shouldReload = forceNoCache || (prev != null && prev !== '');
+  if (shouldReload) {
+    if (forceNoCache) {
+      try {
+        const u = new URL(location.href);
+        u.searchParams.delete('falan_nocache');
+        u.searchParams.delete('cache');
+        const next = u.pathname + (u.search || '') + u.hash;
+        location.replace(next);
+        return true;
+      } catch {
+        location.reload();
+        return true;
+      }
+    }
+    location.reload();
+    return true;
+  }
+  return false;
+}
+
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=392', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=393', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
@@ -2975,34 +3048,40 @@ async function clearServiceWorkerCachesOncePerSession() {
   }
 }
 
-updateCamera();
-syncInfo();
-renderSelectionGrid();
-if (skipSelectionOnLoad || HIDE_TRAVELER_SELECTION) {
-  closeTravelerSelection(false);
-} else {
-  openTravelerSelection(true);
+async function bootstrapFalan() {
+  if (await ensureCacheMatchesBuildVersion()) return;
+
+  updateCamera();
+  syncInfo();
+  renderSelectionGrid();
+  if (skipSelectionOnLoad || HIDE_TRAVELER_SELECTION) {
+    closeTravelerSelection(false);
+  } else {
+    openTravelerSelection(true);
+  }
+  syncResponsiveViewportState();
+  syncFullscreenButton();
+  syncMusicToggleButton();
+  syncMobileJoystickVisibility();
+  syncBgm();
+  syncObstacleToggleButton();
+  syncSpeedBoostButton();
+  applyPerfPanelVisibility();
+  registerServiceWorker().then(() => {
+    if (skipSelectionOnLoad) void clearServiceWorkerCachesOncePerSession();
+  });
+  void loadObjectMapForDepth();
+  if (mobileState.isMobile) {
+    setTimeout(() => {
+      activateMobileImmersive();
+      syncSelectionViewport();
+      if (selectionOpen) lockMobileLandscape();
+    }, 120);
+  }
+  requestAnimationFrame(loop);
 }
-syncResponsiveViewportState();
-syncFullscreenButton();
-syncMusicToggleButton();
-syncMobileJoystickVisibility();
-syncBgm();
-syncObstacleToggleButton();
-syncSpeedBoostButton();
-applyPerfPanelVisibility();
-registerServiceWorker().then(() => {
-  if (skipSelectionOnLoad) void clearServiceWorkerCachesOncePerSession();
-});
-void loadObjectMapForDepth();
-if (mobileState.isMobile) {
-  setTimeout(() => {
-    activateMobileImmersive();
-    syncSelectionViewport();
-    if (selectionOpen) lockMobileLandscape();
-  }, 120);
-}
-requestAnimationFrame(loop);
+
+void bootstrapFalan();
 </script>
 </body>
 </html>
