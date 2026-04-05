@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.15 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.16 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.15</title>
+<title>法兰城 v4.16</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -890,7 +890,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.15</div>
+        <div class="version">v4.16</div>
       </div>
     </section>
 
@@ -899,7 +899,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.15</div>
+          <div class="play-version">v4.16</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -976,7 +976,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="perf-row"><span>深度·本帧件数</span><strong id="perfDepthCounts">—</strong></div>
             <div class="perf-row"><span>选人预览</span><strong id="perfSelection">—</strong></div>
           </div>
-          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。深度排序模式下「旅人」仅含角色精灵；「地图物件深度」为中间层+天空层合计（与下列细分之和一致）。中间层：整段穿插绘制；「图集 draw」为每张物件 <code>drawImage</code> 累计；「其它」为遍历、等距键比较、裁剪判断等。天空层：先按等距键排序再绘制。</p>
+          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。深度排序模式下「旅人」仅含角色精灵；「地图物件深度」为中间层+天空层合计（与下列细分之和一致）。中间层：整段穿插绘制；「图集 draw」为每张物件 <code>drawImage</code> 累计；「其它」为遍历、等距键比较、裁剪判断等。天空层：仅视口附近锚点格（与地面 <code>visibleGridBounds</code> 一致并加边距），再按等距键排序绘制。</p>
         </section>
         </div>
       </aside>
@@ -1205,12 +1205,16 @@ const OBJECT_MAP_MANIFEST_URL = './assets/falan/object-map/falan-city-1000-manif
 const USE_DEPTH_SORTED_OBJECTS = true;
 /** GraphicInfo.flag 归入「天空层」（始终画在人物之上）；可按客户端再调，见 manifest 统计 */
 const OBJECT_SKY_FLAG_VALUES = new Set([45]);
+/** 天空层视口格裁剪：在 visibleGridBounds 外再扩几格，避免大物件锚点落在屏外但贴图仍入镜 */
+const OBJECT_SKY_GRID_MARGIN_CELLS = 6;
 const objectMapState = {
   ready: false,
   assets: null,
   objectItems: null,
   objectItemsMid: null,
   objectItemsSky: null,
+  /** 锚点格 (tx,ty) → objectItemsSky 下标列表 */
+  spatialSky: null,
   atlasImages: null
 };
 
@@ -1277,6 +1281,33 @@ function partitionObjectItemsMidSky(assets, items) {
   return { mid, sky };
 }
 
+/** 锚点格 → 该列表在 objectItemsSky 中的下标（与全局等距序无关，仅用于按格取候选） */
+function buildObjectCellIndex(items) {
+  const map = new Map();
+  if (!items?.length) return map;
+  for (let i = 0; i < items.length; i += 1) {
+    const tx = items[i][0];
+    const ty = items[i][1];
+    const key = `${tx},${ty}`;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(i);
+  }
+  return map;
+}
+
+function collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy) {
+  const set = new Set();
+  if (!cellMap || !cellMap.size) return set;
+  for (let ty = minTy; ty <= maxTy; ty += 1) {
+    for (let tx = minTx; tx <= maxTx; tx += 1) {
+      const list = cellMap.get(`${tx},${ty}`);
+      if (!list) continue;
+      for (let i = 0; i < list.length; i += 1) set.add(list[i]);
+    }
+  }
+  return set;
+}
+
 function sortItemsByIsoKey(items) {
   if (!items || items.length <= 1) return items || [];
   return [...items].sort((a, b) => compareIsoKey(isoKey(a[0], a[1]), isoKey(b[0], b[1])));
@@ -1315,7 +1346,7 @@ function drawDepthSortedMiddleAndPlayer(tick) {
   }
 }
 
-/** 天空层：始终在人物之上，组内仍按等距键排序 */
+/** 天空层：始终在人物之上；仅候选视口附近锚点格（与地面 visibleGridBounds 同源 + 额外边距） */
 function drawSkyObjectsLayer() {
   const raw = objectMapState.objectItemsSky;
   if (!raw || !raw.length) {
@@ -1325,14 +1356,39 @@ function drawSkyObjectsLayer() {
     return;
   }
   const tAll = perfPanelState.visible ? performance.now() : null;
+  const sx = Math.max(0, Math.floor(camera.x));
+  const sy = Math.max(0, Math.floor(camera.y));
+  const sw = Math.min(canvas.width, sceneMap.width - sx);
+  const sh = Math.min(canvas.height, sceneMap.height - sy);
+  const gb0 = visibleGridBounds(sx, sy, sw, sh);
+  const m = OBJECT_SKY_GRID_MARGIN_CELLS;
+  const minTx = clamp(gb0.minTx - m, 0, sceneMap.cols - 1);
+  const maxTx = clamp(gb0.maxTx + m, 0, sceneMap.cols - 1);
+  const minTy = clamp(gb0.minTy - m, 0, sceneMap.rows - 1);
+  const maxTy = clamp(gb0.maxTy + m, 0, sceneMap.rows - 1);
+
   let items;
   let sortMs = 0;
-  if (perfPanelState.visible) {
-    const ts = performance.now();
-    items = sortItemsByIsoKey(raw);
-    sortMs = performance.now() - ts;
+  const cellMap = objectMapState.spatialSky;
+  if (cellMap && cellMap.size) {
+    const visibleSet = collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy);
+    const skyRows = [];
+    visibleSet.forEach((idx) => skyRows.push(raw[idx]));
+    if (perfPanelState.visible) {
+      const ts = performance.now();
+      items = sortItemsByIsoKey(skyRows);
+      sortMs = performance.now() - ts;
+    } else {
+      items = sortItemsByIsoKey(skyRows);
+    }
   } else {
-    items = sortItemsByIsoKey(raw);
+    if (perfPanelState.visible) {
+      const ts = performance.now();
+      items = sortItemsByIsoKey(raw);
+      sortMs = performance.now() - ts;
+    } else {
+      items = sortItemsByIsoKey(raw);
+    }
   }
   perfLastDepthSkyCount = items.length;
   perfLastDepthSkySort = perfPanelState.visible ? sortMs : 0;
@@ -1359,6 +1415,7 @@ async function loadObjectMapForDepth() {
     const part = partitionObjectItemsMidSky(manifest.assets, manifest.objectItems);
     objectMapState.objectItemsMid = part.mid;
     objectMapState.objectItemsSky = part.sky;
+    objectMapState.spatialSky = buildObjectCellIndex(part.sky);
     const names = manifest.atlases || [];
     const imgs = {};
     await Promise.all(
@@ -1385,6 +1442,7 @@ async function loadObjectMapForDepth() {
     objectMapState.ready = false;
     objectMapState.objectItemsMid = null;
     objectMapState.objectItemsSky = null;
+    objectMapState.spatialSky = null;
   }
 }
 
@@ -3050,7 +3108,7 @@ function loop(tick) {
 }
 
 /** 与根目录 VERSION 同步；变更后老用户会自动清空 SW + Cache Storage 并刷新一次 */
-const FALAN_BUILD_VERSION = '4.15';
+const FALAN_BUILD_VERSION = '4.16';
 const FALAN_CACHE_BUST_KEY = 'falan-build-version';
 
 /**
@@ -3125,7 +3183,7 @@ async function ensureCacheMatchesBuildVersion() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=395', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=396', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
