@@ -1,4 +1,4 @@
-4.14
+4.15
 # 下次发布：本文件与 index.html、manifest.webmanifest 中的版本号均 +0.01
 # 同时把 index.html 里的 FALAN_BUILD_VERSION 改成相同版本，老用户才会自动清 SW/缓存
 # 手动强制清缓存：打开 ?falan_nocache=1
