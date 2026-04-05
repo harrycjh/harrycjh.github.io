@@ -1,5 +1,5 @@
-const SHELL_CACHE = 'falan-shell-v399';
-const RUNTIME_CACHE = 'falan-runtime-v399';
+const SHELL_CACHE = 'falan-shell-v400';
+const RUNTIME_CACHE = 'falan-runtime-v400';
 const PRECACHE_URLS = [
   './',
   './index.html',

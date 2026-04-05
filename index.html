@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.16 · 发布版本见根目录 VERSION，每次 +0.01 · 本构建含原 4.17～4.18 功能 -->
+<!-- 法兰城 v4.17 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.16</title>
+<title>法兰城 v4.17</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -909,7 +909,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.16</div>
+        <div class="version">v4.17</div>
       </div>
     </section>
 
@@ -918,7 +918,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.16</div>
+          <div class="play-version">v4.17</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -987,15 +987,9 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="perf-row"><span>贴图到主画布</span><strong id="perfBlit">—</strong></div>
             <div class="perf-row"><span>旅人绘制</span><strong id="perfPlayer">—</strong></div>
             <div class="perf-row"><span>地图物件深度</span><strong id="perfObjectSprites">—</strong></div>
-            <div class="perf-row"><span>深度·中间层合计</span><strong id="perfDepthMidTotal">—</strong></div>
-            <div class="perf-row"><span>深度·中间层图集 draw</span><strong id="perfDepthMidDraw">—</strong></div>
-            <div class="perf-row"><span>深度·中间层其它</span><strong id="perfDepthMidOther">—</strong></div>
-            <div class="perf-row"><span>深度·天空排序</span><strong id="perfDepthSkySort">—</strong></div>
-            <div class="perf-row"><span>深度·天空图集 draw</span><strong id="perfDepthSkyDraw">—</strong></div>
-            <div class="perf-row"><span>深度·本帧件数</span><strong id="perfDepthCounts">—</strong></div>
             <div class="perf-row"><span>选人预览</span><strong id="perfSelection">—</strong></div>
           </div>
-          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。深度排序模式下「旅人」仅含角色精灵；「地图物件深度」为中间层+天空层合计（与下列细分之和一致）。中间层：整段穿插绘制；「图集 draw」为每张物件 <code>drawImage</code> 累计；「其它」为遍历、等距键比较、裁剪判断等。天空层：仅视口附近锚点格（与地面 <code>visibleGridBounds</code> 一致并加边距），再按等距键排序绘制；无 <code>spatialSky</code> 时不绘制天空图集。「深度·本帧件数」中 mid 为 <code>实际绘制数/中间层总数</code>。</p>
+          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。深度排序模式下「旅人」仅含角色精灵；「地图物件深度」为中间层与天空层图集绘制合计。</p>
         </section>
         </div>
       </aside>
@@ -1119,12 +1113,6 @@ const perfRenderMapEl = document.getElementById('perfRenderMap');
 const perfBlitEl = document.getElementById('perfBlit');
 const perfPlayerEl = document.getElementById('perfPlayer');
 const perfObjectSpritesEl = document.getElementById('perfObjectSprites');
-const perfDepthMidTotalEl = document.getElementById('perfDepthMidTotal');
-const perfDepthMidDrawEl = document.getElementById('perfDepthMidDraw');
-const perfDepthMidOtherEl = document.getElementById('perfDepthMidOther');
-const perfDepthSkySortEl = document.getElementById('perfDepthSkySort');
-const perfDepthSkyDrawEl = document.getElementById('perfDepthSkyDraw');
-const perfDepthCountsEl = document.getElementById('perfDepthCounts');
 const perfSelectionEl = document.getElementById('perfSelection');
 const skipSelectionOnLoad = new URLSearchParams(window.location.search).has('skipSelection');
 selectionPreviewCtx.imageSmoothingEnabled = false;
@@ -1262,29 +1250,19 @@ function cameraViewportOrigin() {
 }
 
 function drawOneMapObject(tx, ty, oid) {
-  const t0 = perfPanelState.visible && objectDepthDrawContext ? performance.now() : null;
-  try {
-    if (!objectMapState.ready || !objectMapState.assets || !objectMapState.atlasImages) return;
-    const meta = objectMapState.assets[String(oid)];
-    if (!meta) return;
-    const atlas = objectMapState.atlasImages[meta.atlas];
-    if (!atlas || !atlas.complete || !atlas.naturalWidth) return;
-    const base = mapToPreview(tx, ty);
-    const { sx, sy } = cameraViewportOrigin();
-    const drawX = Math.round(base.x + meta.ofsX - sx);
-    const drawY = Math.round(base.y + meta.ofsY - sy);
-    const rw = meta.atlasW;
-    const rh = meta.atlasH;
-    if (drawX + rw < 0 || drawY + rh < 0 || drawX > canvas.width || drawY > canvas.height) return;
-    ctx.drawImage(atlas, meta.atlasX, meta.atlasY, rw, rh, drawX, drawY, rw, rh);
-    if (objectDepthDrawContext === 'mid') perfLastDepthMidDrawnCount += 1;
-  } finally {
-    if (t0 !== null && objectDepthDrawContext) {
-      const dt = performance.now() - t0;
-      if (objectDepthDrawContext === 'mid') perfDepthAcc.midDrawMs += dt;
-      else if (objectDepthDrawContext === 'sky') perfDepthAcc.skyDrawMs += dt;
-    }
-  }
+  if (!objectMapState.ready || !objectMapState.assets || !objectMapState.atlasImages) return;
+  const meta = objectMapState.assets[String(oid)];
+  if (!meta) return;
+  const atlas = objectMapState.atlasImages[meta.atlas];
+  if (!atlas || !atlas.complete || !atlas.naturalWidth) return;
+  const base = mapToPreview(tx, ty);
+  const { sx, sy } = cameraViewportOrigin();
+  const drawX = Math.round(base.x + meta.ofsX - sx);
+  const drawY = Math.round(base.y + meta.ofsY - sy);
+  const rw = meta.atlasW;
+  const rh = meta.atlasH;
+  if (drawX + rw < 0 || drawY + rh < 0 || drawX > canvas.width || drawY > canvas.height) return;
+  ctx.drawImage(atlas, meta.atlasX, meta.atlasY, rw, rh, drawX, drawY, rw, rh);
 }
 
 function partitionObjectItemsMidSky(assets, items) {
@@ -1335,48 +1313,31 @@ function sortItemsByIsoKey(items) {
 
 /** 中间层：与人物按等距键穿插（背后/身前） */
 function drawDepthSortedMiddleAndPlayer(tick) {
-  const tWall = perfPanelState.visible ? performance.now() : null;
-  perfLastDepthMidDrawnCount = 0;
   const items = objectMapState.objectItemsMid;
   if (!items || !items.length) {
-    perfLastDepthMidCount = 0;
     drawPlayer(tick);
-    if (tWall !== null) perfLastDepthMidTotal = performance.now() - tWall;
     return;
   }
-  perfLastDepthMidCount = items.length;
-  objectDepthDrawContext = 'mid';
-  try {
-    const pKey = isoKey(player.tx, player.ty);
-    let i = 0;
-    let playerDrawn = false;
-    while (i < items.length) {
-      const [otx, oty, oid] = items[i];
-      const oKey = isoKey(otx, oty);
-      if (!playerDrawn && compareIsoKey(pKey, oKey) < 0) {
-        drawPlayer(tick);
-        playerDrawn = true;
-      }
-      drawOneMapObject(otx, oty, oid);
-      i += 1;
+  const pKey = isoKey(player.tx, player.ty);
+  let i = 0;
+  let playerDrawn = false;
+  while (i < items.length) {
+    const [otx, oty, oid] = items[i];
+    const oKey = isoKey(otx, oty);
+    if (!playerDrawn && compareIsoKey(pKey, oKey) < 0) {
+      drawPlayer(tick);
+      playerDrawn = true;
     }
-    if (!playerDrawn) drawPlayer(tick);
-  } finally {
-    objectDepthDrawContext = null;
-    if (tWall !== null) perfLastDepthMidTotal = performance.now() - tWall;
+    drawOneMapObject(otx, oty, oid);
+    i += 1;
   }
+  if (!playerDrawn) drawPlayer(tick);
 }
 
 /** 天空层：始终在人物之上；仅候选视口附近锚点格（与地面 visibleGridBounds 同源 + 额外边距） */
 function drawSkyObjectsLayer() {
   const raw = objectMapState.objectItemsSky;
-  if (!raw || !raw.length) {
-    perfLastDepthSkyTotal = 0;
-    perfLastDepthSkySort = 0;
-    perfLastDepthSkyCount = 0;
-    return;
-  }
-  const tAll = perfPanelState.visible ? performance.now() : null;
+  if (!raw || !raw.length) return;
   const sx = Math.max(0, Math.floor(camera.x));
   const sy = Math.max(0, Math.floor(camera.y));
   const sw = Math.min(canvas.width, sceneMap.width - sx);
@@ -1388,36 +1349,15 @@ function drawSkyObjectsLayer() {
   const minTy = clamp(gb0.minTy - m, 0, sceneMap.rows - 1);
   const maxTy = clamp(gb0.maxTy + m, 0, sceneMap.rows - 1);
 
-  let items;
-  let sortMs = 0;
   const cellMap = objectMapState.spatialSky;
-  if (!cellMap || !cellMap.size) {
-    perfLastDepthSkyTotal = 0;
-    perfLastDepthSkySort = 0;
-    perfLastDepthSkyCount = 0;
-    return;
-  }
+  if (!cellMap || !cellMap.size) return;
   const visibleSet = collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy);
   const skyRows = [];
   visibleSet.forEach((idx) => skyRows.push(raw[idx]));
-  if (perfPanelState.visible) {
-    const ts = performance.now();
-    items = sortItemsByIsoKey(skyRows);
-    sortMs = performance.now() - ts;
-  } else {
-    items = sortItemsByIsoKey(skyRows);
-  }
-  perfLastDepthSkyCount = items.length;
-  perfLastDepthSkySort = perfPanelState.visible ? sortMs : 0;
-  objectDepthDrawContext = 'sky';
-  try {
-    for (let i = 0; i < items.length; i += 1) {
-      const [otx, oty, oid] = items[i];
-      drawOneMapObject(otx, oty, oid);
-    }
-  } finally {
-    objectDepthDrawContext = null;
-    if (tAll !== null) perfLastDepthSkyTotal = performance.now() - tAll;
+  const items = sortItemsByIsoKey(skyRows);
+  for (let i = 0; i < items.length; i += 1) {
+    const [otx, oty, oid] = items[i];
+    drawOneMapObject(otx, oty, oid);
   }
 }
 
@@ -1503,25 +1443,10 @@ const perfEma = {
   blit: 0,
   player: 0,
   objectSprites: 0,
-  depthMidTotal: 0,
-  depthMidDraw: 0,
-  depthMidOther: 0,
-  depthSkySort: 0,
-  depthSkyDraw: 0,
   selection: 0
 };
 /** 本帧 drawPlayer 纯耗时（深度模式下由 drawPlayer 内测量） */
 let perfLastPlayerDrawMs = 0;
-/** 深度绘制：drawOneMapObject 累计（仅 perf 面板开启且处于 mid/sky 穿插阶段） */
-const perfDepthAcc = { midDrawMs: 0, skyDrawMs: 0 };
-let objectDepthDrawContext = null;
-let perfLastDepthMidTotal = 0;
-let perfLastDepthSkyTotal = 0;
-let perfLastDepthSkySort = 0;
-let perfLastDepthMidCount = 0;
-/** 本帧中间层实际执行图集 drawImage 的次数（屏外裁剪不计入） */
-let perfLastDepthMidDrawnCount = 0;
-let perfLastDepthSkyCount = 0;
 const PERF_EMA_ALPHA = 0.12;
 const perfFpsCounter = { frames: 0, lastTime: 0, fps: 0 };
 let uiSyncFrameCounter = 0;
@@ -1547,15 +1472,6 @@ function syncPerfPanel() {
   perfBlitEl.textContent = formatPerfMs(perfEma.blit);
   perfPlayerEl.textContent = formatPerfMs(perfEma.player);
   perfObjectSpritesEl.textContent = formatPerfMs(perfEma.objectSprites);
-  perfDepthMidTotalEl.textContent = formatPerfMs(perfEma.depthMidTotal);
-  perfDepthMidDrawEl.textContent = formatPerfMs(perfEma.depthMidDraw);
-  perfDepthMidOtherEl.textContent = formatPerfMs(perfEma.depthMidOther);
-  perfDepthSkySortEl.textContent = formatPerfMs(perfEma.depthSkySort);
-  perfDepthSkyDrawEl.textContent = formatPerfMs(perfEma.depthSkyDraw);
-  perfDepthCountsEl.textContent =
-    perfLastDepthMidCount > 0 || perfLastDepthSkyCount > 0
-      ? `mid ${perfLastDepthMidDrawnCount}/${perfLastDepthMidCount} · sky ${perfLastDepthSkyCount}`
-      : '—';
   perfSelectionEl.textContent = formatPerfMs(perfEma.selection);
 }
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 2000, directionOrder: [5, 6, 7, 0, 1, 2, 3, 4] };
@@ -2896,18 +2812,7 @@ function tryMoveWithCollision(dtx, dty) {
 }
 
 function drawScene(tick) {
-  const out = {
-    renderMap: 0,
-    blit: 0,
-    player: 0,
-    objectSprites: 0,
-    depthMidTotal: 0,
-    depthMidDraw: 0,
-    depthMidOther: 0,
-    depthSkySort: 0,
-    depthSkyDraw: 0,
-    depthSkyTotal: 0
-  };
+  const out = { renderMap: 0, blit: 0, player: 0, objectSprites: 0 };
   const perf = perfPanelState.visible;
   const sx = Math.max(0, Math.floor(camera.x));
   const sy = Math.max(0, Math.floor(camera.y));
@@ -2943,19 +2848,11 @@ function drawScene(tick) {
     perfLastPlayerDrawMs = 0;
     const tPlayer = performance.now();
     if (depthObjects) {
-      perfDepthAcc.midDrawMs = 0;
-      perfDepthAcc.skyDrawMs = 0;
       drawDepthSortedMiddleAndPlayer(tick);
       drawSkyObjectsLayer();
       const tAfter = performance.now();
       out.player = perfLastPlayerDrawMs;
       out.objectSprites = Math.max(0, tAfter - tPlayer - perfLastPlayerDrawMs);
-      out.depthMidTotal = perfLastDepthMidTotal;
-      out.depthMidDraw = perfDepthAcc.midDrawMs;
-      out.depthMidOther = Math.max(0, perfLastDepthMidTotal - perfLastPlayerDrawMs - perfDepthAcc.midDrawMs);
-      out.depthSkySort = perfLastDepthSkySort;
-      out.depthSkyDraw = perfDepthAcc.skyDrawMs;
-      out.depthSkyTotal = perfLastDepthSkyTotal;
     } else {
       drawPlayer(tick);
       ctx.drawImage(mapSkyLayerCanvas, 0, 0);
@@ -3100,11 +2997,6 @@ function loop(tick) {
   perfTouch('blit', scene.blit);
   perfTouch('player', scene.player);
   perfTouch('objectSprites', scene.objectSprites);
-  perfTouch('depthMidTotal', scene.depthMidTotal);
-  perfTouch('depthMidDraw', scene.depthMidDraw);
-  perfTouch('depthMidOther', scene.depthMidOther);
-  perfTouch('depthSkySort', scene.depthSkySort);
-  perfTouch('depthSkyDraw', scene.depthSkyDraw);
   t = performance.now();
   if (selectionOpen) drawSelectionPreview(tick);
   perfTouch('selection', performance.now() - t);
@@ -3124,7 +3016,7 @@ function loop(tick) {
 }
 
 /** 与根目录 VERSION 同步；变更后老用户会自动清空 SW + Cache Storage 并刷新一次 */
-const FALAN_BUILD_VERSION = '4.16';
+const FALAN_BUILD_VERSION = '4.17';
 const FALAN_CACHE_BUST_KEY = 'falan-build-version';
 
 /**
@@ -3199,7 +3091,7 @@ async function ensureCacheMatchesBuildVersion() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=399', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=400', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
