@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.05 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.06 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.05</title>
+<title>法兰城 v4.06</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -884,7 +884,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.05</div>
+        <div class="version">v4.06</div>
       </div>
     </section>
 
@@ -893,7 +893,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.05</div>
+          <div class="play-version">v4.06</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -961,9 +961,10 @@ body.mobile-play-only.mobile-force-landscape canvas {
             <div class="perf-row"><span>渲染地图层</span><strong id="perfRenderMap">—</strong></div>
             <div class="perf-row"><span>贴图到主画布</span><strong id="perfBlit">—</strong></div>
             <div class="perf-row"><span>旅人绘制</span><strong id="perfPlayer">—</strong></div>
+            <div class="perf-row"><span>地图物件深度</span><strong id="perfObjectSprites">—</strong></div>
             <div class="perf-row"><span>选人预览</span><strong id="perfSelection">—</strong></div>
           </div>
-          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。</p>
+          <p class="perf-hint">各行为本帧耗时；除整帧与 FPS 外为指数滑动平均（约 12 帧趋稳）。地图层仅在相机/切块变化时重绘。深度排序模式下「旅人」仅含角色精灵；「地图物件深度」为中间层+天空层图集绘制。</p>
         </section>
         </div>
       </aside>
@@ -1086,6 +1087,7 @@ const perfSyncInfoEl = document.getElementById('perfSyncInfo');
 const perfRenderMapEl = document.getElementById('perfRenderMap');
 const perfBlitEl = document.getElementById('perfBlit');
 const perfPlayerEl = document.getElementById('perfPlayer');
+const perfObjectSpritesEl = document.getElementById('perfObjectSprites');
 const perfSelectionEl = document.getElementById('perfSelection');
 const skipSelectionOnLoad = new URLSearchParams(window.location.search).has('skipSelection');
 selectionPreviewCtx.imageSmoothingEnabled = false;
@@ -1358,8 +1360,11 @@ const perfEma = {
   renderMap: 0,
   blit: 0,
   player: 0,
+  objectSprites: 0,
   selection: 0
 };
+/** 本帧 drawPlayer 纯耗时（深度模式下由 drawPlayer 内测量） */
+let perfLastPlayerDrawMs = 0;
 const PERF_EMA_ALPHA = 0.12;
 const perfFpsCounter = { frames: 0, lastTime: 0, fps: 0 };
 let uiSyncFrameCounter = 0;
@@ -1384,6 +1389,7 @@ function syncPerfPanel() {
   perfRenderMapEl.textContent = formatPerfMs(perfEma.renderMap);
   perfBlitEl.textContent = formatPerfMs(perfEma.blit);
   perfPlayerEl.textContent = formatPerfMs(perfEma.player);
+  perfObjectSpritesEl.textContent = formatPerfMs(perfEma.objectSprites);
   perfSelectionEl.textContent = formatPerfMs(perfEma.selection);
 }
 const selectionPreviewState = { travelerId: travelers[Math.max(travelerIndex, 0)]?.id ?? 'dog', animationSet: null, directionDurationMs: 2000, directionOrder: [5, 6, 7, 0, 1, 2, 3, 4] };
@@ -2724,7 +2730,7 @@ function tryMoveWithCollision(dtx, dty) {
 }
 
 function drawScene(tick) {
-  const out = { renderMap: 0, blit: 0, player: 0 };
+  const out = { renderMap: 0, blit: 0, player: 0, objectSprites: 0 };
   const perf = perfPanelState.visible;
   const sx = Math.max(0, Math.floor(camera.x));
   const sy = Math.max(0, Math.floor(camera.y));
@@ -2757,15 +2763,20 @@ function drawScene(tick) {
     out.blit = performance.now() - tBlit;
     ctx.globalCompositeOperation = prevComposite;
 
+    perfLastPlayerDrawMs = 0;
     const tPlayer = performance.now();
     if (depthObjects) {
       drawDepthSortedMiddleAndPlayer(tick);
       drawSkyObjectsLayer();
+      const tAfter = performance.now();
+      out.player = perfLastPlayerDrawMs;
+      out.objectSprites = Math.max(0, tAfter - tPlayer - perfLastPlayerDrawMs);
     } else {
       drawPlayer(tick);
       ctx.drawImage(mapSkyLayerCanvas, 0, 0);
+      out.player = performance.now() - tPlayer;
+      out.objectSprites = 0;
     }
-    out.player = performance.now() - tPlayer;
   } else {
     ctx.drawImage(mapLayerCanvas, 0, 0);
     ctx.globalCompositeOperation = prevComposite;
@@ -2782,6 +2793,8 @@ function drawScene(tick) {
 }
 
 function drawPlayer(tick = 0) {
+  const tPerf0 = perfPanelState.visible ? performance.now() : null;
+  try {
   const traveler = travelers[travelerIndex];
   const point = mapToScreen(player.tx, player.ty);
   const walkPhase = player.moving ? Math.sin(player.step) : 0;
@@ -2824,6 +2837,9 @@ function drawPlayer(tick = 0) {
     ctx.restore();
   } else {
     ctx.drawImage(sprite, frame * spriteFrameWidth, 0, spriteFrameWidth, spriteFrameHeight, drawX, drawY, drawW, drawH);
+  }
+  } finally {
+    if (tPerf0 !== null) perfLastPlayerDrawMs = performance.now() - tPerf0;
   }
 }
 
@@ -2898,6 +2914,7 @@ function loop(tick) {
   perfTouch('renderMap', scene.renderMap);
   perfTouch('blit', scene.blit);
   perfTouch('player', scene.player);
+  perfTouch('objectSprites', scene.objectSprites);
   t = performance.now();
   drawSelectionPreview(tick);
   perfTouch('selection', performance.now() - t);
@@ -2919,7 +2936,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=383', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=384', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
