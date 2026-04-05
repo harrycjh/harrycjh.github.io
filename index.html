@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.07 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.08 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.07</title>
+<title>法兰城 v4.08</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -514,6 +514,10 @@ button:hover {
   opacity: 1;
   pointer-events: auto;
 }
+/* HIDE_TRAVELER_SELECTION 时关闭遮罩，避免全屏 backdrop-filter 仍参与合成 */
+.selection-overlay.selection-overlay--idle:not(.active) {
+  display: none !important;
+}
 .selection-overlay.mobile-mode {
   padding: 0;
   background:
@@ -884,7 +888,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.07</div>
+        <div class="version">v4.08</div>
       </div>
     </section>
 
@@ -893,7 +897,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.07</div>
+          <div class="play-version">v4.08</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1696,6 +1700,7 @@ function unlockMobileLandscape() {
 }
 
 function syncSelectionViewport() {
+  if (HIDE_TRAVELER_SELECTION && !selectionOpen) return;
   const mobileMode = refreshMobileMode();
   const portraitMode = mobileMode && isPortraitViewport();
   selectionOverlay.classList.toggle('mobile-mode', mobileMode);
@@ -2246,6 +2251,7 @@ function renderSelectionGrid() {
 }
 
 function openTravelerSelection(resetPending = true) {
+  if (HIDE_TRAVELER_SELECTION) selectionOverlay.classList.remove('selection-overlay--idle');
   if (resetPending) pendingTravelerIndex = travelerIndex;
   selectionOpen = true;
   resetKeyState();
@@ -2269,6 +2275,7 @@ function closeTravelerSelection(apply = true) {
   selectionOpen = false;
   resetKeyState();
   selectionOverlay.classList.remove('active');
+  if (HIDE_TRAVELER_SELECTION) selectionOverlay.classList.add('selection-overlay--idle');
   syncSelectionViewport();
   syncMobileHud();
   syncMobileJoystickVisibility();
@@ -2896,7 +2903,7 @@ function loop(tick) {
     }
     uiSyncFrameCounter += 1;
     drawScene(tick / 16.6);
-    drawSelectionPreview(tick);
+    if (selectionOpen) drawSelectionPreview(tick);
     requestAnimationFrame(loop);
     return;
   }
@@ -2924,7 +2931,7 @@ function loop(tick) {
   perfTouch('player', scene.player);
   perfTouch('objectSprites', scene.objectSprites);
   t = performance.now();
-  drawSelectionPreview(tick);
+  if (selectionOpen) drawSelectionPreview(tick);
   perfTouch('selection', performance.now() - t);
   perfTouch('frame', performance.now() - tFrame0);
 
@@ -2944,7 +2951,7 @@ function loop(tick) {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=385', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=386', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
