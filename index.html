@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.30 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.31 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.30</title>
+<title>法兰城 v4.31</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -909,7 +909,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.30</div>
+        <div class="version">v4.31</div>
       </div>
     </section>
 
@@ -918,7 +918,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.30</div>
+          <div class="play-version">v4.31</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1249,6 +1249,30 @@ const TELEPORT_CRYSTAL_SLOTS = [
   { itx: 146, ity: 158, sortTx: 146, sortTy: 158, refOid: 17239, animKey: '__tc_5' },
   { itx: 146, ity: 135, sortTx: 146, sortTy: 135, refOid: 17239, animKey: '__tc_6' }
 ];
+
+/**
+ * 传送网络（两组三角）：
+ * 组 1: __tc_0 -> __tc_1 -> __tc_2 -> __tc_0
+ * 组 2: __tc_3 -> __tc_4 -> __tc_5 -> __tc_3
+ * 说明：按当前需求只纳入 6 个点；__tc_6 保留显示，不参与自动传送。
+ */
+const TELEPORT_TRIANGLE_GROUPS = [
+  [0, 1, 2],
+  [3, 4, 5]
+];
+const TELEPORT_LINKS = new Map();
+for (let gi = 0; gi < TELEPORT_TRIANGLE_GROUPS.length; gi += 1) {
+  const group = TELEPORT_TRIANGLE_GROUPS[gi];
+  for (let i = 0; i < group.length; i += 1) {
+    TELEPORT_LINKS.set(group[i], group[(i + 1) % group.length]);
+  }
+}
+const TELEPORT_TRIGGER_RADIUS = 0.38;
+const TELEPORT_COOLDOWN_MS = 280;
+const teleportState = {
+  activeSlot: -1,
+  cooldownUntil: 0
+};
 
 /** 移除合成 oid、释放拆帧位图 / 隐藏 img 容器 */
 function disposeTeleportCrystalAnimation() {
@@ -2402,6 +2426,54 @@ function teleportToDisplayCoord() {
   setTeleportStatus(`已传送到 ${clampedDisplayX.toFixed(1)}, ${clampedDisplayY.toFixed(1)}。`);
 }
 
+function findTeleportSlotAt(tx, ty) {
+  let hit = -1;
+  let bestDist2 = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < TELEPORT_CRYSTAL_SLOTS.length; i += 1) {
+    if (!TELEPORT_LINKS.has(i)) continue;
+    const slot = TELEPORT_CRYSTAL_SLOTS[i];
+    const dx = tx - slot.itx;
+    const dy = ty - slot.ity;
+    const dist2 = dx * dx + dy * dy;
+    if (dist2 <= TELEPORT_TRIGGER_RADIUS * TELEPORT_TRIGGER_RADIUS && dist2 < bestDist2) {
+      bestDist2 = dist2;
+      hit = i;
+    }
+  }
+  return hit;
+}
+
+function tryTeleportByCrystalLink(nowMs = performance.now()) {
+  if (nowMs < teleportState.cooldownUntil) return false;
+  const fromIdx = findTeleportSlotAt(player.tx, player.ty);
+  if (fromIdx < 0) {
+    teleportState.activeSlot = -1;
+    return false;
+  }
+  if (fromIdx === teleportState.activeSlot) return false;
+  const toIdx = TELEPORT_LINKS.get(fromIdx);
+  if (toIdx == null) {
+    teleportState.activeSlot = fromIdx;
+    return false;
+  }
+  const toSlot = TELEPORT_CRYSTAL_SLOTS[toIdx];
+  player.tx = toSlot.itx;
+  player.ty = toSlot.ity;
+  player.dir8 = 4;
+  player.moving = false;
+  player.step = 0;
+  resetKeyState();
+  updateCamera();
+  syncInfo();
+  syncBgm();
+  teleportState.activeSlot = toIdx;
+  teleportState.cooldownUntil = nowMs + TELEPORT_COOLDOWN_MS;
+  const fromDisplay = internalToDisplay(TELEPORT_CRYSTAL_SLOTS[fromIdx].itx, TELEPORT_CRYSTAL_SLOTS[fromIdx].ity);
+  const toDisplay = internalToDisplay(toSlot.itx, toSlot.ity);
+  setTeleportStatus(`水晶传送：(${fromDisplay.tx.toFixed(0)}, ${fromDisplay.ty.toFixed(0)}) -> (${toDisplay.tx.toFixed(0)}, ${toDisplay.ty.toFixed(0)})`);
+  return true;
+}
+
 function resetKeyState() {
   keyState.up = false;
   keyState.down = false;
@@ -2850,6 +2922,7 @@ function updatePlayer() {
     player.step += 0.22;
     syncBgm();
   }
+  tryTeleportByCrystalLink();
 }
 
 function resolveDir8FromKeys(fallback = 4) {
@@ -3220,7 +3293,7 @@ function loop(tick) {
 }
 
 /** 与根目录 VERSION 同步；变更后老用户会自动清空 SW + Cache Storage 并刷新一次 */
-const FALAN_BUILD_VERSION = '4.30';
+const FALAN_BUILD_VERSION = '4.31';
 const FALAN_CACHE_BUST_KEY = 'falan-build-version';
 
 /**
@@ -3295,7 +3368,7 @@ async function ensureCacheMatchesBuildVersion() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=413', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=414', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
