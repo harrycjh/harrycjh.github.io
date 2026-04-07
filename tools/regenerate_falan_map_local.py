@@ -15,7 +15,7 @@
 
 用法（在 tools 目录或任意目录）：
   python regenerate_falan_map_local.py
-  python regenerate_falan_map_local.py --game-root "D:/path/to/魔力宝贝6.02"
+  python regenerate_falan_map_local.py --game-root "D:/path/to/crossgate"
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import json
 import sys
 from pathlib import Path
 
-# tools/ -> harrycjh.github.io -> 魔力宝贝6.02
+# tools/ -> harrycjh.github.io -> crossgate（仓库根）
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _DEFAULT_GAME_ROOT = _REPO_ROOT.parent
 
