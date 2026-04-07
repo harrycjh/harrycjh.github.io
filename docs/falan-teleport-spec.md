@@ -420,7 +420,8 @@ function calculateSortKey(tx, ty, refOid = 0) {
 
 | 版本 | 更新内容 |
 |------|----------|
-| v4.39 | 隐藏地图文字牌物件（`HIDDEN_OBJECT_OIDS`：`201`，含「城下丁」等共 15 处），SW `v422` |
+| v4.40 | 从 `falan-city-1000-manifest.json` 移除文字牌 OID `201` 的 15 处实例及 `assets["201"]`（非客户端屏蔽），SW `v423` |
+| v4.39 | 曾用 `HIDDEN_OBJECT_OIDS` 屏蔽 OID `201`（已由 v4.40 数据层删除替代） |
 | v4.38 | 发布版本号与 SW 缓存键同步（`falan-shell-v421` / `sw.js?v=421`），无玩法改动 |
 | v4.37 | 修复/优化，停留10帧不变 |
 | v4.36 | 传送全黑阶段增加10帧停留 |
