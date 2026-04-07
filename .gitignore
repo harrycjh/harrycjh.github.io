@@ -2,5 +2,9 @@ __pycache__/
 *.pyc
 tools/_last_regen_log.txt
 
-# 超过 GitHub 单文件 100MB 限制，仅本地生成/预览用
-assets/falan/map/falan-city-1000-preview.png
+# ── 预览图 / 预览页（本地工具生成，勿 git 提交；避免体积与 GitHub 单文件 100MB 限制）──
+assets/falan/map/falan-city-*-preview.*
+assets/falan/map/map-*-flags-preview.png
+assets/falan/map-previews-map0-lt1000/
+assets/falan/map-previews-*/
+map-previews-map0-lt1000.html
