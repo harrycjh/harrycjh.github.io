@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.40 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.41 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.40</title>
+<title>法兰城 v4.41</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -909,7 +909,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.40</div>
+        <div class="version">v4.41</div>
       </div>
     </section>
 
@@ -918,7 +918,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.40</div>
+          <div class="play-version">v4.41</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -1222,8 +1222,14 @@ const objectMapState = {
   objectItems: null,
   objectItemsMid: null,
   objectItemsSky: null,
+  /** 锚点格 (tx,ty) → objectItemsMid 下标列表 */
+  spatialMid: null,
   /** 锚点格 (tx,ty) → objectItemsSky 下标列表 */
   spatialSky: null,
+  objectMarginCellsX: 12,
+  objectMarginCellsY: 18,
+  midVisibleCache: { key: '', items: [] },
+  skyVisibleCache: { key: '', items: [] },
   atlasImages: null,
   /** oid 字符串 → { gif, image } 或 ImageDecoder 拆帧 { kind:'frames', ... } */
   objectAnimations: null
@@ -1482,6 +1488,30 @@ function collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy) {
   return set;
 }
 
+function collectVisibleObjectRows(items, cellMap, minTx, maxTx, minTy, maxTy) {
+  if (!items?.length) return [];
+  if (!cellMap || !cellMap.size) return items;
+  const visibleSet = collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy);
+  if (!visibleSet.size) return [];
+  const rows = [];
+  visibleSet.forEach((idx) => rows.push(items[idx]));
+  return rows;
+}
+
+function getSortedVisibleObjectRows(cache, items, cellMap, minTx, maxTx, minTy, maxTy) {
+  if (!items?.length) return [];
+  const key = `${minTx}:${maxTx}:${minTy}:${maxTy}:${items.length}`;
+  if (cache && cache.key === key) return cache.items;
+  const rows = sortItemsByIsoKey(
+    collectVisibleObjectRows(items, cellMap, minTx, maxTx, minTy, maxTy)
+  );
+  if (cache) {
+    cache.key = key;
+    cache.items = rows;
+  }
+  return rows;
+}
+
 function sortItemsByIsoKey(items) {
   if (!items || items.length <= 1) return items || [];
   return [...items].sort((a, b) => compareIsoKey(isoKey(a[0], a[1]), isoKey(b[0], b[1])));
@@ -1498,32 +1528,52 @@ function drawTeleportCrystalsPlayerLayer() {
 
 /** 中间层：与人物按等距键穿插（背后/身前）；传送水晶不参排序，见 drawTeleportCrystalsPlayerLayer */
 function drawDepthSortedMiddleAndPlayer(tick) {
-  const items = objectMapState.objectItemsMid;
+  const raw = objectMapState.objectItemsMid;
   const hasCrystals =
     teleportCrystalSlotsReady() && USE_DEPTH_SORTED_OBJECTS && objectMapState.ready;
 
-  if (!items || !items.length) {
+  if (!raw || !raw.length) {
     drawPlayer(tick);
     if (hasCrystals) drawTeleportCrystalsPlayerLayer();
     return;
   }
 
-  const entries = [];
-  for (let j = 0; j < items.length; j += 1) entries.push({ kind: 'obj', row: items[j] });
+  const sx = Math.max(0, Math.floor(camera.x));
+  const sy = Math.max(0, Math.floor(camera.y));
+  const sw = Math.min(canvas.width, sceneMap.width - sx);
+  const sh = Math.min(canvas.height, sceneMap.height - sy);
+  const gb0 = visibleGridBounds(sx, sy, sw, sh);
+  const minTx = clamp(gb0.minTx - objectMapState.objectMarginCellsX, 0, sceneMap.cols - 1);
+  const maxTx = clamp(gb0.maxTx + objectMapState.objectMarginCellsX, 0, sceneMap.cols - 1);
+  const minTy = clamp(gb0.minTy - objectMapState.objectMarginCellsY, 0, sceneMap.rows - 1);
+  const maxTy = clamp(gb0.maxTy + objectMapState.objectMarginCellsY, 0, sceneMap.rows - 1);
+  const items = getSortedVisibleObjectRows(
+    objectMapState.midVisibleCache,
+    raw,
+    objectMapState.spatialMid,
+    minTx,
+    maxTx,
+    minTy,
+    maxTy
+  );
 
-  entries.sort((a, b) => compareIsoKey(isoKey(a.row[0], a.row[1]), isoKey(b.row[0], b.row[1])));
+  if (!items.length) {
+    drawPlayer(tick);
+    if (hasCrystals) drawTeleportCrystalsPlayerLayer();
+    return;
+  }
 
   const pKey = isoKey(player.tx, player.ty);
   let i = 0;
   let playerDrawn = false;
-  while (i < entries.length) {
-    const e = entries[i];
-    const oKey = isoKey(e.row[0], e.row[1]);
+  while (i < items.length) {
+    const row = items[i];
+    const oKey = isoKey(row[0], row[1]);
     if (!playerDrawn && compareIsoKey(pKey, oKey) < 0) {
       drawPlayer(tick);
       playerDrawn = true;
     }
-    const [otx, oty, oid] = e.row;
+    const [otx, oty, oid] = row;
     drawOneMapObject(otx, oty, oid);
     i += 1;
   }
@@ -1546,12 +1596,15 @@ function drawSkyObjectsLayer() {
   const minTy = clamp(gb0.minTy - m, 0, sceneMap.rows - 1);
   const maxTy = clamp(gb0.maxTy + m, 0, sceneMap.rows - 1);
 
-  const cellMap = objectMapState.spatialSky;
-  if (!cellMap || !cellMap.size) return;
-  const visibleSet = collectVisibleObjectIndices(cellMap, minTx, maxTx, minTy, maxTy);
-  const skyRows = [];
-  visibleSet.forEach((idx) => skyRows.push(raw[idx]));
-  const items = sortItemsByIsoKey(skyRows);
+  const items = getSortedVisibleObjectRows(
+    objectMapState.skyVisibleCache,
+    raw,
+    objectMapState.spatialSky,
+    minTx,
+    maxTx,
+    minTy,
+    maxTy
+  );
   for (let i = 0; i < items.length; i += 1) {
     const [otx, oty, oid] = items[i];
     drawOneMapObject(otx, oty, oid);
@@ -1569,7 +1622,12 @@ async function loadObjectMapForDepth() {
     const part = partitionObjectItemsMidSky(manifest.assets, manifest.objectItems);
     objectMapState.objectItemsMid = part.mid;
     objectMapState.objectItemsSky = part.sky;
+    objectMapState.objectMarginCellsX = manifest.viewportHint?.objectMarginCellsX ?? 12;
+    objectMapState.objectMarginCellsY = manifest.viewportHint?.objectMarginCellsY ?? 18;
+    objectMapState.spatialMid = buildObjectCellIndex(part.mid);
     objectMapState.spatialSky = buildObjectCellIndex(part.sky);
+    objectMapState.midVisibleCache = { key: '', items: [] };
+    objectMapState.skyVisibleCache = { key: '', items: [] };
     const names = manifest.atlases || [];
     const imgs = {};
     await Promise.all(
@@ -1635,7 +1693,10 @@ async function loadObjectMapForDepth() {
     objectMapState.ready = false;
     objectMapState.objectItemsMid = null;
     objectMapState.objectItemsSky = null;
+    objectMapState.spatialMid = null;
     objectMapState.spatialSky = null;
+    objectMapState.midVisibleCache = { key: '', items: [] };
+    objectMapState.skyVisibleCache = { key: '', items: [] };
     objectMapState.objectAnimations = null;
     disposeTeleportCrystalAnimation();
   }
@@ -3380,7 +3441,7 @@ function loop(tick) {
 }
 
 /** 与根目录 VERSION 同步；变更后老用户会自动清空 SW + Cache Storage 并刷新一次 */
-const FALAN_BUILD_VERSION = '4.40';
+const FALAN_BUILD_VERSION = '4.41';
 const FALAN_CACHE_BUST_KEY = 'falan-build-version';
 
 /**
@@ -3455,7 +3516,7 @@ async function ensureCacheMatchesBuildVersion() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=423', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=424', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }
