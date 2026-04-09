@@ -43,6 +43,9 @@
     "10670": "force_block",
     "10671": "force_block",
     "10676": "force_block",
+    "11691": "force_pass",
+    "11696": "force_pass",
+    "11697": "force_pass",
     "12170": "force_pass",
     "12171": "force_pass"
   }

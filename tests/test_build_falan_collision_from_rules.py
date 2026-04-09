@@ -1,4 +1,6 @@
 import unittest
+import json
+from pathlib import Path
 
 from tools.build_falan_object_map_assets import original_to_tiled
 from tools.build_falan_collision_from_rules import (
@@ -11,6 +13,13 @@ from tools.build_falan_collision_from_rules import (
 
 
 class BuildFalanCollisionFromRulesTest(unittest.TestCase):
+    def test_collision_rules_mark_known_flower_family_ids_as_force_pass(self):
+        rules_path = Path("/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/collision-rules-by-object-id.json")
+        payload = json.loads(rules_path.read_text(encoding="utf-8"))
+
+        for oid in ("11691", "11696", "11697", "12170", "12171"):
+            self.assertEqual(payload["rules"].get(oid), "force_pass")
+
     def test_build_base_walkable_uses_manifest_tile_layer_non_zero_cells(self):
         tile_layer = [0, 7, 9, 0]
 
