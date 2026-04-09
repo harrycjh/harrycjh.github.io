@@ -1,5 +1,5 @@
 {
-  "default": "inherit",
+  "default": "force_block",
   "rules": {
     "10000": "force_pass",
     "10085": "force_pass",

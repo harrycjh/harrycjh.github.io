@@ -1,6 +1,6 @@
-# 法兰城运行架构（v4.44）
+# 法兰城运行架构（v4.45）
 
-> 适用版本：`v4.44`
+> 适用版本：`v4.45`
 
 本文档描述当前 `html5 法兰城` 在浏览器里的主运行链路。
 
@@ -153,7 +153,7 @@
 
 - 渲染：ground 切片 + object-map
 - 碰撞：读取 `map-1000-collision-final.json`
-- 生成链：`ground ∩ 原始 flags`，再由中间层 `object id` 规则修正
+- 生成链：`manifest.tileLayer` 作为基础可走区，再由中间层 `object id` 规则修正
 - 天空层 object 永远不参与碰撞
 
 并且当前 `ENABLE_MAP_COLLISION = true`，所以运行时会按最终离线碰撞文件参与移动拦截。

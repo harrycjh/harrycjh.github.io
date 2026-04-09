@@ -11,13 +11,12 @@ from tools.build_falan_collision_from_rules import (
 
 
 class BuildFalanCollisionFromRulesTest(unittest.TestCase):
-    def test_build_base_walkable_uses_ground_and_inverted_legacy_flags(self):
-        ground = [0, 7, 9, 4]
-        flags = [1, 1, 0, 0]
+    def test_build_base_walkable_uses_manifest_tile_layer_non_zero_cells(self):
+        tile_layer = [0, 7, 9, 0]
 
-        actual = build_base_walkable(ground, flags)
+        actual = build_base_walkable(tile_layer)
 
-        self.assertEqual(actual, [0, 0, 1, 1])
+        self.assertEqual(actual, [0, 1, 1, 0])
 
     def test_partition_mid_and_sky_items_uses_flag_45_as_sky(self):
         assets = {
@@ -34,26 +33,23 @@ class BuildFalanCollisionFromRulesTest(unittest.TestCase):
         self.assertEqual(mid, [[10, 20, 100]])
         self.assertEqual(sky, [[11, 21, 200]])
 
-    def test_apply_mid_object_rules_force_pass_and_force_block(self):
+    def test_apply_mid_object_rules_defaults_to_block_and_force_pass_clears(self):
         cols = 4
         rows = 4
         base = [0] * (cols * rows)
-        base[collision_grid_index(1, 1, cols)] = 1
-        base[collision_grid_index(2, 2, cols)] = 1
 
         assets = {
             "100": {"flag": 0, "areaE": 1, "areaS": 1},
-            "101": {"flag": 0, "areaE": 1, "areaS": 1},
+            "101": {"flag": 0, "areaE": 3, "areaS": 3},
         }
         items = [
             [1, 1, 100],
             [0, 0, 101],
         ]
         rules = {
-            "default": "inherit",
+            "default": "force_block",
             "rules": {
                 "100": "force_pass",
-                "101": "force_block",
             },
         }
 
@@ -61,30 +57,23 @@ class BuildFalanCollisionFromRulesTest(unittest.TestCase):
 
         self.assertEqual(actual[collision_grid_index(1, 1, cols)], 0)
         self.assertEqual(actual[collision_grid_index(0, 0, cols)], 1)
-        self.assertEqual(actual[collision_grid_index(2, 2, cols)], 1)
-        self.assertEqual(summary, {"forcePassObjects": 1, "forceBlockObjects": 1})
+        self.assertEqual(actual[collision_grid_index(2, 2, cols)], 0)
+        self.assertEqual(
+            summary,
+            {"forcePassObjects": 1, "forceBlockObjects": 0, "defaultBlockedObjects": 1},
+        )
 
-    def test_end_to_end_generation_uses_ground_flags_and_mid_rules(self):
+    def test_end_to_end_generation_uses_manifest_tile_layer_and_skips_sky(self):
         cols = 3
         rows = 3
-        map_json = {
-            "width": cols,
-            "height": rows,
-            "ground": [
-                1, 1, 1,
-                1, 0, 1,
-                1, 1, 1,
-            ],
-            "objects": [0] * 9,
-            "flags": [
-                1, 1, 1,
-                1, 1, 1,
-                1, 0, 1,
-            ],
-        }
         manifest = {
             "rows": rows,
             "cols": cols,
+            "tileLayer": [
+                1, 1, 1,
+                1, 0, 1,
+                1, 1, 1,
+            ],
             "assets": {
                 "100": {"flag": 0, "areaE": 1, "areaS": 1},
                 "200": {"flag": 45, "areaE": 1, "areaS": 1},
@@ -95,42 +84,62 @@ class BuildFalanCollisionFromRulesTest(unittest.TestCase):
             ],
         }
         rules = {
-            "default": "inherit",
-            "rules": {"100": "force_block", "200": "force_block"},
+            "default": "force_block",
+            "rules": {"100": "force_pass", "200": "force_block"},
         }
 
-        payload, summary = build_final_collision_payload(map_json, manifest, rules)
+        payload, summary = build_final_collision_payload(manifest, rules)
 
         self.assertEqual(payload["width"], 3)
         self.assertEqual(payload["height"], 3)
-        self.assertEqual(payload["flags"][collision_grid_index(1, 1, cols)], 1)
-        self.assertEqual(payload["flags"][collision_grid_index(2, 2, cols)], 1)
+        self.assertEqual(payload["flags"][collision_grid_index(1, 1, cols)], 0)
+        self.assertEqual(payload["flags"][collision_grid_index(2, 2, cols)], 0)
         self.assertEqual(summary["skySkipped"], 1)
+        self.assertEqual(summary["midProcessed"], 1)
 
-    def test_end_to_end_generation_emits_blocked_flags_from_base_walkable(self):
-        map_json = {
-            "width": 2,
-            "height": 2,
-            "ground": [1, 1, 0, 1],
-            "objects": [0, 0, 0, 0],
-            "flags": [0, 1, 0, 0],
-        }
+    def test_end_to_end_generation_emits_blocked_flags_from_tile_layer(self):
         manifest = {
             "rows": 2,
             "cols": 2,
+            "tileLayer": [1, 1, 0, 1],
             "assets": {},
             "objectItems": [],
         }
         rules = {
-            "default": "inherit",
+            "default": "force_block",
             "rules": {},
         }
 
-        payload, summary = build_final_collision_payload(map_json, manifest, rules)
+        payload, summary = build_final_collision_payload(manifest, rules)
 
-        self.assertEqual(payload["flags"], [0, 1, 1, 0])
-        self.assertEqual(summary["baseBlocked"], 2)
-        self.assertEqual(summary["finalBlocked"], 2)
+        self.assertEqual(payload["flags"], [0, 0, 1, 0])
+        self.assertEqual(summary["baseBlocked"], 1)
+        self.assertEqual(summary["finalBlocked"], 1)
+        self.assertEqual(summary["defaultBlockedObjects"], 0)
+
+    def test_end_to_end_generation_blocks_mid_by_default_without_area_expansion(self):
+        manifest = {
+            "rows": 2,
+            "cols": 2,
+            "tileLayer": [1, 1, 1, 1],
+            "assets": {
+                "100": {"flag": 0, "areaE": 3, "areaS": 3},
+            },
+            "objectItems": [
+                [1, 0, 100],
+            ],
+        }
+        rules = {
+            "default": "force_block",
+            "rules": {},
+        }
+
+        payload, summary = build_final_collision_payload(manifest, rules)
+
+        self.assertEqual(payload["flags"][collision_grid_index(1, 0, 2)], 1)
+        self.assertEqual(payload["flags"][collision_grid_index(0, 0, 2)], 0)
+        self.assertEqual(payload["flags"][collision_grid_index(1, 1, 2)], 0)
+        self.assertEqual(summary["defaultBlockedObjects"], 1)
 
     def test_svg_preview_contains_blocked_cells(self):
         from tools.build_falan_collision_from_rules import render_collision_preview_svg

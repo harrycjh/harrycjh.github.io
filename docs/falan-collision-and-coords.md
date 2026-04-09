@@ -1,6 +1,6 @@
-# 法兰城坐标与碰撞说明（v4.44）
+# 法兰城坐标与碰撞说明（v4.45）
 
-> 适用版本：`v4.44`
+> 适用版本：`v4.45`
 
 ## 1. 坐标体系
 
@@ -67,11 +67,16 @@ previewY = ((tx + ty) * halfH + baseY) * scale
 
 它由离线脚本读取：
 
-- [/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/map-1000.json](/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/map-1000.json)
 - [/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/object-map/falan-city-1000-manifest.json](/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/object-map/falan-city-1000-manifest.json)
 - [/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/collision-rules-by-object-id.json](/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/collision-rules-by-object-id.json)
 
-生成，不再把 `map-1000.json.flags` 直接当最终真相。
+生成。新的基础底稿来自 `manifest.tileLayer`，不再把旧 `map-1000.json.ground/objects` 当坐标真相。
+
+同时要注意：
+
+- `manifest.objectItems` 是原始 object layer 的逐格条目
+- 不是“大物件锚点列表”
+- 所以当前碰撞修正只按每个 `object cell` 自身生效，不再按 `areaE/areaS` 向周围外扩
 
 装载入口：
 
@@ -104,7 +109,7 @@ const ENABLE_MAP_COLLISION = true;
 
 如果后面有人问“为什么已经有格表但人物还是穿过去”，先看这个开关是否又被改回去了。
 
-## 7. `map-1000.json` 的索引方向
+## 7. 碰撞格表的索引方向
 
 当前格表索引不是简单的 `ty * width + tx`，而是：
 
@@ -139,9 +144,9 @@ idx = tx * width + (width - 1 - ty)
 
 ## 10. 障碍格叠层只是视觉工具
 
-当前障碍格叠层默认关闭：
+当前障碍格叠层默认开启，但默认显示开关仍然由 UI 控制：
 
-- `ENABLE_OBSTACLE_OVERLAY_LAYER = false`
+- `ENABLE_OBSTACLE_OVERLAY_LAYER = true`
 
 并且它只是视觉 overlay，不等于实际阻挡逻辑。
 
@@ -151,5 +156,5 @@ idx = tx * width + (width - 1 - ty)
 
 1. `itx / ity` 命名带历史包袱，实际已被当作内部格坐标使用。
 2. 右侧坐标和调试输入框显示的是“显示坐标”，不是 `player.tx / ty`。
-3. `map-1000-collision-final.json` 才是当前最终碰撞真相；`map-1000.json` 现在只是底稿输入之一。
+3. `map-1000-collision-final.json` 才是当前最终碰撞真相；旧 `map-1000.json` 现在只保留给历史兼容和对照，不再参与新底稿生成。
 4. 现在移动卡顿、卡墙或仍能穿越，先确认 `ENABLE_MAP_COLLISION`、格表方向和探针参数。

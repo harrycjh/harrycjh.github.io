@@ -7,7 +7,6 @@ from pathlib import Path
 
 
 ROOT = Path("/Users/chujianhe/.openclaw/workspace-taizi")
-BASE_MAP_PATH = ROOT / "assets" / "falan" / "map" / "map-1000.json"
 MANIFEST_PATH = ROOT / "assets" / "falan" / "object-map" / "falan-city-1000-manifest.json"
 RULES_PATH = ROOT / "assets" / "falan" / "map" / "collision-rules-by-object-id.json"
 OUTPUT_PATH = ROOT / "assets" / "falan" / "map" / "map-1000-collision-final.json"
@@ -20,8 +19,8 @@ def collision_grid_index(tx: int, ty: int, cols: int) -> int:
     return tx * cols + (cols - 1 - ty)
 
 
-def build_base_walkable(ground: list[int], flags: list[int]) -> list[int]:
-    return [1 if (ground[i] and not flags[i]) else 0 for i in range(len(flags))]
+def build_base_walkable(tile_layer: list[int]) -> list[int]:
+    return [1 if cell else 0 for cell in tile_layer]
 
 
 def walkable_to_blocked_flags(walkable: list[int]) -> list[int]:
@@ -57,27 +56,31 @@ def partition_mid_and_sky_items(items: list[list[int]], assets: dict[str, dict])
     return mid, sky
 
 
-def iter_object_cells(tx: int, ty: int, meta: dict, cols: int, rows: int):
-    area_e = max(1, int(meta.get("areaE", 1)))
-    area_s = max(1, int(meta.get("areaS", 1)))
-    for dx in range(area_e):
-        for dy in range(area_s):
-            cx = tx + dx
-            cy = ty + dy
-            if 0 <= cx < cols and 0 <= cy < rows:
-                yield cx, cy
+def iter_object_cells(tx: int, ty: int, _meta: dict, cols: int, rows: int):
+    """
+    objectItems 已经是 object layer 的逐格条目，不是“大物件锚点”列表。
+    所以这里不能再按 areaE/areaS 扩 footprint，否则会把同一批 object cell
+    多次外扩到周围空地上，造成大面积误挡。
+    """
+    if 0 <= tx < cols and 0 <= ty < rows:
+        yield tx, ty
 
 
 def apply_mid_object_rules(base: list[int], items: list[list[int]], assets: dict[str, dict], rules: dict, cols: int, rows: int) -> tuple[list[int], dict]:
     out = list(base)
-    summary = {"forcePassObjects": 0, "forceBlockObjects": 0}
+    summary = {"forcePassObjects": 0, "forceBlockObjects": 0, "defaultBlockedObjects": 0}
     by_id = rules.get("rules", {})
-    default_mode = rules.get("default", "inherit")
+    default_mode = rules.get("default", "force_block")
+    if default_mode == "inherit":
+        default_mode = "force_block"
     for tx, ty, oid in items:
-        mode = by_id.get(str(oid), default_mode)
+        oid_str = str(oid)
+        explicit_rule = oid_str in by_id
+        # Mid-layer objects block by default; the rules file only needs pass-through exceptions.
+        mode = by_id.get(oid_str, default_mode)
         if mode == "inherit":
-            continue
-        meta = assets.get(str(oid), {})
+            mode = default_mode
+        meta = assets.get(oid_str, {})
         touched = False
         for cx, cy in iter_object_cells(tx, ty, meta, cols, rows):
             idx = collision_grid_index(cx, cy, cols)
@@ -89,15 +92,17 @@ def apply_mid_object_rules(base: list[int], items: list[list[int]], assets: dict
                 touched = True
         if touched and mode == "force_pass":
             summary["forcePassObjects"] += 1
-        if touched and mode == "force_block":
+        if touched and mode == "force_block" and explicit_rule:
             summary["forceBlockObjects"] += 1
+        if touched and mode == "force_block" and not explicit_rule:
+            summary["defaultBlockedObjects"] += 1
     return out, summary
 
 
-def build_final_collision_payload(map_json: dict, manifest: dict, rules: dict) -> tuple[dict, dict]:
-    cols = int(map_json["width"])
-    rows = int(map_json["height"])
-    base_walkable = build_base_walkable(map_json["ground"], map_json["flags"])
+def build_final_collision_payload(manifest: dict, rules: dict) -> tuple[dict, dict]:
+    cols = int(manifest["cols"])
+    rows = int(manifest["rows"])
+    base_walkable = build_base_walkable(manifest["tileLayer"])
     base = walkable_to_blocked_flags(base_walkable)
     mid, sky = partition_mid_and_sky_items(manifest["objectItems"], manifest["assets"])
     final_flags, rule_summary = apply_mid_object_rules(base, mid, manifest["assets"], rules, cols, rows)
@@ -126,7 +131,6 @@ def save_json(path: Path, payload: dict) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--map", type=Path, default=BASE_MAP_PATH)
     parser.add_argument("--manifest", type=Path, default=MANIFEST_PATH)
     parser.add_argument("--rules", type=Path, default=RULES_PATH)
     parser.add_argument("--out", type=Path, default=OUTPUT_PATH)
@@ -134,7 +138,6 @@ def main() -> int:
     args = parser.parse_args()
 
     payload, summary = build_final_collision_payload(
-        load_json(args.map),
         load_json(args.manifest),
         load_json(args.rules),
     )
