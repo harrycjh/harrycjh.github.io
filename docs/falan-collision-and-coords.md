@@ -1,6 +1,6 @@
-# 法兰城坐标与碰撞说明（v4.41）
+# 法兰城坐标与碰撞说明（v4.42）
 
-> 适用版本：`v4.41`
+> 适用版本：`v4.42`
 
 ## 1. 坐标体系
 
@@ -77,12 +77,12 @@ previewY = ((tx + ty) * halfH + baseY) * scale
 
 而是前端直接读离线好的 `flags`。
 
-## 6. 一个非常重要的现状：碰撞当前关闭
+## 6. 一个非常重要的现状：碰撞当前开启
 
 当前代码中：
 
 ```javascript
-const ENABLE_MAP_COLLISION = false;
+const ENABLE_MAP_COLLISION = true;
 ```
 
 也就是：
@@ -90,11 +90,11 @@ const ENABLE_MAP_COLLISION = false;
 - 碰撞数据会加载
 - `collisionState.grid` 会准备好
 - `isBlockedGridCell()` / `collides()` 会存在
-- 但真正移动时不会拦人
+- 并且真正移动时会参与拦截
 
 代码位置：[/Users/chujianhe/.openclaw/workspace-taizi/index.html#L1722](/Users/chujianhe/.openclaw/workspace-taizi/index.html#L1722)
 
-如果后面有人问“为什么红格有、数据有、人还是能穿”，先看这个开关。
+如果后面有人问“为什么已经有格表但人物还是穿过去”，先看这个开关是否又被改回去了。
 
 ## 7. `map-1000.json` 的索引方向
 
@@ -144,4 +144,4 @@ idx = tx * width + (width - 1 - ty)
 1. `itx / ity` 命名带历史包袱，实际已被当作内部格坐标使用。
 2. 右侧坐标和调试输入框显示的是“显示坐标”，不是 `player.tx / ty`。
 3. `map-1000.json` 已经是离线产物，不要再按“图片碰撞图”理解。
-4. 现在移动卡顿或穿墙，不能先默认怪碰撞逻辑，先看 `ENABLE_MAP_COLLISION`。
+4. 现在移动卡顿、卡墙或仍能穿越，先确认 `ENABLE_MAP_COLLISION`、格表方向和探针参数。

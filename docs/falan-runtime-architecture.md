@@ -1,6 +1,6 @@
-# 法兰城运行架构（v4.41）
+# 法兰城运行架构（v4.42）
 
-> 适用版本：`v4.41`
+> 适用版本：`v4.42`
 
 本文档描述当前 `html5 法兰城` 在浏览器里的主运行链路。
 
@@ -154,7 +154,7 @@
 - 渲染：ground 切片 + object-map
 - 碰撞：单独读取 `map-1000.json`
 
-并且当前 `ENABLE_MAP_COLLISION = false`，所以运行时不拦人，只保留碰撞数据装载与查询逻辑。
+并且当前 `ENABLE_MAP_COLLISION = true`，所以运行时会按 `map-1000.json` 参与移动拦截。
 
 对应代码：[/Users/chujianhe/.openclaw/workspace-taizi/index.html#L1719](/Users/chujianhe/.openclaw/workspace-taizi/index.html#L1719)
 
