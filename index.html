@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 法兰城 v4.43 · 发布版本见根目录 VERSION，每次 +0.01 -->
+<!-- 法兰城 v4.44 · 发布版本见根目录 VERSION，每次 +0.01 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>法兰城 v4.43</title>
+<title>法兰城 v4.44</title>
 <meta name="theme-color" content="#18251b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -909,7 +909,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
       <div class="eyebrow">Cross Gate Falan Map</div>
         <div class="title-row">
         <h1>法兰城</h1>
-        <div class="version">v4.43</div>
+        <div class="version">v4.44</div>
       </div>
     </section>
 
@@ -918,7 +918,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <div class="canvas-wrap">
           <button type="button" class="map-fullscreen-exit" id="mapFullscreenExit">退出全屏</button>
           <canvas id="isoCanvas" width="960" height="720"></canvas>
-          <div class="play-version">v4.43</div>
+          <div class="play-version">v4.44</div>
           <div class="mobile-hud" id="mobileHud" hidden aria-hidden="true">
             <button type="button" id="mobileSelectionBtn">选人界面</button>
             <button type="button" id="mobileMusicBtn">关闭音乐</button>
@@ -2277,7 +2277,7 @@ function updateVisibleTiles() {
   return bounds;
 }
 
-const MAP_COLLISION_JSON = './assets/falan/map/map-1000.json';
+const MAP_COLLISION_JSON = './assets/falan/map/map-1000-collision-final.json';
 
 function applyCollisionFromDatFlags(flags) {
   const expected = sceneMap.cols * sceneMap.rows;
@@ -2341,7 +2341,6 @@ function collides(tx, ty) {
   for (const [ox, oy] of probes) {
     const cellX = Math.round(tx + ox);
     const cellY = Math.round(ty + oy);
-    if (cellX < 2 || cellY < 2 || cellX > sceneMap.cols - 2 || cellY > sceneMap.rows - 2) return true;
     if (isBlockedGridCell(cellX, cellY)) return true;
   }
   return false;
@@ -3441,7 +3440,7 @@ function loop(tick) {
 }
 
 /** 与根目录 VERSION 同步；变更后老用户会自动清空 SW + Cache Storage 并刷新一次 */
-const FALAN_BUILD_VERSION = '4.43';
+const FALAN_BUILD_VERSION = '4.44';
 const FALAN_CACHE_BUST_KEY = 'falan-build-version';
 
 /**
@@ -3516,7 +3515,7 @@ async function ensureCacheMatchesBuildVersion() {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   try {
-    await navigator.serviceWorker.register('./sw.js?v=426', { scope: './' });
+    await navigator.serviceWorker.register('./sw.js?v=428', { scope: './' });
   } catch (error) {
     console.warn('service worker register failed', error);
   }

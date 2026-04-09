@@ -1,0 +1,11 @@
+{
+  "width": 300,
+  "height": 300,
+  "baseBlocked": 72587,
+  "finalBlocked": 71787,
+  "changedCells": 800,
+  "midProcessed": 4469,
+  "skySkipped": 389,
+  "forcePassObjects": 1128,
+  "forceBlockObjects": 0
+}

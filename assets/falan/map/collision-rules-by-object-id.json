@@ -1,0 +1,24 @@
+{
+  "default": "inherit",
+  "rules": {
+    "10000": "force_pass",
+    "10085": "force_pass",
+    "10086": "force_pass",
+    "10087": "force_pass",
+    "10088": "force_pass",
+    "10089": "force_pass",
+    "10090": "force_pass",
+    "10426": "force_pass",
+    "10427": "force_pass",
+    "10452": "force_pass",
+    "10453": "force_pass",
+    "10465": "force_pass",
+    "10466": "force_pass",
+    "10467": "force_pass",
+    "10468": "force_pass",
+    "10469": "force_pass",
+    "10470": "force_pass",
+    "10471": "force_pass",
+    "10472": "force_pass"
+  }
+}

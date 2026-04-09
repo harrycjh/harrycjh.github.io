@@ -1,6 +1,6 @@
-# 法兰城坐标与碰撞说明（v4.42）
+# 法兰城坐标与碰撞说明（v4.44）
 
-> 适用版本：`v4.42`
+> 适用版本：`v4.44`
 
 ## 1. 坐标体系
 
@@ -63,7 +63,15 @@ previewY = ((tx + ty) * halfH + baseY) * scale
 
 当前碰撞直接来自：
 
+- [/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/map-1000-collision-final.json](/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/map-1000-collision-final.json)
+
+它由离线脚本读取：
+
 - [/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/map-1000.json](/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/map-1000.json)
+- [/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/object-map/falan-city-1000-manifest.json](/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/object-map/falan-city-1000-manifest.json)
+- [/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/collision-rules-by-object-id.json](/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/collision-rules-by-object-id.json)
+
+生成，不再把 `map-1000.json.flags` 直接当最终真相。
 
 装载入口：
 
@@ -75,7 +83,7 @@ previewY = ((tx + ty) * halfH + baseY) * scale
 - 根据最终大图反推
 - 运行时按 object 语义实时扣格
 
-而是前端直接读离线好的 `flags`。
+而是前端直接读离线好的最终 `flags`。
 
 ## 6. 一个非常重要的现状：碰撞当前开启
 
@@ -110,7 +118,7 @@ idx = tx * width + (width - 1 - ty)
 
 ## 8. 运行时碰撞探针
 
-虽然当前总开关关着，`collides()` 本身仍保留了探针方案：
+当前总开关已开启，`collides()` 仍使用多探针判定：
 
 - 中心
 - 左前脚
@@ -143,5 +151,5 @@ idx = tx * width + (width - 1 - ty)
 
 1. `itx / ity` 命名带历史包袱，实际已被当作内部格坐标使用。
 2. 右侧坐标和调试输入框显示的是“显示坐标”，不是 `player.tx / ty`。
-3. `map-1000.json` 已经是离线产物，不要再按“图片碰撞图”理解。
+3. `map-1000-collision-final.json` 才是当前最终碰撞真相；`map-1000.json` 现在只是底稿输入之一。
 4. 现在移动卡顿、卡墙或仍能穿越，先确认 `ENABLE_MAP_COLLISION`、格表方向和探针参数。
