@@ -2,11 +2,11 @@
   "width": 300,
   "height": 300,
   "baseBlocked": 47984,
-  "finalBlocked": 51259,
-  "changedCells": 3275,
+  "finalBlocked": 51253,
+  "changedCells": 3269,
   "midProcessed": 4469,
   "skySkipped": 389,
-  "forcePassObjects": 1194,
+  "forcePassObjects": 1200,
   "forceBlockObjects": 1810,
-  "defaultBlockedObjects": 1465
+  "defaultBlockedObjects": 1459
 }
