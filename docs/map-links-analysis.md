@@ -1,5 +1,13 @@
 # 法兰城602地图链接分析
 
+> 说明：这是一份**研究笔记**，用于保留 `coordinateinfov3_2.bin / coordinatev3_2.bin` 的分析过程。
+>
+> 它不是当前 `html5 法兰城` 的运行真相文档。要看现在网页实际怎么跑，请先看：
+>
+> - [/Users/chujianhe/.openclaw/workspace-taizi/docs/falan-runtime-architecture.md](/Users/chujianhe/.openclaw/workspace-taizi/docs/falan-runtime-architecture.md)
+> - [/Users/chujianhe/.openclaw/workspace-taizi/docs/falan-collision-and-coords.md](/Users/chujianhe/.openclaw/workspace-taizi/docs/falan-collision-and-coords.md)
+> - [/Users/chujianhe/.openclaw/workspace-taizi/docs/falan-teleport-spec.md](/Users/chujianhe/.openclaw/workspace-taizi/docs/falan-teleport-spec.md)
+
 ## 分析日期
 2026-04-07
 
