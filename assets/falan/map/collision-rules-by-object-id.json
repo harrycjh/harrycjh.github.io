@@ -1,7 +1,11 @@
 {
   "default": "force_block",
   "rules": {
+    "250": "force_pass",
     "10000": "force_pass",
+    "10040": "force_pass",
+    "10041": "force_pass",
+    "10042": "force_pass",
     "10085": "force_pass",
     "10086": "force_pass",
     "10087": "force_pass",
@@ -30,6 +34,8 @@
     "10481": "force_block",
     "10482": "force_block",
     "10483": "force_block",
+    "10413": "force_pass",
+    "10419": "force_pass",
     "10620": "force_block",
     "10624": "force_block",
     "10625": "force_block",
@@ -44,10 +50,22 @@
     "10670": "force_block",
     "10671": "force_block",
     "10676": "force_block",
+    "10529": "force_pass",
     "11691": "force_pass",
     "11696": "force_pass",
     "11697": "force_pass",
+    "12165": "force_pass",
+    "12166": "force_pass",
+    "12167": "force_pass",
+    "12168": "force_pass",
+    "12169": "force_pass",
     "12170": "force_pass",
-    "12171": "force_pass"
+    "12171": "force_pass",
+    "12175": "force_pass",
+    "12176": "force_pass",
+    "12177": "force_pass",
+    "12178": "force_pass",
+    "12179": "force_pass",
+    "12180": "force_pass"
   }
 }

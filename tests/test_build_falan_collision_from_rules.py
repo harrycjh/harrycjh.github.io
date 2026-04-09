@@ -26,6 +26,32 @@ class BuildFalanCollisionFromRulesTest(unittest.TestCase):
 
         self.assertEqual(payload["rules"].get("10662"), "force_pass")
 
+    def test_collision_rules_mark_total_candidate_board_ids_as_force_pass(self):
+        rules_path = Path("/Users/chujianhe/.openclaw/workspace-taizi/assets/falan/map/collision-rules-by-object-id.json")
+        payload = json.loads(rules_path.read_text(encoding="utf-8"))
+
+        for oid in (
+            "250",
+            "10040",
+            "10041",
+            "10042",
+            "10413",
+            "10419",
+            "10529",
+            "12165",
+            "12166",
+            "12167",
+            "12168",
+            "12169",
+            "12175",
+            "12176",
+            "12177",
+            "12178",
+            "12179",
+            "12180",
+        ):
+            self.assertEqual(payload["rules"].get(oid), "force_pass")
+
     def test_build_base_walkable_uses_manifest_tile_layer_non_zero_cells(self):
         tile_layer = [0, 7, 9, 0]
 
