@@ -1,0 +1,9 @@
+{
+  "name": "cross-gate",
+  "installCommand": "",
+  "buildCommand": "",
+  "assets": {
+    "directory": ".",
+    "notFoundStrategy": "singlePageApplication"
+  }
+}
