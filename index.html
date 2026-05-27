@@ -97,6 +97,21 @@ h1 {
   color: var(--gold);
   font-size: 0.9rem;
 }
+.hero .home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 6px 14px;
+  color: var(--gold);
+  text-decoration: none;
+  border: 1px solid rgba(232, 204, 134, 0.24);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.hero .home-link:hover { border-color: var(--gold); background: rgba(232, 204, 134, 0.08); }
+
 .hero p {
   margin: 0;
   max-width: 920px;
@@ -911,6 +926,7 @@ body.mobile-play-only.mobile-force-landscape canvas {
         <h1>法兰城</h1>
         <div class="version">v4.49</div>
       </div>
+      <a href="https://www.cw2017.com" class="home-link" title="回家">&#8962; 回家</a>
     </section>
 
     <section class="layout">
